@@ -1,4 +1,3 @@
-import { format_file_size } from '../../utils/mock-data'
 import { Calendar, FileText, Download, X } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
@@ -84,9 +83,6 @@ const FileViewer = ({ file, on_close }) => {
               </div>
             </div>
             <p className="text-text-light mb-2">{file.name}</p>
-            <p className="text-text-muted text-sm">
-              Image • {format_file_size(file.size)}
-            </p>
           </div>
         )
 
@@ -118,14 +114,12 @@ const FileViewer = ({ file, on_close }) => {
               <span className="bg-primary-100 dark:bg-primary-900 text-primary-600 dark:text-primary-400 px-2 py-1 rounded">
                 {file.file_type}
               </span>
-              <span>{format_file_size(file.size)}</span>
             </div>
           </div>
 
           <div className="flex items-center space-x-2">
-            <button className="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors duration-200">
+            <button className="bg-primary-600 hover:bg-primary-700 text-white px-2 py-2 rounded-lg flex items-center space-x-2 transition-colors duration-200">
               <Download className="w-4 h-4" />
-              <span>Download</span>
             </button>
 
             {on_close && (

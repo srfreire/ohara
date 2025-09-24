@@ -1,14 +1,12 @@
 import { useState } from 'react'
-import { ChevronRight, ChevronDown, ChevronLeft, ArrowLeft, Folder, FolderOpen } from 'lucide-react'
+import { ChevronRight, ChevronDown, PanelRightClose, PanelRightOpen, ArrowLeft, Folder, FolderOpen } from 'lucide-react'
 import * as Icons from 'lucide-react'
-import ViewModeSwitcher from '../ui/ViewModeSwitcher'
 import {
   get_root_folders,
   get_subfolders,
   get_files_in_folder,
   get_file_icon,
   get_folder_by_id,
-  format_file_size
 } from '../../utils/mock-data'
 
 const FileExplorer = ({
@@ -19,11 +17,11 @@ const FileExplorer = ({
   is_collapsed,
   on_toggle_collapse,
   is_expanded = false,
-  view_mode = 'icon',
-  on_view_mode_change,
   current_folder_id = null,
   on_folder_navigate
 }) => {
+  // Auto-determine view mode based on file selection
+  const view_mode = selected_file ? 'list' : 'icon'
   const [expanded_folders, set_expanded_folders] = useState(new Set(['2'])) // Expand 'Projects' by default
 
   const toggle_folder = (folder_id) => {
@@ -38,6 +36,16 @@ const FileExplorer = ({
   }
 
   const FileIcon = ({ file_type, className }) => {
+    if (file_type === 'text') {
+      return (
+        <img
+          src="/src/assets/txt.png"
+          alt="Text file"
+          className={className}
+        />
+      )
+    }
+
     const icon_name = get_file_icon(file_type)
     const IconComponent = Icons[icon_name]
     return IconComponent ? <IconComponent className={className} /> : <Icons.File className={className} />
@@ -79,7 +87,13 @@ const FileExplorer = ({
         case 'pdf':
           return <Icons.FileType className="w-14 h-14 text-red-500" />
         case 'text':
-          return <Icons.FileText className="w-14 h-14 text-gray-500" />
+          return (
+            <img
+              src="/src/assets/txt.png"
+              alt="Text file"
+              className="w-14 h-14"
+            />
+          )
         default:
           return <Icons.File className="w-14 h-14 text-gray-500" />
       }
@@ -96,9 +110,6 @@ const FileExplorer = ({
         </div>
         <span className="text-sm text-text-light text-center max-w-full break-words overflow-hidden text-ellipsis">
           {file.name}
-        </span>
-        <span className="text-xs text-text-muted mt-1">
-          {format_file_size(file.size)}
         </span>
       </div>
     )
@@ -140,7 +151,7 @@ const FileExplorer = ({
           />
 
           {/* Folder Name */}
-          <span className="text-text-light font-medium truncate">
+          <span className="text-text-light font-medium truncate flex-1 min-w-0">
             {folder.name}
           </span>
         </div>
@@ -247,46 +258,36 @@ const FileExplorer = ({
   }
 
   return (
-    <div className={`bg-background-surface border-r border-secondary-200 dark:border-secondary-700 flex flex-col transition-all duration-300 ${get_width_class()}`}>
+    <div className={`bg-background-surface border-r border-secondary-200 dark:border-secondary-700 flex flex-col transition-all duration-300 overflow-hidden ${get_width_class()}`}>
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-secondary-200 dark:border-secondary-700">
         {!is_collapsed && (
-          <div>
-            <h2 className="text-lg font-semibold text-text-light">
+          <div className="min-w-0 flex-1">
+            <h2 className="text-lg font-semibold text-text-light truncate">
               File Explorer
             </h2>
             {is_expanded && view_mode === 'icon' && (
-              <p className="text-sm text-text-muted mt-1">
+              <p className="text-sm text-text-muted mt-1 truncate">
                 Select a file to view its contents
               </p>
             )}
           </div>
         )}
 
-        <div className="flex items-center space-x-2">
-          {/* View Mode Switcher - Always visible when expanded */}
-          {is_expanded && on_view_mode_change && (
-            <ViewModeSwitcher
-              view_mode={view_mode}
-              on_view_mode_change={on_view_mode_change}
-            />
-          )}
-
-          {/* Collapse Button - Only show when file is selected (list mode) */}
-          {view_mode === 'list' && (
-            <button
-              onClick={on_toggle_collapse}
-              className="p-2 rounded-lg hover:bg-secondary-100 dark:hover:bg-secondary-800 text-text-muted transition-colors duration-200"
-              aria-label={is_collapsed ? 'Expand file explorer' : 'Collapse file explorer'}
-            >
-              {is_collapsed ? (
-                <ChevronRight className="w-4 h-4" />
-              ) : (
-                <ChevronLeft className="w-4 h-4" />
-              )}
-            </button>
-          )}
-        </div>
+        {/* Collapse Button - Only show when file is selected (list mode) */}
+        {view_mode === 'list' && (
+          <button
+            onClick={on_toggle_collapse}
+            className="p-2 rounded-lg hover:bg-secondary-100 dark:hover:bg-secondary-800 text-text-muted transition-colors duration-200"
+            aria-label={is_collapsed ? 'Expand file explorer' : 'Collapse file explorer'}
+          >
+            {is_collapsed ? (
+              <PanelRightClose className="w-5 h-5" />
+            ) : (
+              <PanelRightOpen className="w-5 h-5" />
+            )}
+          </button>
+        )}
       </div>
 
       {/* Content Area */}

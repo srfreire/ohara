@@ -1,13 +1,11 @@
 import { useState, useRef, useEffect } from 'react'
-import { Send, Bot, User, ChevronRight, ChevronLeft } from 'lucide-react'
+import { Send, Bot, User, PanelLeftClose, PanelLeftOpen } from 'lucide-react'
 import { mock_chat_messages } from '../../utils/mock-data'
 
-const ChatAgent = () => {
+const ChatAgent = ({ is_collapsed = false, on_toggle_collapse }) => {
   const [messages, set_messages] = useState(mock_chat_messages)
   const [input_value, set_input_value] = useState('')
-  const [is_minimized, set_is_minimized] = useState(false)
   const [is_typing, set_is_typing] = useState(false)
-  const [is_expanding, set_is_expanding] = useState(false)
   const messages_end_ref = useRef(null)
 
   const scroll_to_bottom = () => {
@@ -79,48 +77,51 @@ const ChatAgent = () => {
     })
   }
 
-  if (is_minimized) {
-    return (
-      <div className="fixed bottom-6 right-6 z-50">
-        <button
-          onClick={() => set_is_minimized(false)}
-          className="w-14 h-14 bg-primary-600 hover:bg-primary-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center group transform hover:scale-105"
-          aria-label="Open AI Assistant"
-        >
-          <Bot className="w-6 h-6 group-hover:scale-110 transition-transform" />
-          {is_typing && (
-            <div className="absolute -top-2 -right-2 w-4 h-4 bg-green-500 rounded-full animate-pulse"></div>
-          )}
-        </button>
-      </div>
-    )
-  }
-
   return (
-    <div className="w-[400px] bg-background-surface border-l border-secondary-200 dark:border-secondary-700 flex flex-col shadow-xl animate-expand-from-button">
+    <div className="relative">
+      {/* Floating AI Button - Only visible when collapsed */}
+      {is_collapsed && on_toggle_collapse && (
+        <button
+          onClick={on_toggle_collapse}
+          className="fixed bottom-6 right-6 z-50 w-14 h-14 bg-primary-600 hover:bg-primary-700 text-white rounded-full flex items-center justify-center transition-all duration-200 shadow-lg hover:shadow-xl"
+          aria-label="Expand chat"
+        >
+          <Bot className="w-6 h-6" />
+        </button>
+      )}
+
+      <div className={`h-full bg-background-surface border-l border-secondary-200 dark:border-secondary-700 flex flex-col transition-all duration-300 overflow-hidden w-[400px] ${is_collapsed ? 'translate-x-full -mr-[400px]' : 'translate-x-0'}`}>
       {/* Chat Header */}
       <div className="flex items-center justify-between p-4 border-b border-secondary-200 dark:border-secondary-700">
-        <div className="flex items-center space-x-2">
-          <div className="w-8 h-8 bg-primary-600 rounded-full flex items-center justify-center">
-            <Bot className="w-5 h-5 text-white" />
-          </div>
-          <div>
-            <h3 className="text-sm font-semibold text-text-light">
-              AI Assistant
-            </h3>
-            <p className="text-xs text-text-muted">
-              {is_typing ? 'Typing...' : 'Online'}
-            </p>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center space-x-2">
+            <div className="w-8 h-8 bg-primary-600 rounded-full flex items-center justify-center flex-shrink-0">
+              <Bot className="w-5 h-5 text-white" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <h3 className="text-sm font-semibold text-text-light truncate">
+                AI Assistant
+              </h3>
+              <p className="text-xs text-text-muted truncate">
+                {is_typing ? 'Typing...' : 'Online'}
+              </p>
+            </div>
           </div>
         </div>
 
-        <button
-          onClick={() => set_is_minimized(true)}
-          className="p-2 rounded-lg hover:bg-secondary-100 dark:hover:bg-secondary-800 text-text-muted transition-colors duration-200"
-          aria-label="Minimize chat"
-        >
-          <ChevronRight className="w-4 h-4" />
-        </button>
+        {on_toggle_collapse && (
+          <button
+            onClick={on_toggle_collapse}
+            className="p-2 rounded-lg hover:bg-secondary-100 dark:hover:bg-secondary-800 text-text-muted transition-colors duration-200 flex-shrink-0"
+            aria-label={is_collapsed ? 'Expand chat' : 'Collapse chat'}
+          >
+            {is_collapsed ? (
+              <PanelLeftClose className="w-5 h-5" />
+            ) : (
+              <PanelLeftOpen className="w-5 h-5" />
+            )}
+          </button>
+        )}
       </div>
 
       {/* Messages Area */}
@@ -205,6 +206,7 @@ const ChatAgent = () => {
         <p className="text-xs text-text-muted mt-2">
           Press Enter to send, Shift + Enter for new line
         </p>
+      </div>
       </div>
     </div>
   )

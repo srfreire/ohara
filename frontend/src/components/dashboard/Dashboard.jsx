@@ -8,12 +8,11 @@ const Dashboard = () => {
   const [selected_file, set_selected_file] = useState(null)
   const [selected_folder, set_selected_folder] = useState('2') // Default to 'Projects' folder
   const [is_file_explorer_collapsed, set_is_file_explorer_collapsed] = useState(false)
-  const [view_mode, set_view_mode] = useState('icon') // 'icon' | 'list'
+  const [is_chat_collapsed, set_is_chat_collapsed] = useState(false)
   const [current_folder_id, set_current_folder_id] = useState(null) // For icon view navigation
 
   const handle_file_select = (file) => {
     set_selected_file(file)
-    set_view_mode('list')
   }
 
   const handle_folder_select = (folder_id) => {
@@ -25,41 +24,31 @@ const Dashboard = () => {
     set_selected_folder(folder_id)
   }
 
-  const handle_view_mode_change = (new_view_mode) => {
-    set_view_mode(new_view_mode)
-    if (new_view_mode === 'icon') {
-      set_selected_file(null)
-    }
+  const handle_close_file = () => {
+    set_selected_file(null)
+    // Auto-expand file explorer when returning to icon view
+    set_is_file_explorer_collapsed(false)
   }
 
   const handle_toggle_file_explorer = () => {
     set_is_file_explorer_collapsed(!is_file_explorer_collapsed)
   }
 
+  const handle_toggle_chat = () => {
+    set_is_chat_collapsed(!is_chat_collapsed)
+  }
+
   // Keyboard shortcuts
   useEffect(() => {
     const handle_keyboard_shortcuts = (e) => {
-      // ESC key: Return to icon view and clear selected file
+      // ESC key: Close file and return to icon view
       if (e.key === 'Escape') {
         if (selected_file) {
           set_selected_file(null)
-          set_view_mode('icon')
+          // Auto-expand file explorer when returning to icon view
+          set_is_file_explorer_collapsed(false)
           e.preventDefault()
         }
-        return
-      }
-
-      // Cmd/Ctrl + 1: Switch to icon view
-      if ((e.metaKey || e.ctrlKey) && e.key === '1') {
-        handle_view_mode_change('icon')
-        e.preventDefault()
-        return
-      }
-
-      // Cmd/Ctrl + 2: Switch to list view
-      if ((e.metaKey || e.ctrlKey) && e.key === '2') {
-        handle_view_mode_change('list')
-        e.preventDefault()
         return
       }
     }
@@ -68,7 +57,7 @@ const Dashboard = () => {
     return () => {
       document.removeEventListener('keydown', handle_keyboard_shortcuts)
     }
-  }, [selected_file, handle_view_mode_change])
+  }, [selected_file])
 
   return (
     <div className="h-screen bg-background-light flex flex-col">
@@ -86,8 +75,6 @@ const Dashboard = () => {
           is_collapsed={is_file_explorer_collapsed}
           on_toggle_collapse={handle_toggle_file_explorer}
           is_expanded={!selected_file} // Expand when no file selected
-          view_mode={view_mode}
-          on_view_mode_change={handle_view_mode_change}
           current_folder_id={current_folder_id}
           on_folder_navigate={handle_folder_navigate}
         />
@@ -103,13 +90,16 @@ const Dashboard = () => {
           {selected_file && (
             <FileViewer
               file={selected_file}
-              on_close={() => handle_view_mode_change('icon')}
+              on_close={handle_close_file}
             />
           )}
         </div>
 
         {/* Chat Agent Sidebar */}
-        <ChatAgent />
+        <ChatAgent
+          is_collapsed={is_chat_collapsed}
+          on_toggle_collapse={handle_toggle_chat}
+        />
       </div>
     </div>
   )
