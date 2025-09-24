@@ -1,0 +1,95 @@
+# Text files
+*.txt text eol=lf
+*.md text eol=lf linguist-documentation
+*.json text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.xml text eol=lf
+*.csv text eol=lf
+
+# Source code
+*.js   text eol=lf diff=javascript
+*.jsx  text eol=lf diff=javascript
+*.ts   text eol=lf diff=javascript
+*.tsx  text eol=lf diff=javascript
+*.py   text eol=lf diff=python
+*.sql  text eol=lf diff=sql
+*.sh   text eol=lf
+*.bash text eol=lf
+
+# Web files
+*.html text eol=lf
+*.css  text eol=lf
+*.scss text eol=lf
+*.sass text eol=lf
+*.less text eol=lf
+*.svg  text eol=lf
+
+# Config files
+*.toml  text eol=lf
+*.ini   text eol=lf
+*.cfg   text eol=lf
+*.conf  text eol=lf
+*.config text eol=lf
+.gitignore    text eol=lf
+.gitattributes text eol=lf
+.env* text eol=lf
+Dockerfile text eol=lf
+docker-compose*.yml text eol=lf
+
+# Package manager files
+package.json text eol=lf
+package-lock.json text eol=lf linguist-generated
+yarn.lock text eol=lf linguist-generated
+pnpm-lock.yaml text eol=lf linguist-generated
+requirements.txt text eol=lf
+Pipfile text eol=lf
+Pipfile.lock text eol=lf
+
+# Binary files
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.ico  binary
+*.webp binary
+*.pdf  binary
+*.zip  binary
+*.tar  binary
+*.gz   binary
+*.7z   binary
+*.rar  binary
+
+# Font files
+*.woff  binary
+*.woff2 binary
+*.ttf   binary
+*.eot   binary
+*.otf   binary
+
+# Audio/Video files
+*.mp3 binary
+*.mp4 binary
+*.avi binary
+*.mov binary
+*.wmv binary
+*.wav binary
+
+# Archives and executables
+*.exe   binary
+*.dll   binary
+*.so    binary
+*.dylib binary
+*.app   binary
+
+# Generated files
+dist/* linguist-generated
+build/* linguist-generated
+coverage/* linguist-generated
+*.min.js linguist-generated
+*.min.css linguist-generated
+
+# Vendor files
+node_modules/* linguist-vendored
+vendor/* linguist-vendored
+third_party/* linguist-vendored
