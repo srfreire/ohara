@@ -143,7 +143,7 @@ const ChatAgent = ({ is_collapsed = false, on_toggle_collapse }) => {
               className={`max-w-[80%] rounded-lg p-3 ${
                 message.type === 'user'
                   ? 'bg-primary-600 text-white'
-                  : 'bg-secondary-100 dark:bg-secondary-800 text-text-light'
+                  : 'text-text-light'
               }`}
             >
               <p className="text-sm whitespace-pre-wrap">{message.content}</p>

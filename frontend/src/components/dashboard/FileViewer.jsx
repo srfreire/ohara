@@ -32,7 +32,7 @@ const FileViewer = ({ file, on_close }) => {
     switch (file.file_type) {
       case 'markdown':
         return (
-          <div className="bg-secondary dark:bg-secondary-900 p-6 rounded-lg overflow-auto prose prose-sm dark:prose-invert max-w-none prose-headings:text-text-light prose-p:text-text-light prose-a:text-primary-600 dark:prose-a:text-primary-400 prose-strong:text-text-light prose-code:text-primary-600 dark:prose-code:text-primary-400 prose-code:bg-secondary-200 dark:prose-code:bg-secondary-800 prose-pre:bg-secondary-200 dark:prose-pre:bg-secondary-800">
+          <div className="p-6 rounded-lg overflow-auto prose prose-sm dark:prose-invert max-w-none prose-headings:text-text-light prose-p:text-text-light prose-a:text-primary-600 dark:prose-a:text-primary-400 prose-strong:text-text-light prose-code:text-primary-600 dark:prose-code:text-primary-400 prose-code:bg-secondary-200 dark:prose-code:bg-secondary-800 prose-pre:bg-secondary-200 dark:prose-pre:bg-secondary-800">
             <ReactMarkdown
               remarkPlugins={[remarkGfm]}
             >
@@ -45,14 +45,14 @@ const FileViewer = ({ file, on_close }) => {
       case 'javascript':
       case 'json':
         return (
-          <pre className="bg-secondary dark:bg-secondary-900 p-6 rounded-lg overflow-auto text-sm text-text-light whitespace-pre-wrap font-mono">
+          <pre className="p-6 rounded-lg overflow-auto text-sm text-text-light whitespace-pre-wrap font-mono">
             {file.content}
           </pre>
         )
 
       case 'pdf':
         return (
-          <div className="bg-secondary dark:bg-secondary-900 p-8 rounded-lg text-center">
+          <div className="p-8 rounded-lg text-center">
             <FileText className="w-16 h-16 text-text-muted mx-auto mb-4" />
             <p className="text-text-light mb-2">PDF Document</p>
             <p className="text-text-muted text-sm mb-4">
@@ -67,7 +67,7 @@ const FileViewer = ({ file, on_close }) => {
 
       case 'image':
         return (
-          <div className="bg-secondary dark:bg-secondary-900 p-8 rounded-lg text-center">
+          <div className="p-8 rounded-lg text-center">
             <div className="max-w-2xl mx-auto mb-4">
               <img
                 src={file.content}
@@ -88,7 +88,7 @@ const FileViewer = ({ file, on_close }) => {
 
       default:
         return (
-          <div className="bg-secondary dark:bg-secondary-900 p-8 rounded-lg text-center">
+          <div className="p-8 rounded-lg text-center">
             <FileText className="w-16 h-16 text-text-muted mx-auto mb-4" />
             <p className="text-text-light mb-2">
               Cannot preview this file type
