@@ -1,15 +1,29 @@
 import { useState } from 'react'
-import { ChevronRight, ChevronDown, Folder, FolderOpen } from 'lucide-react'
+import { ChevronRight, ChevronDown, ChevronLeft, ArrowLeft, Folder, FolderOpen } from 'lucide-react'
 import * as Icons from 'lucide-react'
+import ViewModeSwitcher from '../ui/ViewModeSwitcher'
 import {
   get_root_folders,
   get_subfolders,
   get_files_in_folder,
   get_file_icon,
+  get_folder_by_id,
   format_file_size
 } from '../../utils/mock-data'
 
-const FileExplorer = ({ selected_file, on_file_select, selected_folder, on_folder_select }) => {
+const FileExplorer = ({
+  selected_file,
+  on_file_select,
+  selected_folder,
+  on_folder_select,
+  is_collapsed,
+  on_toggle_collapse,
+  is_expanded = false,
+  view_mode = 'icon',
+  on_view_mode_change,
+  current_folder_id = null,
+  on_folder_navigate
+}) => {
   const [expanded_folders, set_expanded_folders] = useState(new Set(['2'])) // Expand 'Projects' by default
 
   const toggle_folder = (folder_id) => {
@@ -27,6 +41,67 @@ const FileExplorer = ({ selected_file, on_file_select, selected_folder, on_folde
     const icon_name = get_file_icon(file_type)
     const IconComponent = Icons[icon_name]
     return IconComponent ? <IconComponent className={className} /> : <Icons.File className={className} />
+  }
+
+  // Icon View Components
+  const FolderIconItem = ({ folder, animation_delay = 0 }) => {
+    return (
+      <div
+        className="flex flex-col items-center p-4 rounded-lg cursor-pointer hover:bg-secondary-100 dark:hover:bg-secondary-800 transition-all duration-200 group animate-fade-in-up"
+        style={{ animationDelay: `${animation_delay}ms` }}
+        onClick={() => on_folder_navigate && on_folder_navigate(folder.id)}
+      >
+        <div className="w-16 h-16 mb-2 flex items-center justify-center">
+          <img
+            src="/src/assets/closed.png"
+            alt="Folder"
+            className="w-14 h-14 group-hover:scale-105 transition-transform"
+          />
+        </div>
+        <span className="text-sm text-text-light text-center max-w-full break-words overflow-hidden text-ellipsis">
+          {folder.name}
+        </span>
+      </div>
+    )
+  }
+
+  const FileIconItem = ({ file, animation_delay = 0 }) => {
+    const get_large_icon = (file_type) => {
+      switch (file_type) {
+        case 'image':
+          return <Icons.Image className="w-14 h-14 text-green-500" />
+        case 'markdown':
+          return <Icons.FileText className="w-14 h-14 text-blue-500" />
+        case 'javascript':
+          return <Icons.Code className="w-14 h-14 text-yellow-500" />
+        case 'json':
+          return <Icons.Code className="w-14 h-14 text-orange-500" />
+        case 'pdf':
+          return <Icons.FileType className="w-14 h-14 text-red-500" />
+        case 'text':
+          return <Icons.FileText className="w-14 h-14 text-gray-500" />
+        default:
+          return <Icons.File className="w-14 h-14 text-gray-500" />
+      }
+    }
+
+    return (
+      <div
+        className="flex flex-col items-center p-4 rounded-lg cursor-pointer hover:bg-secondary-100 dark:hover:bg-secondary-800 transition-all duration-200 group animate-fade-in-up"
+        style={{ animationDelay: `${animation_delay}ms` }}
+        onClick={() => on_file_select && on_file_select(file)}
+      >
+        <div className="w-16 h-16 mb-2 flex items-center justify-center">
+          {get_large_icon(file.file_type)}
+        </div>
+        <span className="text-sm text-text-light text-center max-w-full break-words overflow-hidden text-ellipsis">
+          {file.name}
+        </span>
+        <span className="text-xs text-text-muted mt-1">
+          {format_file_size(file.size)}
+        </span>
+      </div>
+    )
   }
 
   const FolderItem = ({ folder, level = 0 }) => {
@@ -58,11 +133,11 @@ const FileExplorer = ({ selected_file, on_file_select, selected_folder, on_folde
           </div>
 
           {/* Folder Icon */}
-          {is_expanded ? (
-            <FolderOpen className="w-5 h-5 text-primary-500" />
-          ) : (
-            <Folder className="w-5 h-5 text-primary-500" />
-          )}
+          <img
+            src={is_expanded ? "/src/assets/open.png" : "/src/assets/closed.png"}
+            alt={is_expanded ? "Open folder" : "Closed folder"}
+            className="w-5 h-5"
+          />
 
           {/* Folder Name */}
           <span className="text-text-light font-medium truncate">
@@ -96,9 +171,6 @@ const FileExplorer = ({ selected_file, on_file_select, selected_folder, on_folde
                   <div className="text-text-light text-sm truncate">
                     {file.name}
                   </div>
-                  <div className="text-xs text-text-muted">
-                    {format_file_size(file.size)}
-                  </div>
                 </div>
               </div>
             ))}
@@ -108,23 +180,145 @@ const FileExplorer = ({ selected_file, on_file_select, selected_folder, on_folde
     )
   }
 
+  // Grid View Layout Component
+  const IconGridView = () => {
+    const folder_to_show = current_folder_id || null
+    const folders_to_display = folder_to_show ? get_subfolders(folder_to_show) : get_root_folders()
+    const files_to_display = folder_to_show ? get_files_in_folder(folder_to_show) : []
+
+    return (
+      <div className="p-6">
+        {/* Breadcrumb/Header */}
+        <div className="mb-6 flex items-center space-x-2">
+          {folder_to_show && (
+            <>
+              <button
+                onClick={() => on_folder_navigate && on_folder_navigate(null)}
+                className="text-primary-600 hover:text-primary-700 text-sm font-medium"
+              >
+                All Folders
+              </button>
+              <ChevronRight className="w-4 h-4 text-text-muted" />
+            </>
+          )}
+          <h3 className="text-lg font-semibold text-text-light">
+            {folder_to_show ? get_folder_by_id(folder_to_show)?.name || 'Unknown Folder' : 'All Folders'}
+          </h3>
+        </div>
+
+        {/* Grid Layout */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+          {/* Folders First */}
+          {folders_to_display.map((folder, index) => (
+            <FolderIconItem
+              key={`folder-${folder.id}`}
+              folder={folder}
+              animation_delay={index * 50}
+            />
+          ))}
+
+          {/* Then Files */}
+          {files_to_display.map((file, index) => (
+            <FileIconItem
+              key={`file-${file.id}`}
+              file={file}
+              animation_delay={(folders_to_display.length + index) * 50}
+            />
+          ))}
+        </div>
+
+        {/* Empty State */}
+        {folders_to_display.length === 0 && files_to_display.length === 0 && (
+          <div className="text-center py-12">
+            <Folder className="w-12 h-12 text-text-muted mx-auto mb-4" />
+            <p className="text-text-muted">This folder is empty</p>
+          </div>
+        )}
+      </div>
+    )
+  }
+
   const root_folders = get_root_folders()
 
+  const get_width_class = () => {
+    if (is_collapsed) return 'w-12'
+    if (is_expanded) return 'flex-1'
+    return 'w-80'
+  }
+
   return (
-    <div className="w-80 bg-background-surface border-r border-secondary-200 dark:border-secondary-700 overflow-y-auto">
+    <div className={`bg-background-surface border-r border-secondary-200 dark:border-secondary-700 flex flex-col transition-all duration-300 ${get_width_class()}`}>
       {/* Header */}
-      <div className="p-4 border-b border-secondary-200 dark:border-secondary-700">
-        <h2 className="text-lg font-semibold text-text-light">
-          File Explorer
-        </h2>
+      <div className="flex items-center justify-between p-4 border-b border-secondary-200 dark:border-secondary-700">
+        {!is_collapsed && (
+          <div>
+            <h2 className="text-lg font-semibold text-text-light">
+              File Explorer
+            </h2>
+            {is_expanded && view_mode === 'icon' && (
+              <p className="text-sm text-text-muted mt-1">
+                Select a file to view its contents
+              </p>
+            )}
+          </div>
+        )}
+
+        <div className="flex items-center space-x-2">
+          {/* View Mode Switcher - Always visible when expanded */}
+          {is_expanded && on_view_mode_change && (
+            <ViewModeSwitcher
+              view_mode={view_mode}
+              on_view_mode_change={on_view_mode_change}
+            />
+          )}
+
+          {/* Collapse Button - Only show when file is selected (list mode) */}
+          {view_mode === 'list' && (
+            <button
+              onClick={on_toggle_collapse}
+              className="p-2 rounded-lg hover:bg-secondary-100 dark:hover:bg-secondary-800 text-text-muted transition-colors duration-200"
+              aria-label={is_collapsed ? 'Expand file explorer' : 'Collapse file explorer'}
+            >
+              {is_collapsed ? (
+                <ChevronRight className="w-4 h-4" />
+              ) : (
+                <ChevronLeft className="w-4 h-4" />
+              )}
+            </button>
+          )}
+        </div>
       </div>
 
-      {/* File Tree */}
-      <div className="p-4 space-y-1">
-        {root_folders.map(folder => (
-          <FolderItem key={folder.id} folder={folder} />
-        ))}
-      </div>
+      {/* Content Area */}
+      {(!is_collapsed || is_expanded) && (
+        <div className="flex-1 relative min-h-0">
+          {/* Icon Grid View */}
+          <div
+            className={`absolute inset-0 overflow-auto transition-all duration-300 ease-in-out ${
+              view_mode === 'icon'
+                ? 'opacity-100 transform translate-x-0 pointer-events-auto z-10'
+                : 'opacity-0 transform translate-x-4 pointer-events-none z-0'
+            }`}
+          >
+            <IconGridView />
+          </div>
+
+          {/* Traditional List View */}
+          <div
+            className={`absolute inset-0 overflow-auto transition-all duration-300 ease-in-out ${
+              view_mode === 'list'
+                ? 'opacity-100 transform translate-x-0 pointer-events-auto z-10'
+                : 'opacity-0 transform -translate-x-4 pointer-events-none z-0'
+            }`}
+          >
+            <div className="p-4 space-y-1">
+              {root_folders.map(folder => (
+                <FolderItem key={folder.id} folder={folder} />
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

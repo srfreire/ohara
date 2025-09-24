@@ -163,11 +163,11 @@ Next Steps:
     },
     {
       id: '6',
-      name: 'hero-image.jpg',
+      name: 'hero.png',
       folder_id: '5',
-      content: 'Binary image data - Beautiful landscape photo used as hero image',
+      content: '/hero.png',
       file_type: 'image',
-      size: 1536000,
+      size: 2800000, // Approximately 2.8MB to match the actual file
       created_at: '2024-01-05T15:00:00Z',
       updated_at: '2024-01-28T10:45:00Z',
     }

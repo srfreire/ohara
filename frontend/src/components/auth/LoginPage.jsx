@@ -16,22 +16,22 @@ const LoginPage = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center relative overflow-hidden">
+    <div className="min-h-screen flex relative overflow-hidden">
       {/* Background Hero Image */}
       <div
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
         style={{
-          backgroundImage: 'url(/hero.svg)',
+          backgroundImage: 'url(/hero.png)',
         }}
       >
-        {/* Dark overlay for better text readability */}
-        <div className="absolute inset-0 bg-black bg-opacity-40"></div>
+        {/* Light overlay for better contrast */}
+        <div className="absolute inset-0 bg-black bg-opacity-20"></div>
       </div>
 
       {/* Theme Toggle Button */}
       <button
         onClick={toggleTheme}
-        className="absolute top-6 right-6 p-3 rounded-full bg-white/10 backdrop-blur-sm text-white hover:bg-white/20 transition-all duration-200 z-10"
+        className="absolute top-6 right-6 p-3 rounded-full bg-white/20 text-white hover:bg-white/30 transition-all duration-200 z-10"
         aria-label="Toggle theme"
       >
         {isDarkMode ? (
@@ -41,15 +41,16 @@ const LoginPage = () => {
         )}
       </button>
 
-      {/* Login Card */}
-      <div className="relative z-10 max-w-md w-full mx-4">
-        <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 shadow-2xl border border-white/20">
-          {/* Logo/Title */}
+      {/* Login Card - Right Side */}
+      <div className="relative z-10 ml-auto flex items-center mr-8">
+        <div className="max-w-md w-full">
+          <div className="bg-white/90 dark:bg-gray-900/90 rounded-2xl p-8 shadow-2xl border border-white/30 dark:border-gray-700/30">
+            {/* Logo/Title */}
           <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold text-white mb-2">
+            <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
               OHARA
             </h1>
-            <p className="text-white/80 text-lg">
+            <p className="text-gray-700 dark:text-gray-300 text-lg">
               File Repository & Chat Assistant
             </p>
           </div>
@@ -57,7 +58,7 @@ const LoginPage = () => {
           {/* Login Content */}
           <div className="space-y-6">
             <div className="text-center">
-              <p className="text-white/70 mb-6">
+              <p className="text-gray-600 dark:text-gray-400 mb-6">
                 Sign in to access your files and chat with our AI assistant
               </p>
             </div>
@@ -65,7 +66,7 @@ const LoginPage = () => {
             {/* Google Login Button */}
             <button
               onClick={handle_google_login}
-              className="w-full bg-white hover:bg-gray-50 text-gray-900 font-semibold py-3 px-6 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center justify-center space-x-3"
+              className="w-full bg-white hover:bg-gray-50 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-900 dark:text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center justify-center space-x-3 border border-gray-200 dark:border-gray-600"
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24">
                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -77,9 +78,10 @@ const LoginPage = () => {
             </button>
 
             {/* Terms */}
-            <p className="text-xs text-white/60 text-center">
+            <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
               By continuing, you agree to our Terms of Service and Privacy Policy
             </p>
+          </div>
           </div>
         </div>
       </div>
