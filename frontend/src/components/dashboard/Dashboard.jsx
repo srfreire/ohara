@@ -31,10 +31,9 @@ const Dashboard = () => {
   }
 
   const handle_toggle_file_explorer = () => {
-    // Don't allow collapse if file explorer is the only component showing
-    const is_file_explorer_alone = !selected_file && is_chat_collapsed
-    if (is_file_explorer_alone && !is_file_explorer_collapsed) {
-      return // Prevent collapse when alone
+    // Don't allow collapse if FileViewer is not active (no file selected)
+    if (!selected_file && !is_file_explorer_collapsed) {
+      return // Prevent collapse when FileViewer is not active
     }
     set_is_file_explorer_collapsed(!is_file_explorer_collapsed)
   }
@@ -82,7 +81,7 @@ const Dashboard = () => {
           is_expanded={!selected_file} // Expand when no file selected
           current_folder_id={current_folder_id}
           on_folder_navigate={handle_folder_navigate}
-          can_collapse={!((!selected_file && is_chat_collapsed) && !is_file_explorer_collapsed)}
+          can_collapse={selected_file || is_file_explorer_collapsed}
         />
 
         {/* File Viewer - Only render when file is selected */}
