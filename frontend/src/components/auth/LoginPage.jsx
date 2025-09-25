@@ -24,14 +24,14 @@ const LoginPage = () => {
           backgroundImage: 'url(/hero.png)',
         }}
       >
-        {/* Light overlay for better contrast */}
-        <div className="absolute inset-0 bg-black bg-opacity-20"></div>
+        {/* Overlay for better contrast - adapts to theme */}
+        <div className="absolute inset-0 bg-black/20 dark:bg-black/40"></div>
       </div>
 
       {/* Theme Toggle Button */}
       <button
         onClick={toggleTheme}
-        className="absolute top-6 right-6 p-3 rounded-full bg-white/20 text-white hover:bg-white/30 transition-all duration-200 z-10"
+        className="absolute top-6 right-6 p-3 rounded-full bg-white/20 dark:bg-gray-800/70 text-gray-800 dark:text-white hover:bg-white/30 dark:hover:bg-gray-700/80 backdrop-blur-md border border-gray-300/50 dark:border-gray-600/50 shadow-lg transition-all duration-200 z-20"
         aria-label="Toggle theme"
       >
         {isDarkMode ? (
