@@ -31,6 +31,11 @@ const Dashboard = () => {
   }
 
   const handle_toggle_file_explorer = () => {
+    // Don't allow collapse if file explorer is the only component showing
+    const is_file_explorer_alone = !selected_file && is_chat_collapsed
+    if (is_file_explorer_alone && !is_file_explorer_collapsed) {
+      return // Prevent collapse when alone
+    }
     set_is_file_explorer_collapsed(!is_file_explorer_collapsed)
   }
 
@@ -66,31 +71,19 @@ const Dashboard = () => {
 
       {/* Main Content */}
       <div className="flex-1 flex overflow-hidden gap-4 p-4">
-        {/* File Explorer - Only render when not collapsed */}
-        {!is_file_explorer_collapsed ? (
-          <FileExplorer
-            selected_file={selected_file?.id}
-            on_file_select={handle_file_select}
-            selected_folder={selected_folder}
-            on_folder_select={handle_folder_select}
-            is_collapsed={is_file_explorer_collapsed}
-            on_toggle_collapse={handle_toggle_file_explorer}
-            is_expanded={!selected_file} // Expand when no file selected
-            current_folder_id={current_folder_id}
-            on_folder_navigate={handle_folder_navigate}
-          />
-        ) : (
-          /* Floating File Explorer Button when collapsed */
-          <button
-            onClick={handle_toggle_file_explorer}
-            className="fixed top-20 left-6 z-50 w-14 h-14 bg-secondary-600 hover:bg-secondary-700 text-white rounded-full flex items-center justify-center transition-all duration-200 shadow-lg hover:shadow-xl"
-            aria-label="Expand file explorer"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
-              <path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/>
-            </svg>
-          </button>
-        )}
+        {/* File Explorer - Always render as sidebar */}
+        <FileExplorer
+          selected_file={selected_file?.id}
+          on_file_select={handle_file_select}
+          selected_folder={selected_folder}
+          on_folder_select={handle_folder_select}
+          is_collapsed={is_file_explorer_collapsed}
+          on_toggle_collapse={handle_toggle_file_explorer}
+          is_expanded={!selected_file} // Expand when no file selected
+          current_folder_id={current_folder_id}
+          on_folder_navigate={handle_folder_navigate}
+          can_collapse={!((!selected_file && is_chat_collapsed) && !is_file_explorer_collapsed)}
+        />
 
         {/* File Viewer - Only render when file is selected */}
         {selected_file && (

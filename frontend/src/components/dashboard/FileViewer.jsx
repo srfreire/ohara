@@ -1,6 +1,47 @@
 import { Calendar, FileText, Download, X } from 'lucide-react'
-import ReactMarkdown from 'react-markdown'
-import remarkGfm from 'remark-gfm'
+import { marked } from 'marked'
+import { memo, useMemo } from 'react'
+
+// Content cache to prevent re-parsing
+const markdown_cache = new Map()
+
+const MarkdownRenderer = memo(({ content }) => {
+  const html_content = useMemo(() => {
+    // Check cache first
+    const cache_key = content.slice(0, 100) + content.length
+    if (markdown_cache.has(cache_key)) {
+      return markdown_cache.get(cache_key)
+    }
+
+    // Configure marked options for performance
+    marked.setOptions({
+      breaks: true,
+      gfm: true,
+      pedantic: false,
+      sanitize: false
+    })
+
+    const html = marked.parse(content)
+
+    // Cache the result (limit cache size to prevent memory leaks)
+    if (markdown_cache.size > 50) {
+      const first_key = markdown_cache.keys().next().value
+      markdown_cache.delete(first_key)
+    }
+    markdown_cache.set(cache_key, html)
+
+    return html
+  }, [content])
+
+  return (
+    <div
+      className="markdown-content"
+      dangerouslySetInnerHTML={{ __html: html_content }}
+    />
+  )
+})
+
+MarkdownRenderer.displayName = 'MarkdownRenderer'
 
 const FileViewer = ({ file, on_close }) => {
   if (!file) {
@@ -32,13 +73,7 @@ const FileViewer = ({ file, on_close }) => {
     switch (file.file_type) {
       case 'markdown':
         return (
-          <div className="p-6 rounded-lg overflow-auto prose prose-sm dark:prose-invert max-w-none prose-headings:text-text-light prose-p:text-text-light prose-a:text-primary-600 dark:prose-a:text-primary-400 prose-strong:text-text-light prose-code:text-primary-600 dark:prose-code:text-primary-400 prose-code:bg-secondary-200 dark:prose-code:bg-secondary-800 prose-pre:bg-secondary-200 dark:prose-pre:bg-secondary-800">
-            <ReactMarkdown
-              remarkPlugins={[remarkGfm]}
-            >
-              {file.content}
-            </ReactMarkdown>
-          </div>
+          <MarkdownRenderer content={file.content} />
         )
 
       case 'text':

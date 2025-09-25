@@ -27,6 +27,7 @@ const FileExplorer = ({
   is_expanded = false,
   current_folder_id = null,
   on_folder_navigate,
+  can_collapse = true,
 }) => {
   // Auto-determine view mode based on file selection
   const view_mode = selected_file ? "list" : "icon";
@@ -277,6 +278,7 @@ const FileExplorer = ({
   const root_folders = get_root_folders();
 
   const get_width_class = () => {
+    if (is_collapsed) return "w-12"; // Just show the collapse button
     if (is_expanded || !selected_file) return "flex-1";
     return "w-80";
   };
@@ -286,32 +288,46 @@ const FileExplorer = ({
       className={`bg-background-surface border border-secondary-200 dark:border-secondary-700 rounded-xl shadow-lg flex flex-col overflow-hidden ${get_width_class()}`}
     >
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-secondary-200 dark:border-secondary-700">
-        <div className="min-w-0 flex-1">
-          <h2 className="text-lg font-semibold text-text-light truncate">
-            File Explorer
-          </h2>
-          {is_expanded && view_mode === "icon" && (
-            <p className="text-sm text-text-muted mt-1 truncate">
-              Select a file to view its contents
-            </p>
-          )}
-        </div>
+      <div className={`flex items-center p-4 ${
+        is_collapsed
+          ? 'justify-center'
+          : 'justify-between border-b border-secondary-200 dark:border-secondary-700'
+      }`}>
+        {!is_collapsed && (
+          <div className="min-w-0 flex-1">
+            <h2 className="text-lg font-semibold text-text-light truncate">
+              File Explorer
+            </h2>
+            {is_expanded && view_mode === "icon" && (
+              <p className="text-sm text-text-muted mt-1 truncate">
+                Select a file to view its contents
+              </p>
+            )}
+          </div>
+        )}
 
-        {/* Collapse Button - Only show in list mode */}
-        {view_mode === "list" && (
+        {/* Collapse Button - Show when can collapse or when already collapsed */}
+        {(can_collapse || is_collapsed) && (
           <button
             onClick={on_toggle_collapse}
-            className="p-2 rounded-lg text-text-muted hover:text-text-light transition-colors duration-200"
-            aria-label="Collapse file explorer"
+            className={`p-2 rounded-lg text-text-muted hover:text-text-light ${
+              !can_collapse && !is_collapsed ? 'opacity-50 cursor-not-allowed' : ''
+            }`}
+            aria-label={is_collapsed ? "Expand file explorer" : "Collapse file explorer"}
+            disabled={!can_collapse && !is_collapsed}
           >
-            <PanelRightOpen className="w-5 h-5" />
+            {is_collapsed ? (
+              <PanelRightClose className="w-5 h-5" />
+            ) : (
+              <PanelRightOpen className="w-5 h-5" />
+            )}
           </button>
         )}
       </div>
 
-      {/* Content Area */}
-      <div className="flex-1 relative min-h-0">
+      {/* Content Area - Only show when not collapsed */}
+      {!is_collapsed && (
+        <div className="flex-1 relative min-h-0">
         {/* Icon Grid View */}
         <div
           className={`absolute inset-0 overflow-auto ${
@@ -337,7 +353,8 @@ const FileExplorer = ({
             ))}
           </div>
         </div>
-      </div>
+        </div>
+      )}
     </div>
   );
 };
