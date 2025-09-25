@@ -187,7 +187,7 @@ const FileExplorer = ({
                 key={file.id}
                 className={`flex items-center space-x-2 py-2 px-3 cursor-pointer hover:bg-secondary-100 dark:hover:bg-secondary-800 rounded-lg ${
                   selected_file === file.id
-                    ? "bg-secondary-200 dark:bg-secondary-700 border border-secondary-300 dark:border-secondary-600"
+                    ? "bg-secondary-200 dark:bg-secondary-700 border border-secondary-300 dark:border-white/80"
                     : ""
                 }`}
                 style={{ marginLeft: `${(level + 1) * 20 + 20}px` }}
@@ -317,10 +317,10 @@ const FileExplorer = ({
 
   return (
     <div
-      className={`bg-background-surface border border-secondary-200 dark:border-secondary-700 rounded-xl shadow-lg flex flex-col overflow-hidden ${get_width_class()}`}
+      className={`bg-white/80 backdrop-blur-lg rounded-xl shadow-lg flex flex-col overflow-hidden ${get_width_class()}`}
     >
       {/* Header */}
-      <div className={`flex items-center p-4 border-b border-secondary-200 dark:border-secondary-700 ${
+      <div className={`flex items-center p-4 border-b border-white/80 ${
         is_collapsed ? 'justify-center' : 'justify-between'
       }`}>
         {!is_collapsed && (

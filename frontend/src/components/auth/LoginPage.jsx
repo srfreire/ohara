@@ -1,10 +1,7 @@
 import { useNavigate } from 'react-router-dom'
-import { useTheme } from '../../utils/theme.jsx'
-import { Sun, Moon } from 'lucide-react'
 
 const LoginPage = () => {
   const navigate = useNavigate()
-  const { isDarkMode, toggleTheme } = useTheme()
 
   const handle_google_login = () => {
     // Mock login - in real app this would handle OAuth
@@ -25,26 +22,14 @@ const LoginPage = () => {
         }}
       >
         {/* Overlay for better contrast - adapts to theme */}
-        <div className="absolute inset-0 bg-black/20 dark:bg-black/40"></div>
+        <div className="absolute inset-0 bg-black/20"></div>
       </div>
 
-      {/* Theme Toggle Button */}
-      <button
-        onClick={toggleTheme}
-        className="absolute top-6 right-6 p-3 rounded-full bg-white/30 dark:bg-gray-800/70 text-gray-800 dark:text-white hover:bg-primary-100/40 dark:hover:bg-primary-900/40 backdrop-blur-md border border-primary-200/30 dark:border-primary-700/50 shadow-lg transition-all duration-200 z-20"
-        aria-label="Toggle theme"
-      >
-        {isDarkMode ? (
-          <Sun className="w-6 h-6" />
-        ) : (
-          <Moon className="w-6 h-6" />
-        )}
-      </button>
 
       {/* Login Card - Right Side */}
       <div className="relative z-10 ml-auto flex items-center mr-8">
         <div className="max-w-md w-full">
-          <div className="bg-white/95 dark:bg-gray-900/95 rounded-2xl p-8 shadow-2xl border border-primary-200/20 dark:border-primary-800/30 backdrop-blur-lg">
+          <div className="bg-white/95 rounded-2xl p-8 shadow-2xl border border-primary-200/20 backdrop-blur-lg">
             {/* Logo/Title */}
           <div className="text-center mb-8">
             <div className="flex items-center justify-center mb-4">
@@ -53,11 +38,11 @@ const LoginPage = () => {
                 alt="Ohara Icon"
                 className="w-12 h-12 mr-3 rounded-lg"
               />
-              <h1 className="text-4xl font-bold text-gray-900 dark:text-white font-sora">
+              <h1 className="text-4xl font-bold text-text-light font-sora">
                 OHARA
               </h1>
             </div>
-            <p className="text-gray-700 dark:text-gray-300 text-lg font-reddit-sans">
+            <p className="text-text-dark text-lg font-reddit-sans">
               File Repository & Chat Assistant
             </p>
           </div>
@@ -65,7 +50,7 @@ const LoginPage = () => {
           {/* Login Content */}
           <div className="space-y-6">
             <div className="text-center">
-              <p className="text-gray-600 dark:text-gray-400 mb-6 font-reddit-sans">
+              <p className="text-text-muted mb-6 font-reddit-sans">
                 Sign in to access your files and chat with our AI assistant
               </p>
             </div>
@@ -73,7 +58,7 @@ const LoginPage = () => {
             {/* Google Login Button */}
             <button
               onClick={handle_google_login}
-              className="w-full bg-white hover:bg-primary-50 dark:bg-gray-800 dark:hover:bg-primary-900/20 text-gray-900 dark:text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center justify-center space-x-3 border border-primary-200/30 dark:border-primary-700/50 backdrop-blur-sm"
+              className="w-full bg-white hover:bg-primary-50 text-text-light font-semibold py-3 px-6 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 flex items-center justify-center space-x-3 border border-primary-200/30 backdrop-blur-sm"
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24">
                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -85,7 +70,7 @@ const LoginPage = () => {
             </button>
 
             {/* Terms */}
-            <p className="text-xs text-gray-500 dark:text-gray-400 text-center font-reddit-sans">
+            <p className="text-xs text-text-muted text-center font-reddit-sans">
               By continuing, you agree to our Terms of Service and Privacy Policy
             </p>
           </div>

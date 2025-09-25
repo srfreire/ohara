@@ -64,12 +64,25 @@ const Dashboard = () => {
   }, [selected_file])
 
   return (
-    <div className="h-screen bg-background-light flex flex-col">
+    <div className="h-screen flex flex-col relative overflow-hidden">
+      {/* Background Hero Image */}
+      <div
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+        style={{
+          backgroundImage: 'url(/hero.png)',
+        }}
+      >
+        {/* Overlay for better contrast */}
+        <div className="absolute inset-0 bg-black/20"></div>
+      </div>
+
       {/* Header */}
-      <Header />
+      <div className="relative z-10">
+        <Header />
+      </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex overflow-hidden gap-4 p-4">
+      <div className="flex-1 flex overflow-hidden gap-4 p-4 relative z-10">
         {/* File Explorer - Always render as sidebar */}
         <FileExplorer
           selected_file={selected_file?.id}
