@@ -13,7 +13,7 @@ const ViewModeSwitcher = ({ view_mode, on_view_mode_change, className = '' }) =>
         aria-label="Icon view"
       >
         <Grid className="w-4 h-4" />
-        <span>Icon</span>
+        <span className="font-reddit-sans">Icon</span>
       </button>
 
       <button
@@ -26,7 +26,7 @@ const ViewModeSwitcher = ({ view_mode, on_view_mode_change, className = '' }) =>
         aria-label="List view"
       >
         <List className="w-4 h-4" />
-        <span>List</span>
+        <span className="font-reddit-sans">List</span>
       </button>
     </div>
   )

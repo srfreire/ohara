@@ -16,15 +16,15 @@ const Header = () => {
       <div className="flex items-center space-x-3">
         <div className="flex items-center space-x-2">
           <img
-            src="/src/assets/icon.png"
+            src="src/assets/icon.png"
             alt="OHARA"
             className="w-8 h-8"
           />
-          <h1 className="text-2xl font-bold text-primary-600">
+          <h1 className="text-2xl font-bold text-primary-600 font-sora">
             OHARA
           </h1>
         </div>
-        <span className="text-text-muted text-sm">
+        <span className="text-text-muted text-sm font-reddit-sans">
           File Repository
         </span>
       </div>
@@ -49,7 +49,7 @@ const Header = () => {
           <div className="p-2 rounded-lg bg-secondary-100 dark:bg-secondary-800">
             <User className="w-5 h-5 text-text-light" />
           </div>
-          <span className="text-text-light font-medium">User</span>
+          <span className="text-text-light font-medium font-reddit-sans">User</span>
         </div>
 
         {/* Logout Button */}

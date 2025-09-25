@@ -68,7 +68,16 @@
 
 /* Base styles */
 body {
-  @apply bg-background-light text-text-light transition-colors duration-200;
+  @apply bg-background-light text-text-light transition-colors duration-200 font-reddit-sans;
+}
+
+/* Global font families */
+h1, h2, h3, h4, h5, h6, .font-heading {
+  font-family: 'Sora', sans-serif;
+}
+
+.font-body, p, span, div:not(.font-heading) {
+  font-family: 'Reddit Sans', sans-serif;
 }
 
 /* Custom scrollbar */
@@ -193,7 +202,7 @@ body {
 
 .markdown-content h1, .markdown-content h2, .markdown-content h3,
 .markdown-content h4, .markdown-content h5, .markdown-content h6 {
-  @apply text-text-light font-bold mt-6 mb-4;
+  @apply text-text-light font-bold mt-6 mb-4 font-sora;
 }
 
 .markdown-content h1 { font-size: 2rem; }
@@ -202,7 +211,7 @@ body {
 .markdown-content h4 { font-size: 1.125rem; }
 
 .markdown-content p {
-  @apply text-text-light mb-4;
+  @apply text-text-light mb-4 font-reddit-sans;
 }
 
 .markdown-content a {

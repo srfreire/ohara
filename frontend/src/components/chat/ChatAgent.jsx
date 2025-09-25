@@ -87,10 +87,10 @@ const ChatAgent = ({ is_collapsed = false, on_toggle_collapse }) => {
               <Bot className="w-5 h-5 text-white" />
             </div>
             <div className="min-w-0 flex-1">
-              <h3 className="text-sm font-semibold text-text-light truncate">
+              <h3 className="text-sm font-semibold text-text-light truncate font-sora">
                 AI Assistant
               </h3>
-              <p className="text-xs text-text-muted truncate">
+              <p className="text-xs text-text-muted truncate font-reddit-sans">
                 {is_typing ? 'Typing...' : 'Online'}
               </p>
             </div>
@@ -134,9 +134,9 @@ const ChatAgent = ({ is_collapsed = false, on_toggle_collapse }) => {
                   : 'text-text-light'
               }`}
             >
-              <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+              <p className="text-sm whitespace-pre-wrap font-reddit-sans">{message.content}</p>
               <p
-                className={`text-xs mt-1 ${
+                className={`text-xs mt-1 font-reddit-sans ${
                   message.type === 'user'
                     ? 'text-primary-100'
                     : 'text-text-muted'
@@ -180,7 +180,7 @@ const ChatAgent = ({ is_collapsed = false, on_toggle_collapse }) => {
             onChange={(e) => set_input_value(e.target.value)}
             onKeyPress={handle_key_press}
             placeholder="Ask about your files..."
-            className="flex-1 resize-none rounded-lg border border-secondary-200 dark:border-secondary-700 bg-background-light px-3 py-2 text-sm text-text-light placeholder-text-muted focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-opacity-20"
+            className="flex-1 resize-none rounded-lg border border-secondary-200 dark:border-secondary-700 bg-background-light px-3 py-2 text-sm text-text-light placeholder-text-muted focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-opacity-20 font-reddit-sans"
             rows="2"
           />
           <button
@@ -191,7 +191,7 @@ const ChatAgent = ({ is_collapsed = false, on_toggle_collapse }) => {
             <Send className="w-4 h-4" />
           </button>
         </div>
-        <p className="text-xs text-text-muted mt-2">
+        <p className="text-xs text-text-muted mt-2 font-reddit-sans">
           Press Enter to send, Shift + Enter for new line
         </p>
       </div>

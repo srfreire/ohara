@@ -74,7 +74,7 @@ const FileExplorer = ({
             className="w-14 h-14"
           />
         </div>
-        <span className="text-sm text-text-light text-center max-w-full break-words overflow-hidden text-ellipsis">
+        <span className="text-sm text-text-light text-center max-w-full break-words overflow-hidden text-ellipsis font-reddit-sans">
           {folder.name}
         </span>
       </div>
@@ -115,7 +115,7 @@ const FileExplorer = ({
         <div className="w-16 h-16 mb-2 flex items-center justify-center">
           {get_large_icon(file.file_type)}
         </div>
-        <span className="text-sm text-text-light text-center max-w-full break-words overflow-hidden text-ellipsis">
+        <span className="text-sm text-text-light text-center max-w-full break-words overflow-hidden text-ellipsis font-reddit-sans">
           {file.name}
         </span>
       </div>
@@ -162,7 +162,7 @@ const FileExplorer = ({
           />
 
           {/* Folder Name */}
-          <span className="text-text-light font-medium truncate flex-1 min-w-0">
+          <span className="text-text-light font-medium truncate flex-1 min-w-0 font-reddit-sans">
             {folder.name}
           </span>
         </div>
@@ -199,7 +199,7 @@ const FileExplorer = ({
 
                 {/* File Info */}
                 <div className="flex-1 min-w-0">
-                  <div className="text-text-light text-sm truncate">
+                  <div className="text-text-light text-sm truncate font-reddit-sans">
                     {file.name}
                   </div>
                 </div>
@@ -229,14 +229,14 @@ const FileExplorer = ({
             <Fragment>
               <button
                 onClick={() => on_folder_navigate && on_folder_navigate(null)}
-                className="text-primary-600 hover:text-primary-700 text-sm font-medium"
+                className="text-primary-600 hover:text-primary-700 text-sm font-medium font-reddit-sans"
               >
                 All Folders
               </button>
               <ChevronRight className="w-4 h-4 text-text-muted" />
             </Fragment>
           )}
-          <h3 className="text-lg font-semibold text-text-light">
+          <h3 className="text-lg font-semibold text-text-light font-sora">
             {folder_to_show
               ? get_folder_by_id(folder_to_show)?.name || "Unknown Folder"
               : "All Folders"}
@@ -268,7 +268,7 @@ const FileExplorer = ({
         {folders_to_display.length === 0 && files_to_display.length === 0 && (
           <div className="text-center py-12">
             <Folder className="w-12 h-12 text-text-muted mx-auto mb-4" />
-            <p className="text-text-muted">This folder is empty</p>
+            <p className="text-text-muted font-reddit-sans">This folder is empty</p>
           </div>
         )}
       </div>
@@ -295,11 +295,11 @@ const FileExplorer = ({
       }`}>
         {!is_collapsed && (
           <div className="min-w-0 flex-1">
-            <h2 className="text-lg font-semibold text-text-light truncate">
+            <h2 className="text-lg font-semibold text-text-light truncate font-sora">
               File Explorer
             </h2>
             {is_expanded && view_mode === "icon" && (
-              <p className="text-sm text-text-muted mt-1 truncate">
+              <p className="text-sm text-text-muted mt-1 truncate font-reddit-sans">
                 Select a file to view its contents
               </p>
             )}

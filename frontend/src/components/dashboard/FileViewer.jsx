@@ -50,7 +50,7 @@ const FileViewer = ({ file, on_close }) => {
         <div className="h-full flex items-center justify-center">
           <div className="text-center">
             <FileText className="w-16 h-16 text-text-muted mx-auto mb-4" />
-            <p className="text-text-muted">
+            <p className="text-text-muted font-reddit-sans">
               Choose a file from the explorer to see its contents
             </p>
           </div>
@@ -80,7 +80,7 @@ const FileViewer = ({ file, on_close }) => {
       case 'javascript':
       case 'json':
         return (
-          <pre className="p-6 rounded-lg overflow-auto text-sm text-text-light whitespace-pre-wrap font-mono">
+          <pre className="p-6 rounded-lg overflow-auto text-sm text-text-light whitespace-pre-wrap font-mono font-reddit-sans">
             {file.content}
           </pre>
         )
@@ -89,13 +89,13 @@ const FileViewer = ({ file, on_close }) => {
         return (
           <div className="p-8 rounded-lg text-center">
             <FileText className="w-16 h-16 text-text-muted mx-auto mb-4" />
-            <p className="text-text-light mb-2">PDF Document</p>
-            <p className="text-text-muted text-sm mb-4">
+            <p className="text-text-light mb-2 font-reddit-sans">PDF Document</p>
+            <p className="text-text-muted text-sm mb-4 font-reddit-sans">
               {file.content}
             </p>
             <button className="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 mx-auto">
               <Download className="w-4 h-4" />
-              <span>Download PDF</span>
+              <span className="font-reddit-sans">Download PDF</span>
             </button>
           </div>
         )
@@ -114,10 +114,10 @@ const FileViewer = ({ file, on_close }) => {
                 }}
               />
               <div className="w-48 h-32 bg-gradient-to-br from-primary-200 to-secondary-200 dark:from-primary-800 dark:to-secondary-800 rounded-lg mx-auto flex items-center justify-center" style={{display: 'none'}}>
-                <span className="text-text-muted text-sm">Image Preview</span>
+                <span className="text-text-muted text-sm font-reddit-sans">Image Preview</span>
               </div>
             </div>
-            <p className="text-text-light mb-2">{file.name}</p>
+            <p className="text-text-light mb-2 font-reddit-sans">{file.name}</p>
           </div>
         )
 
@@ -125,10 +125,10 @@ const FileViewer = ({ file, on_close }) => {
         return (
           <div className="p-8 rounded-lg text-center">
             <FileText className="w-16 h-16 text-text-muted mx-auto mb-4" />
-            <p className="text-text-light mb-2">
+            <p className="text-text-light mb-2 font-reddit-sans">
               Cannot preview this file type
             </p>
-            <p className="text-text-muted text-sm">
+            <p className="text-text-muted text-sm font-reddit-sans">
               File type: {file.file_type}
             </p>
           </div>
@@ -142,7 +142,7 @@ const FileViewer = ({ file, on_close }) => {
       <div className="bg-background-surface border-b border-secondary-200 dark:border-secondary-700 rounded-t-xl px-6 py-4 sticky top-0 z-10">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-bold text-text-light">
+            <h1 className="text-xl font-bold text-text-light font-sora">
               {file.name}
             </h1>
           </div>

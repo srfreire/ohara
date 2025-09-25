@@ -7,6 +7,10 @@ export default {
   darkMode: 'class',
   theme: {
     extend: {
+      fontFamily: {
+        'sora': ['Sora', 'sans-serif'],
+        'reddit-sans': ['Reddit Sans', 'sans-serif'],
+      },
       colors: {
         // Primary colors - easily customizable
         primary: {
