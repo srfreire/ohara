@@ -1,13 +1,21 @@
-import { useState } from 'react'
-import { ChevronRight, ChevronDown, PanelRightClose, PanelRightOpen, ArrowLeft, Folder, FolderOpen } from 'lucide-react'
-import * as Icons from 'lucide-react'
+import { useState, Fragment } from "react";
+import {
+  ChevronRight,
+  ChevronDown,
+  PanelRightClose,
+  PanelRightOpen,
+  ArrowLeft,
+  Folder,
+  FolderOpen,
+} from "lucide-react";
+import * as Icons from "lucide-react";
 import {
   get_root_folders,
   get_subfolders,
   get_files_in_folder,
   get_file_icon,
   get_folder_by_id,
-} from '../../utils/mock-data'
+} from "../../utils/mock-data";
 
 const FileExplorer = ({
   selected_file,
@@ -18,91 +26,89 @@ const FileExplorer = ({
   on_toggle_collapse,
   is_expanded = false,
   current_folder_id = null,
-  on_folder_navigate
+  on_folder_navigate,
 }) => {
   // Auto-determine view mode based on file selection
-  const view_mode = selected_file ? 'list' : 'icon'
-  const [expanded_folders, set_expanded_folders] = useState(new Set(['2'])) // Expand 'Projects' by default
+  const view_mode = selected_file ? "list" : "icon";
+  const [expanded_folders, set_expanded_folders] = useState(new Set(["2"])); // Expand 'Projects' by default
 
   const toggle_folder = (folder_id) => {
-    const new_expanded = new Set(expanded_folders)
+    const new_expanded = new Set(expanded_folders);
     if (new_expanded.has(folder_id)) {
-      new_expanded.delete(folder_id)
+      new_expanded.delete(folder_id);
     } else {
-      new_expanded.add(folder_id)
+      new_expanded.add(folder_id);
     }
-    set_expanded_folders(new_expanded)
-    on_folder_select(folder_id)
-  }
+    set_expanded_folders(new_expanded);
+    on_folder_select(folder_id);
+  };
 
   const FileIcon = ({ file_type, className }) => {
-    if (file_type === 'text') {
+    if (file_type === "text") {
       return (
-        <img
-          src="/src/assets/txt.png"
-          alt="Text file"
-          className={className}
-        />
-      )
+        <img src="/src/assets/txt.png" alt="Text file" className={className} />
+      );
     }
 
-    const icon_name = get_file_icon(file_type)
-    const IconComponent = Icons[icon_name]
-    return IconComponent ? <IconComponent className={className} /> : <Icons.File className={className} />
-  }
+    const icon_name = get_file_icon(file_type);
+    const IconComponent = Icons[icon_name];
+    return IconComponent ? (
+      <IconComponent className={className} />
+    ) : (
+      <Icons.File className={className} />
+    );
+  };
 
   // Icon View Components
   const FolderIconItem = ({ folder, animation_delay = 0 }) => {
     return (
       <div
-        className="flex flex-col items-center p-4 rounded-lg cursor-pointer hover:bg-secondary-100 dark:hover:bg-secondary-800 transition-all duration-200 group animate-fade-in-up"
-        style={{ animationDelay: `${animation_delay}ms` }}
+        className="flex flex-col items-center p-4 rounded-lg cursor-pointer hover:bg-secondary-100 dark:hover:bg-secondary-800 group"
         onClick={() => on_folder_navigate && on_folder_navigate(folder.id)}
       >
         <div className="w-16 h-16 mb-2 flex items-center justify-center">
           <img
             src="/src/assets/closed.png"
             alt="Folder"
-            className="w-14 h-14 group-hover:scale-105 transition-transform"
+            className="w-14 h-14"
           />
         </div>
         <span className="text-sm text-text-light text-center max-w-full break-words overflow-hidden text-ellipsis">
           {folder.name}
         </span>
       </div>
-    )
-  }
+    );
+  };
 
   const FileIconItem = ({ file, animation_delay = 0 }) => {
     const get_large_icon = (file_type) => {
       switch (file_type) {
-        case 'image':
-          return <Icons.Image className="w-14 h-14 text-green-500" />
-        case 'markdown':
-          return <Icons.FileText className="w-14 h-14 text-blue-500" />
-        case 'javascript':
-          return <Icons.Code className="w-14 h-14 text-yellow-500" />
-        case 'json':
-          return <Icons.Code className="w-14 h-14 text-orange-500" />
-        case 'pdf':
-          return <Icons.FileType className="w-14 h-14 text-red-500" />
-        case 'text':
+        case "image":
+          return <Icons.Image className="w-14 h-14 text-green-500" />;
+        case "markdown":
+          return <Icons.FileText className="w-14 h-14 text-blue-500" />;
+        case "javascript":
+          return <Icons.Code className="w-14 h-14 text-yellow-500" />;
+        case "json":
+          return <Icons.Code className="w-14 h-14 text-orange-500" />;
+        case "pdf":
+          return <Icons.FileType className="w-14 h-14 text-red-500" />;
+        case "text":
           return (
             <img
               src="/src/assets/txt.png"
               alt="Text file"
-              className="w-14 h-14"
+              className="w-12 h-12"
             />
-          )
+          );
         default:
-          return <Icons.File className="w-14 h-14 text-gray-500" />
+          return <Icons.File className="w-14 h-14 text-gray-500" />;
       }
-    }
+    };
 
     return (
       <div
-        className="flex flex-col items-center p-4 rounded-lg cursor-pointer hover:bg-secondary-100 dark:hover:bg-secondary-800 transition-all duration-200 group animate-fade-in-up"
-        style={{ animationDelay: `${animation_delay}ms` }}
+        className="flex flex-col items-center p-4 rounded-lg cursor-pointer hover:bg-secondary-100 dark:hover:bg-secondary-800 group"
         onClick={() => on_file_select && on_file_select(file)}
       >
         <div className="w-16 h-16 mb-2 flex items-center justify-center">
@@ -112,22 +118,24 @@ const FileExplorer = ({
           {file.name}
         </span>
       </div>
-    )
-  }
+    );
+  };
 
   const FolderItem = ({ folder, level = 0 }) => {
-    const is_expanded = expanded_folders.has(folder.id)
-    const is_selected = selected_folder === folder.id
-    const subfolders = get_subfolders(folder.id)
-    const files = get_files_in_folder(folder.id)
-    const has_children = subfolders.length > 0 || files.length > 0
+    const is_expanded = expanded_folders.has(folder.id);
+    const is_selected = selected_folder === folder.id;
+    const subfolders = get_subfolders(folder.id);
+    const files = get_files_in_folder(folder.id);
+    const has_children = subfolders.length > 0 || files.length > 0;
 
     return (
       <div>
         {/* Folder Row */}
         <div
-          className={`flex items-center space-x-2 py-2 px-3 cursor-pointer hover:bg-secondary-100 dark:hover:bg-secondary-800 rounded-lg transition-colors duration-200 ${
-            is_selected ? 'bg-primary-100 dark:bg-primary-900 border border-primary-200 dark:border-primary-700' : ''
+          className={`flex items-center space-x-2 py-2 px-3 cursor-pointer hover:bg-secondary-100 dark:hover:bg-secondary-800 rounded-lg ${
+            is_selected
+              ? "bg-primary-100 dark:bg-primary-900 border border-primary-200 dark:border-primary-700"
+              : ""
           }`}
           style={{ marginLeft: `${level * 20}px` }}
           onClick={() => toggle_folder(folder.id)}
@@ -145,7 +153,9 @@ const FileExplorer = ({
 
           {/* Folder Icon */}
           <img
-            src={is_expanded ? "/src/assets/open.png" : "/src/assets/closed.png"}
+            src={
+              is_expanded ? "/src/assets/open.png" : "/src/assets/closed.png"
+            }
             alt={is_expanded ? "Open folder" : "Closed folder"}
             className="w-5 h-5"
           />
@@ -160,22 +170,31 @@ const FileExplorer = ({
         {is_expanded && (
           <div>
             {/* Subfolders */}
-            {subfolders.map(subfolder => (
-              <FolderItem key={subfolder.id} folder={subfolder} level={level + 1} />
+            {subfolders.map((subfolder) => (
+              <FolderItem
+                key={subfolder.id}
+                folder={subfolder}
+                level={level + 1}
+              />
             ))}
 
             {/* Files */}
-            {files.map(file => (
+            {files.map((file) => (
               <div
                 key={file.id}
-                className={`flex items-center space-x-2 py-2 px-3 cursor-pointer hover:bg-secondary-100 dark:hover:bg-secondary-800 rounded-lg transition-colors duration-200 ${
-                  selected_file === file.id ? 'bg-secondary-200 dark:bg-secondary-700 border border-secondary-300 dark:border-secondary-600' : ''
+                className={`flex items-center space-x-2 py-2 px-3 cursor-pointer hover:bg-secondary-100 dark:hover:bg-secondary-800 rounded-lg ${
+                  selected_file === file.id
+                    ? "bg-secondary-200 dark:bg-secondary-700 border border-secondary-300 dark:border-secondary-600"
+                    : ""
                 }`}
                 style={{ marginLeft: `${(level + 1) * 20 + 20}px` }}
                 onClick={() => on_file_select(file)}
               >
                 {/* File Icon */}
-                <FileIcon file_type={file.file_type} className="w-4 h-4 text-text-muted" />
+                <FileIcon
+                  file_type={file.file_type}
+                  className="w-4 h-4 text-text-muted"
+                />
 
                 {/* File Info */}
                 <div className="flex-1 min-w-0">
@@ -188,21 +207,25 @@ const FileExplorer = ({
           </div>
         )}
       </div>
-    )
-  }
+    );
+  };
 
   // Grid View Layout Component
   const IconGridView = () => {
-    const folder_to_show = current_folder_id || null
-    const folders_to_display = folder_to_show ? get_subfolders(folder_to_show) : get_root_folders()
-    const files_to_display = folder_to_show ? get_files_in_folder(folder_to_show) : []
+    const folder_to_show = current_folder_id || null;
+    const folders_to_display = folder_to_show
+      ? get_subfolders(folder_to_show)
+      : get_root_folders();
+    const files_to_display = folder_to_show
+      ? get_files_in_folder(folder_to_show)
+      : [];
 
     return (
       <div className="p-6">
         {/* Breadcrumb/Header */}
         <div className="mb-6 flex items-center space-x-2">
           {folder_to_show && (
-            <>
+            <Fragment>
               <button
                 onClick={() => on_folder_navigate && on_folder_navigate(null)}
                 className="text-primary-600 hover:text-primary-700 text-sm font-medium"
@@ -210,10 +233,12 @@ const FileExplorer = ({
                 All Folders
               </button>
               <ChevronRight className="w-4 h-4 text-text-muted" />
-            </>
+            </Fragment>
           )}
           <h3 className="text-lg font-semibold text-text-light">
-            {folder_to_show ? get_folder_by_id(folder_to_show)?.name || 'Unknown Folder' : 'All Folders'}
+            {folder_to_show
+              ? get_folder_by_id(folder_to_show)?.name || "Unknown Folder"
+              : "All Folders"}
           </h3>
         </div>
 
@@ -246,82 +271,75 @@ const FileExplorer = ({
           </div>
         )}
       </div>
-    )
-  }
+    );
+  };
 
-  const root_folders = get_root_folders()
+  const root_folders = get_root_folders();
 
   const get_width_class = () => {
-    if (is_collapsed) return 'w-12'
-    if (is_expanded) return 'flex-1'
-    return 'w-80'
-  }
+    if (is_expanded || !selected_file) return "flex-1";
+    return "w-80";
+  };
 
   return (
-    <div className={`bg-background-surface border-r border-secondary-200 dark:border-secondary-700 flex flex-col transition-all duration-300 overflow-hidden ${get_width_class()}`}>
+    <div
+      className={`bg-background-surface border border-secondary-200 dark:border-secondary-700 rounded-xl shadow-lg flex flex-col overflow-hidden ${get_width_class()}`}
+    >
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-secondary-200 dark:border-secondary-700">
-        {!is_collapsed && (
-          <div className="min-w-0 flex-1">
-            <h2 className="text-lg font-semibold text-text-light truncate">
-              File Explorer
-            </h2>
-            {is_expanded && view_mode === 'icon' && (
-              <p className="text-sm text-text-muted mt-1 truncate">
-                Select a file to view its contents
-              </p>
-            )}
-          </div>
-        )}
+        <div className="min-w-0 flex-1">
+          <h2 className="text-lg font-semibold text-text-light truncate">
+            File Explorer
+          </h2>
+          {is_expanded && view_mode === "icon" && (
+            <p className="text-sm text-text-muted mt-1 truncate">
+              Select a file to view its contents
+            </p>
+          )}
+        </div>
 
-        {/* Collapse Button - Only show when file is selected (list mode) */}
-        {view_mode === 'list' && (
+        {/* Collapse Button - Only show in list mode */}
+        {view_mode === "list" && (
           <button
             onClick={on_toggle_collapse}
-            className="p-2 rounded-lg hover:bg-secondary-100 dark:hover:bg-secondary-800 text-text-muted transition-colors duration-200"
-            aria-label={is_collapsed ? 'Expand file explorer' : 'Collapse file explorer'}
+            className="p-2 rounded-lg text-text-muted hover:text-text-light transition-colors duration-200"
+            aria-label="Collapse file explorer"
           >
-            {is_collapsed ? (
-              <PanelRightClose className="w-5 h-5" />
-            ) : (
-              <PanelRightOpen className="w-5 h-5" />
-            )}
+            <PanelRightOpen className="w-5 h-5" />
           </button>
         )}
       </div>
 
       {/* Content Area */}
-      {(!is_collapsed || is_expanded) && (
-        <div className="flex-1 relative min-h-0">
-          {/* Icon Grid View */}
-          <div
-            className={`absolute inset-0 overflow-auto transition-all duration-300 ease-in-out ${
-              view_mode === 'icon'
-                ? 'opacity-100 transform translate-x-0 pointer-events-auto z-10'
-                : 'opacity-0 transform translate-x-4 pointer-events-none z-0'
-            }`}
-          >
-            <IconGridView />
-          </div>
+      <div className="flex-1 relative min-h-0">
+        {/* Icon Grid View */}
+        <div
+          className={`absolute inset-0 overflow-auto ${
+            view_mode === "icon"
+              ? "opacity-100 transform translate-x-0 pointer-events-auto z-10"
+              : "opacity-0 transform translate-x-4 pointer-events-none z-0"
+          }`}
+        >
+          <IconGridView />
+        </div>
 
-          {/* Traditional List View */}
-          <div
-            className={`absolute inset-0 overflow-auto transition-all duration-300 ease-in-out ${
-              view_mode === 'list'
-                ? 'opacity-100 transform translate-x-0 pointer-events-auto z-10'
-                : 'opacity-0 transform -translate-x-4 pointer-events-none z-0'
-            }`}
-          >
-            <div className="p-4 space-y-1">
-              {root_folders.map(folder => (
-                <FolderItem key={folder.id} folder={folder} />
-              ))}
-            </div>
+        {/* Traditional List View */}
+        <div
+          className={`absolute inset-0 overflow-auto ${
+            view_mode === "list"
+              ? "opacity-100 transform translate-x-0 pointer-events-auto z-10"
+              : "opacity-0 transform -translate-x-4 pointer-events-none z-0"
+          }`}
+        >
+          <div className="p-4 space-y-1">
+            {root_folders.map((folder) => (
+              <FolderItem key={folder.id} folder={folder} />
+            ))}
           </div>
         </div>
-      )}
+      </div>
     </div>
-  )
-}
+  );
+};
 
-export default FileExplorer
+export default FileExplorer;

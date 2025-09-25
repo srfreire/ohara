@@ -102,30 +102,25 @@ const FileViewer = ({ file, on_close }) => {
   }
 
   return (
-    <div className="flex-1 bg-background-light overflow-auto">
+    <div className="h-full bg-background-surface border border-secondary-200 dark:border-secondary-700 rounded-xl shadow-lg flex flex-col">
       {/* File Header */}
-      <div className="bg-background-surface border-b border-secondary-200 dark:border-secondary-700 p-6">
-        <div className="flex items-start justify-between">
+      <div className="bg-background-surface border-b border-secondary-200 dark:border-secondary-700 rounded-t-xl px-6 py-4 sticky top-0 z-10">
+        <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-text-light mb-2">
+            <h1 className="text-xl font-bold text-text-light">
               {file.name}
             </h1>
-            <div className="flex items-center space-x-4 text-sm text-text-muted">
-              <span className="bg-primary-100 dark:bg-primary-900 text-primary-600 dark:text-primary-400 px-2 py-1 rounded">
-                {file.file_type}
-              </span>
-            </div>
           </div>
 
           <div className="flex items-center space-x-2">
-            <button className="bg-primary-600 hover:bg-primary-700 text-white px-2 py-2 rounded-lg flex items-center space-x-2 transition-colors duration-200">
-              <Download className="w-4 h-4" />
+            <button className="p-2 rounded-lg text-text-muted hover:text-text-light">
+              <Download className="w-5 h-5" />
             </button>
 
             {on_close && (
               <button
                 onClick={on_close}
-                className="p-2 rounded-lg hover:bg-secondary-100 dark:hover:bg-secondary-800 text-text-muted hover:text-text-light transition-colors duration-200"
+                className="p-2 rounded-lg text-text-muted hover:text-text-light"
                 aria-label="Close file viewer"
               >
                 <X className="w-5 h-5" />
@@ -133,22 +128,10 @@ const FileViewer = ({ file, on_close }) => {
             )}
           </div>
         </div>
-
-        {/* File Metadata */}
-        <div className="mt-4 flex items-center space-x-6 text-sm text-text-muted">
-          <div className="flex items-center space-x-2">
-            <Calendar className="w-4 h-4" />
-            <span>Created: {format_date(file.created_at)}</span>
-          </div>
-          <div className="flex items-center space-x-2">
-            <Calendar className="w-4 h-4" />
-            <span>Modified: {format_date(file.updated_at)}</span>
-          </div>
-        </div>
       </div>
 
       {/* File Content */}
-      <div className="p-6">
+      <div className="flex-1 overflow-auto p-6 bg-background-light">
         {render_file_content()}
       </div>
     </div>

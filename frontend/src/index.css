@@ -4,43 +4,42 @@
 
 /* CSS Variables for theme colors */
 :root {
-  /* Primary colors - Blue theme */
-  --color-primary-50: #eff6ff;
-  --color-primary-100: #dbeafe;
-  --color-primary-200: #bfdbfe;
-  --color-primary-300: #93c5fd;
-  --color-primary-400: #60a5fa;
-  --color-primary-500: #3b82f6;
-  --color-primary-600: #2563eb;
-  --color-primary-700: #1d4ed8;
-  --color-primary-800: #1e40af;
-  --color-primary-900: #1e3a8a;
-  --color-primary-950: #172554;
+  /* Primary colors - Soft Forest Green palette */
+  --color-primary-50: #f7f9f7;  /* soft sage */
+  --color-primary-100: #e8f0e8; /* pale moss */
+  --color-primary-200: #d1e4d1; /* light sage */
+  --color-primary-300: #a8c8a8; /* soft mint */
+  --color-primary-400: #7fb07f; /* gentle leaf */
+  --color-primary-500: #5a9b5a; /* tree green */
+  --color-primary-600: #4a7c54; /* forest green */
+  --color-primary-700: #3d6b47; /* deep forest */
+  --color-primary-800: #2f5233; /* pine shadow */
+  --color-primary-900: #1f3821; /* dark evergreen */
+  --color-primary-950: #0f1c10; /* forest night */
 
-  /* Secondary colors - Slate theme */
-  --color-secondary-50: #f8fafc;
-  --color-secondary-100: #f1f5f9;
-  --color-secondary-200: #e2e8f0;
-  --color-secondary-300: #cbd5e1;
-  --color-secondary-400: #94a3b8;
-  --color-secondary-500: #64748b;
-  --color-secondary-600: #475569;
-  --color-secondary-700: #334155;
-  --color-secondary-800: #1e293b;
-  --color-secondary-900: #0f172a;
-  --color-secondary-950: #020617;
+  /* Secondary colors - Warm Earth palette */
+  --color-secondary-50: #faf9f7; /* cream */
+  --color-secondary-100: #f4f1eb; /* warm ivory */
+  --color-secondary-200: #e8e1d4; /* soft beige */
+  --color-secondary-300: #d4c4b0; /* light taupe */
+  --color-secondary-400: #b5a082; /* warm sand */
+  --color-secondary-500: #9a8568; /* mushroom */
+  --color-secondary-600: #7a6b52; /* tree bark */
+  --color-secondary-700: #5e5441; /* rich bark */
+  --color-secondary-800: #463e32; /* deep earth */
+  --color-secondary-900: #2e2820; /* dark soil */
+  --color-secondary-950: #1a1713; /* forest floor */
 
-  /* Background colors - Light mode */
-  --color-background-light: #ffffff;
-  --color-background-dark: #f8fafc;
-  --color-background-surface: #f1f5f9;
+  /* Background colors - Light mode (tree-inspired) */
+  --color-background-light: #fdfdfc; /* soft white */
+  --color-background-dark: #f9f8f6;  /* warm cream */
+  --color-background-surface: #f2efea; /* light bark */
 
   /* Text colors - Light mode */
-  --color-text-light: #0f172a;
-  --color-text-dark: #1e293b;
-  --color-text-muted: #64748b;
+  --color-text-light: #2e2820; /* dark soil */
+  --color-text-dark: #463e32;  /* deep earth */
+  --color-text-muted: #9a8568; /* mushroom */
 }
-
 /* Dark mode theme */
 .dark {
   /* Secondary colors override - Dark mode */
@@ -134,6 +133,36 @@ body {
 
 .animate-slide-in-left {
   animation: slide-in-left 0.4s ease-out;
+}
+
+@keyframes slide-in-right {
+  0% {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-in-right {
+  animation: slide-in-right 0.4s ease-out;
+}
+
+@keyframes slide-out-right {
+  0% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+.animate-slide-out-right {
+  animation: slide-out-right 0.3s ease-in forwards;
 }
 
 @keyframes expand-from-button {

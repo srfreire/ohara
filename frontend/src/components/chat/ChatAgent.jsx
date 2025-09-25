@@ -78,21 +78,9 @@ const ChatAgent = ({ is_collapsed = false, on_toggle_collapse }) => {
   }
 
   return (
-    <div className="relative">
-      {/* Floating AI Button - Only visible when collapsed */}
-      {is_collapsed && on_toggle_collapse && (
-        <button
-          onClick={on_toggle_collapse}
-          className="fixed bottom-6 right-6 z-50 w-14 h-14 bg-primary-600 hover:bg-primary-700 text-white rounded-full flex items-center justify-center transition-all duration-200 shadow-lg hover:shadow-xl"
-          aria-label="Expand chat"
-        >
-          <Bot className="w-6 h-6" />
-        </button>
-      )}
-
-      <div className={`h-full bg-background-surface border-l border-secondary-200 dark:border-secondary-700 flex flex-col transition-all duration-300 overflow-hidden w-[400px] ${is_collapsed ? 'translate-x-full -mr-[400px]' : 'translate-x-0'}`}>
+    <div className="h-full w-[400px] bg-background-surface border border-secondary-200 dark:border-secondary-700 rounded-xl shadow-lg flex flex-col overflow-hidden">
       {/* Chat Header */}
-      <div className="flex items-center justify-between p-4 border-b border-secondary-200 dark:border-secondary-700">
+      <div className="flex items-center justify-between p-4 border-b border-secondary-200 dark:border-secondary-700 rounded-t-xl">
         <div className="min-w-0 flex-1">
           <div className="flex items-center space-x-2">
             <div className="w-8 h-8 bg-primary-600 rounded-full flex items-center justify-center flex-shrink-0">
@@ -112,7 +100,7 @@ const ChatAgent = ({ is_collapsed = false, on_toggle_collapse }) => {
         {on_toggle_collapse && (
           <button
             onClick={on_toggle_collapse}
-            className="p-2 rounded-lg hover:bg-secondary-100 dark:hover:bg-secondary-800 text-text-muted transition-colors duration-200 flex-shrink-0"
+            className="p-2 rounded-lg text-text-muted hover:text-text-light transition-colors duration-200"
             aria-label={is_collapsed ? 'Expand chat' : 'Collapse chat'}
           >
             {is_collapsed ? (
@@ -206,7 +194,6 @@ const ChatAgent = ({ is_collapsed = false, on_toggle_collapse }) => {
         <p className="text-xs text-text-muted mt-2">
           Press Enter to send, Shift + Enter for new line
         </p>
-      </div>
       </div>
     </div>
   )
