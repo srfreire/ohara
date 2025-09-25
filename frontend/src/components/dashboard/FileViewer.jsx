@@ -137,9 +137,9 @@ const FileViewer = ({ file, on_close }) => {
   }
 
   return (
-    <div className="h-full bg-white/80 backdrop-blur-sm rounded-xl shadow-lg flex flex-col">
+    <div className="h-full bg-white/80 dark:bg-secondary-900/80 backdrop-blur-sm rounded-xl shadow-lg flex flex-col">
       {/* File Header */}
-      <div className="rounded-t-xl px-6 py-4 sticky top-0 z-10 border-b border-white/80">
+      <div className="rounded-t-xl px-6 py-4 sticky top-0 z-10 border-b border-white/80 dark:border-secondary-600/50">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-xl font-bold text-text-light font-sora">
@@ -166,7 +166,7 @@ const FileViewer = ({ file, on_close }) => {
       </div>
 
       {/* File Content */}
-      <div className="flex-1 no-scrollbar overflow-y-auto p-6 bg-white/40 backdrop-blur-sm rounded-b-xl">
+      <div className="flex-1 no-scrollbar overflow-y-auto p-6 bg-white/40 dark:bg-secondary-900/40 backdrop-blur-sm rounded-b-xl">
         {render_file_content()}
       </div>
     </div>

@@ -78,9 +78,9 @@ const ChatAgent = ({ is_collapsed = false, on_toggle_collapse }) => {
   }
 
   return (
-    <div className="h-full w-[400px] bg-white/80 backdrop-blur-lg rounded-xl shadow-lg flex flex-col overflow-hidden">
+    <div className="h-full w-[400px] bg-white/80 dark:bg-secondary-900/80 backdrop-blur-lg rounded-xl shadow-lg flex flex-col overflow-hidden">
       {/* Chat Header */}
-      <div className="flex items-center justify-between p-4 border-b border-white/80 rounded-t-xl">
+      <div className="flex items-center justify-between p-4 border-b border-white/80 dark:border-secondary-600/50 rounded-t-xl">
         <div className="min-w-0 flex-1">
           <div className="flex items-center space-x-2">
             <div className="w-8 h-8 bg-primary-600 rounded-full flex items-center justify-center flex-shrink-0">
@@ -159,7 +159,7 @@ const ChatAgent = ({ is_collapsed = false, on_toggle_collapse }) => {
             <div className="w-8 h-8 bg-primary-600 rounded-full flex items-center justify-center flex-shrink-0">
               <Bot className="w-4 h-4 text-white" />
             </div>
-            <div className="bg-white/60 backdrop-blur-sm rounded-lg p-3">
+            <div className="bg-white/60 dark:bg-secondary-900/60 backdrop-blur-sm rounded-lg p-3">
               <div className="flex space-x-1">
                 <div className="w-2 h-2 bg-text-muted rounded-full animate-bounce"></div>
                 <div className="w-2 h-2 bg-text-muted rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
@@ -173,15 +173,15 @@ const ChatAgent = ({ is_collapsed = false, on_toggle_collapse }) => {
       </div>
 
       {/* Input Area */}
-      <div className="border-t border-white/80 p-4">
+      <div className="border-t border-white/80 dark:border-secondary-600/50 p-4">
         <div className="flex space-x-2">
           <textarea
             value={input_value}
             onChange={(e) => set_input_value(e.target.value)}
             onKeyPress={handle_key_press}
             placeholder="Ask about your files..."
-            className="flex-1 resize-none rounded-lg border border-white/80 bg-white/60 backdrop-blur-sm px-3 py-2 text-sm text-text-light placeholder-text-muted focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-opacity-20 font-reddit-sans"
-            rows="2"
+            className="flex-1 resize-none rounded-lg border border-white/80 dark:border-secondary-600/50 bg-white/60 dark:bg-secondary-900/60 backdrop-blur-sm px-3 py-2 text-sm text-text-light placeholder-text-muted focus:border-primary-500 focus:outline-none font-reddit-sans"
+            rows="1"
           />
           <button
             onClick={handle_send_message}

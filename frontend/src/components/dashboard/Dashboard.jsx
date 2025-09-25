@@ -73,7 +73,7 @@ const Dashboard = () => {
         }}
       >
         {/* Overlay for better contrast */}
-        <div className="absolute inset-0 bg-black/20"></div>
+        <div className="absolute inset-0 bg-black/20 dark:bg-black/50"></div>
       </div>
 
       {/* Header */}

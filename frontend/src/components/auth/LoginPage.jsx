@@ -29,7 +29,7 @@ const LoginPage = () => {
       {/* Login Card - Right Side */}
       <div className="relative z-10 ml-auto flex items-center mr-8">
         <div className="max-w-md w-full">
-          <div className="bg-white/95 rounded-2xl p-8 shadow-2xl border border-primary-200/20 backdrop-blur-lg">
+          <div className="bg-white/95 dark:bg-secondary-900/95 rounded-2xl p-8 shadow-2xl border border-primary-200/20 dark:border-secondary-600/30 backdrop-blur-lg">
             {/* Logo/Title */}
           <div className="text-center mb-8">
             <div className="flex items-center justify-center mb-4">
@@ -58,7 +58,7 @@ const LoginPage = () => {
             {/* Google Login Button */}
             <button
               onClick={handle_google_login}
-              className="w-full bg-white hover:bg-primary-50 text-text-light font-semibold py-3 px-6 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 flex items-center justify-center space-x-3 border border-primary-200/30 backdrop-blur-sm"
+              className="w-full bg-white dark:bg-secondary-800 hover:bg-primary-50 dark:hover:bg-secondary-700 text-text-light font-semibold py-3 px-6 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 flex items-center justify-center space-x-3 border border-primary-200/30 dark:border-secondary-600/50 backdrop-blur-sm"
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24">
                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>

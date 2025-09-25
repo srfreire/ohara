@@ -317,10 +317,10 @@ const FileExplorer = ({
 
   return (
     <div
-      className={`bg-white/80 backdrop-blur-lg rounded-xl shadow-lg flex flex-col overflow-hidden ${get_width_class()}`}
+      className={`bg-white/80 dark:bg-secondary-900/80 backdrop-blur-lg rounded-xl shadow-lg flex flex-col overflow-hidden ${get_width_class()}`}
     >
       {/* Header */}
-      <div className={`flex items-center p-4 border-b border-white/80 ${
+      <div className={`flex items-center p-4 border-b border-white/80 dark:border-secondary-600/50 ${
         is_collapsed ? 'justify-center' : 'justify-between'
       }`}>
         {!is_collapsed && (
