@@ -507,6 +507,20 @@ export const format_file_size = (bytes) => {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
 }
 
+export const get_folder_path = (folder_id) => {
+  if (!folder_id) return []
+
+  const path = []
+  let current_folder = get_folder_by_id(folder_id)
+
+  while (current_folder) {
+    path.unshift(current_folder)
+    current_folder = current_folder.parent_id ? get_folder_by_id(current_folder.parent_id) : null
+  }
+
+  return path
+}
+
 export const get_file_icon = (file_type) => {
   const icons = {
     markdown: 'FileText',

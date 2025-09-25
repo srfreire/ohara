@@ -7,6 +7,7 @@ import {
   ArrowLeft,
   Folder,
   FolderOpen,
+  Home,
 } from "lucide-react";
 import * as Icons from "lucide-react";
 import {
@@ -15,6 +16,7 @@ import {
   get_files_in_folder,
   get_file_icon,
   get_folder_by_id,
+  get_folder_path,
 } from "../../utils/mock-data";
 
 const FileExplorer = ({
@@ -224,23 +226,53 @@ const FileExplorer = ({
     return (
       <div className="p-6">
         {/* Breadcrumb/Header */}
-        <div className="mb-6 flex items-center space-x-2">
+        <div className="mb-6 flex items-center space-x-2 flex-wrap min-h-[28px]">
+          {/* Root breadcrumb - only show when not at root */}
           {folder_to_show && (
-            <Fragment>
-              <button
-                onClick={() => on_folder_navigate && on_folder_navigate(null)}
-                className="text-primary-600 hover:text-primary-700 text-sm font-medium font-reddit-sans"
-              >
-                All Folders
-              </button>
-              <ChevronRight className="w-4 h-4 text-text-muted" />
-            </Fragment>
+            <button
+              onClick={() => on_folder_navigate && on_folder_navigate(null)}
+              className="text-primary-600 hover:text-primary-700 transition-colors flex items-center h-7"
+              title="Home"
+            >
+              <Home className="w-5 h-5" />
+            </button>
           )}
-          <h3 className="text-lg font-semibold text-text-light font-sora">
-            {folder_to_show
-              ? get_folder_by_id(folder_to_show)?.name || "Unknown Folder"
-              : "All Folders"}
-          </h3>
+
+          {/* Show only home icon when at root */}
+          {!folder_to_show && (
+            <div className="h-7 flex items-center">
+              <Home className="w-5 h-5 text-text-light" />
+            </div>
+          )}
+
+          {/* Path breadcrumbs */}
+          {folder_to_show && (() => {
+            const folder_path = get_folder_path(folder_to_show)
+            return folder_path.map((folder, index) => {
+              const is_last = index === folder_path.length - 1
+              return (
+                <Fragment key={folder.id}>
+                  <div className="h-7 flex items-center">
+                    <ChevronRight className="w-4 h-4 text-text-muted" />
+                  </div>
+                  {is_last ? (
+                    <div className="h-7 flex items-center">
+                      <h3 className="text-lg font-semibold text-text-light font-sora leading-none">
+                        {folder.name}
+                      </h3>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => on_folder_navigate && on_folder_navigate(folder.id)}
+                      className="text-primary-600 hover:text-primary-700 text-sm font-medium font-reddit-sans transition-colors h-7 flex items-center"
+                    >
+                      {folder.name}
+                    </button>
+                  )}
+                </Fragment>
+              )
+            })
+          })()}
         </div>
 
         {/* Grid Layout */}
@@ -288,41 +320,36 @@ const FileExplorer = ({
       className={`bg-background-surface border border-secondary-200 dark:border-secondary-700 rounded-xl shadow-lg flex flex-col overflow-hidden ${get_width_class()}`}
     >
       {/* Header */}
-      <div className={`flex items-center p-4 ${
-        is_collapsed
-          ? 'justify-center'
-          : 'justify-between border-b border-secondary-200 dark:border-secondary-700'
+      <div className={`flex items-center p-4 border-b border-secondary-200 dark:border-secondary-700 ${
+        is_collapsed ? 'justify-center' : 'justify-between'
       }`}>
         {!is_collapsed && (
           <div className="min-w-0 flex-1">
             <h2 className="text-lg font-semibold text-text-light truncate font-sora">
               File Explorer
             </h2>
-            {is_expanded && view_mode === "icon" && (
-              <p className="text-sm text-text-muted mt-1 truncate font-reddit-sans">
-                Select a file to view its contents
-              </p>
-            )}
           </div>
         )}
 
-        {/* Collapse Button - Show when can collapse or when already collapsed */}
-        {(can_collapse || is_collapsed) && (
-          <button
-            onClick={on_toggle_collapse}
-            className={`p-2 rounded-lg text-text-muted hover:text-text-light ${
-              !can_collapse && !is_collapsed ? 'opacity-50 cursor-not-allowed' : ''
-            }`}
-            aria-label={is_collapsed ? "Expand file explorer" : "Collapse file explorer"}
-            disabled={!can_collapse && !is_collapsed}
-          >
-            {is_collapsed ? (
-              <PanelRightClose className="w-5 h-5" />
-            ) : (
-              <PanelRightOpen className="w-5 h-5" />
-            )}
-          </button>
-        )}
+        {/* Collapse Button - Always reserve space to prevent layout shift */}
+        <div className="w-9 h-9 flex items-center justify-center">
+          {(can_collapse || is_collapsed) && (
+            <button
+              onClick={on_toggle_collapse}
+              className={`p-2 rounded-lg text-text-muted hover:text-text-light ${
+                !can_collapse && !is_collapsed ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
+              aria-label={is_collapsed ? "Expand file explorer" : "Collapse file explorer"}
+              disabled={!can_collapse && !is_collapsed}
+            >
+              {is_collapsed ? (
+                <PanelRightClose className="w-5 h-5" />
+              ) : (
+                <PanelRightOpen className="w-5 h-5" />
+              )}
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Content Area - Only show when not collapsed */}
