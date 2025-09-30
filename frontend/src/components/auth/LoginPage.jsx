@@ -36,7 +36,7 @@ const LoginPage = () => {
               <img
                 src="src/assets/icon.png"
                 alt="Ohara Icon"
-                className="w-12 h-12 mr-3 rounded-lg"
+                className="w-12 h-12 mr-3 rounded-md"
               />
               <h1 className="text-4xl font-bold text-text-light font-sora">
                 OHARA

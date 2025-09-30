@@ -18,7 +18,7 @@ const Header = () => {
           <img
             src="src/assets/icon.png"
             alt="OHARA"
-            className="w-8 h-8"
+            className="w-8 h-8 rounded-md"
           />
           <h1 className="text-2xl font-bold text-primary-600 font-sora">
             OHARA
