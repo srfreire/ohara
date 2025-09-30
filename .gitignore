@@ -137,9 +137,6 @@ next-env.d.ts
 # Nuxt.js build / generate output
 .nuxt
 
-# Gatsby files
-public
-
 # Vite
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
