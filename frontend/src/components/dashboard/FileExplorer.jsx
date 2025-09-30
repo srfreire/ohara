@@ -46,32 +46,30 @@ const FileExplorer = ({
     on_folder_select(folder_id);
   };
 
-  const FileIcon = ({ file_type, className }) => {
-    if (file_type === "text") {
-      return (
-        <img src="/src/assets/txt.png" alt="Text file" className={className} />
-      );
-    }
-
-    const icon_name = get_file_icon(file_type);
-    const IconComponent = Icons[icon_name];
-    return IconComponent ? (
-      <IconComponent className={className} />
-    ) : (
-      <Icons.File className={className} />
+  const FileIcon = ({ file_type, className, is_selected = false }) => {
+    return (
+      <img
+        src={is_selected ? "/src/assets/fold.png" : "/src/assets/file.png"}
+        alt="File"
+        className={className}
+      />
     );
   };
 
   // Icon View Components
   const FolderIconItem = ({ folder, animation_delay = 0 }) => {
+    const [is_hovered, set_is_hovered] = useState(false);
+
     return (
       <div
         className="flex flex-col items-center p-4 rounded-lg cursor-pointer hover:bg-secondary-100 dark:hover:bg-secondary-800 group"
         onClick={() => on_folder_navigate && on_folder_navigate(folder.id)}
+        onMouseEnter={() => set_is_hovered(true)}
+        onMouseLeave={() => set_is_hovered(false)}
       >
         <div className="w-16 h-16 mb-2 flex items-center justify-center">
           <img
-            src="/src/assets/closed.png"
+            src={is_hovered ? "/src/assets/open.png" : "/src/assets/closed.png"}
             alt="Folder"
             className="w-14 h-14"
           />
@@ -84,35 +82,24 @@ const FileExplorer = ({
   };
 
   const FileIconItem = ({ file, animation_delay = 0 }) => {
+    const [is_hovered, set_is_hovered] = useState(false);
+
     const get_large_icon = (file_type) => {
-      switch (file_type) {
-        case "image":
-          return <Icons.Image className="w-14 h-14 text-green-500" />;
-        case "markdown":
-          return <Icons.FileText className="w-14 h-14 text-blue-500" />;
-        case "javascript":
-          return <Icons.Code className="w-14 h-14 text-yellow-500" />;
-        case "json":
-          return <Icons.Code className="w-14 h-14 text-orange-500" />;
-        case "pdf":
-          return <Icons.FileType className="w-14 h-14 text-red-500" />;
-        case "text":
-          return (
-            <img
-              src="/src/assets/txt.png"
-              alt="Text file"
-              className="w-12 h-12"
-            />
-          );
-        default:
-          return <Icons.File className="w-14 h-14 text-gray-500" />;
-      }
+      return (
+        <img
+          src={is_hovered ? "/src/assets/fold.png" : "/src/assets/file.png"}
+          alt="File"
+          className="w-14 h-14"
+        />
+      );
     };
 
     return (
       <div
         className="flex flex-col items-center p-4 rounded-lg cursor-pointer hover:bg-secondary-100 dark:hover:bg-secondary-800 group"
         onClick={() => on_file_select && on_file_select(file)}
+        onMouseEnter={() => set_is_hovered(true)}
+        onMouseLeave={() => set_is_hovered(false)}
       >
         <div className="w-16 h-16 mb-2 flex items-center justify-center">
           {get_large_icon(file.file_type)}
@@ -197,6 +184,7 @@ const FileExplorer = ({
                 <FileIcon
                   file_type={file.file_type}
                   className="w-4 h-4 text-text-muted"
+                  is_selected={selected_file === file.id}
                 />
 
                 {/* File Info */}
@@ -276,7 +264,7 @@ const FileExplorer = ({
         </div>
 
         {/* Grid Layout */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-4">
           {/* Folders First */}
           {folders_to_display.map((folder, index) => (
             <FolderIconItem
