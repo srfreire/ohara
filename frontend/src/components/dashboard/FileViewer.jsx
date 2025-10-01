@@ -1,9 +1,10 @@
-import { FileText, X } from 'lucide-react'
+import { FileText, X, MessageSquare } from 'lucide-react'
 import { marked } from 'marked'
 import { memo, useMemo, useState, useEffect } from 'react'
 import { get_document_by_id } from '../../api/documents'
 import { toast_error } from '../../utils/toast'
 import LoadingSpinner from '../ui/LoadingSpinner'
+import CommentsSection from '../comments/CommentsSection'
 
 // Content cache to prevent re-parsing
 const markdown_cache = new Map()
@@ -49,6 +50,7 @@ MarkdownRenderer.displayName = 'MarkdownRenderer'
 const FileViewer = ({ file, on_close }) => {
   const [document_data, set_document_data] = useState(null)
   const [is_loading, set_is_loading] = useState(false)
+  const [show_comments, set_show_comments] = useState(false)
 
   // Fetch document content when file changes
   useEffect(() => {
@@ -175,35 +177,56 @@ const FileViewer = ({ file, on_close }) => {
   }
 
   return (
-    <div className="h-full bg-white/80 dark:bg-secondary-900/80 backdrop-blur-sm rounded-xl shadow-lg flex flex-col">
-      {/* File Header */}
-      <div className="rounded-t-xl px-6 py-4 sticky top-0 z-10 border-b border-white/80 dark:border-secondary-600/50">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-bold text-text-light font-sora">
-              {display_file.title || display_file.name}
-            </h1>
-          </div>
+    <div className="h-full flex space-x-4">
+      {/* File Viewer */}
+      <div className={`${show_comments ? 'flex-1' : 'w-full'} bg-white/80 dark:bg-secondary-900/80 backdrop-blur-sm rounded-xl shadow-lg flex flex-col`}>
+        {/* File Header */}
+        <div className="rounded-t-xl px-6 py-4 sticky top-0 z-10 border-b border-white/80 dark:border-secondary-600/50">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-xl font-bold text-text-light font-sora">
+                {display_file.title || display_file.name}
+              </h1>
+            </div>
 
-          <div className="flex items-center space-x-2">
-
-            {on_close && (
+            <div className="flex items-center space-x-2">
               <button
-                onClick={on_close}
-                className="p-2 rounded-lg text-text-muted hover:text-text-light"
-                aria-label="Close file viewer"
+                onClick={() => set_show_comments(!show_comments)}
+                className={`p-2 rounded-lg ${
+                  show_comments
+                    ? 'bg-primary-600 text-white'
+                    : 'text-text-muted hover:text-text-light hover:bg-secondary-100 dark:hover:bg-secondary-700'
+                }`}
+                aria-label="Toggle comments"
               >
-                <X className="w-5 h-5" />
+                <MessageSquare className="w-5 h-5" />
               </button>
-            )}
+
+              {on_close && (
+                <button
+                  onClick={on_close}
+                  className="p-2 rounded-lg text-text-muted hover:text-text-light hover:bg-secondary-100 dark:hover:bg-secondary-700"
+                  aria-label="Close file viewer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              )}
+            </div>
           </div>
+        </div>
+
+        {/* File Content */}
+        <div className="flex-1 overflow-y-auto p-6 bg-white/40 dark:bg-secondary-900/40 backdrop-blur-sm rounded-b-xl">
+          {render_file_content()}
         </div>
       </div>
 
-      {/* File Content */}
-      <div className="flex-1 no-scrollbar overflow-y-auto p-6 bg-white/40 dark:bg-secondary-900/40 backdrop-blur-sm rounded-b-xl">
-        {render_file_content()}
-      </div>
+      {/* Comments Panel */}
+      {show_comments && (
+        <div className="w-[450px] flex-shrink-0">
+          <CommentsSection document_id={display_file.id} />
+        </div>
+      )}
     </div>
   )
 }
