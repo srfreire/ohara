@@ -144,6 +144,7 @@ const Dashboard = () => {
           <ChatAgent
             is_collapsed={is_chat_collapsed}
             on_toggle_collapse={handle_toggle_chat}
+            selected_document_id={selected_file?.id}
           />
         )}
 

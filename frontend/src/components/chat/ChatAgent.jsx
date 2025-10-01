@@ -3,7 +3,7 @@ import { Send, Bot, User, PanelLeftClose, PanelLeftOpen, RotateCcw } from 'lucid
 import { stream_chat } from '../../api/agent'
 import { toast_error } from '../../utils/toast'
 
-const ChatAgent = ({ is_collapsed = false, on_toggle_collapse }) => {
+const ChatAgent = ({ is_collapsed = false, on_toggle_collapse, selected_document_id = null }) => {
   const [messages, set_messages] = useState([])
   const [input_value, set_input_value] = useState('')
   const [is_typing, set_is_typing] = useState(false)
@@ -58,6 +58,7 @@ const ChatAgent = ({ is_collapsed = false, on_toggle_collapse }) => {
     // Start streaming
     abort_controller_ref.current = stream_chat(api_messages, {
       model: 'gpt-4.1',
+      document_id: selected_document_id,
       on_token: (token) => {
         console.log('📨 Received token:', { length: token.length, preview: token.substring(0, 50) })
         set_is_typing(false)
@@ -150,13 +151,6 @@ const ChatAgent = ({ is_collapsed = false, on_toggle_collapse }) => {
     }
   }
 
-  const format_time = (timestamp) => {
-    return new Date(timestamp).toLocaleTimeString('en-US', {
-      hour: '2-digit',
-      minute: '2-digit'
-    })
-  }
-
   return (
     <div className="h-full w-[400px] bg-white/80 dark:bg-secondary-900/80 backdrop-blur-lg rounded-xl shadow-lg flex flex-col overflow-hidden">
       {/* Chat Header */}
@@ -241,15 +235,6 @@ const ChatAgent = ({ is_collapsed = false, on_toggle_collapse }) => {
               }`}
             >
               <p className="text-sm whitespace-pre-wrap font-reddit-sans">{message.content}</p>
-              <p
-                className={`text-xs mt-1 font-reddit-sans ${
-                  message.type === 'user'
-                    ? 'text-primary-100'
-                    : 'text-text-muted'
-                }`}
-              >
-                {format_time(message.timestamp)}
-              </p>
             </div>
 
             {message.type === 'user' && (

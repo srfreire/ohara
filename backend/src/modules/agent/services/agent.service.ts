@@ -11,6 +11,7 @@ interface StreamRequestDto {
     timestamp?: string;
   }>;
   model?: string;
+  document_id?: string;
 }
 
 @Injectable()
@@ -60,13 +61,41 @@ export class AgentService {
         );
       }
 
+      // Build workspace context
+      // - workspaceId and workspaceName come from environment variables
+      // - workspaceDescription is dynamic: only included when a document is currently open
+      const workspace_id = this.config_service.get<string>('WORKSPACE_ID');
+      const workspace_name = this.config_service.get<string>('WORKSPACE_NAME');
+
+      let workspace_context: {
+        workspaceId: string;
+        workspaceName: string;
+        workspaceDescription?: string;
+      } | null = null;
+
+      if (workspace_id) {
+        workspace_context = {
+          workspaceId: workspace_id,
+          workspaceName: workspace_name || 'Default Workspace',
+        };
+
+        // Add dynamic workspace description if document is selected
+        if (stream_request.document_id) {
+          workspace_context.workspaceDescription = `I'm currently working on document ${stream_request.document_id}. Please focus queries and responses on this specific document.`;
+        }
+      }
+
       // Create JWT token for agent service authentication
-      // Note: Agent expects payload with 'sub' (email) and 'user_id' fields
+      // Note: Agent expects payload with 'sub' (email), 'user_id', and nested 'workspace' object
+      // The ToolExecutor will extract workspace_id from workspace.workspace_id
       const agent_service_token = this.jwt_service.sign(
         {
           sub: user_email,  // Agent expects 'sub' field
           user_id: user_id,
           email: user_email,
+          workspace: workspace_id ? {
+            workspace_id: workspace_id,  // Agent ToolExecutor extracts this
+          } : null,
         },
         {
           secret: agent_jwt_secret,
@@ -74,7 +103,7 @@ export class AgentService {
         }
       );
 
-      this.logger.debug(`🎟️  Generated JWT for agent service (length: ${agent_service_token.length})`);
+      this.logger.debug(`🎟️  Generated JWT for agent service (length: ${agent_service_token.length}, workspace: ${workspace_id})`);
 
       // Set streaming response headers
       res.setHeader('Content-Type', 'text/plain; charset=utf-8');
@@ -89,6 +118,7 @@ export class AgentService {
           timestamp: msg.timestamp,
         })),
         model: stream_request.model || 'gpt-4.1',
+        workspace_context: workspace_context,
       };
 
       this.logger.log(`🤖 Calling agent service - URL: ${agent_service_url}/v1/chat/stream, Messages: ${stream_request.messages.length}, User: ${user_email}`);

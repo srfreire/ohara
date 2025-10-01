@@ -17,6 +17,7 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000
 export const stream_chat = async (messages, options = {}) => {
   const {
     model = 'gpt-4.1',
+    document_id = null,
     on_token = () => {},
     on_done = () => {},
     on_error = () => {},
@@ -42,6 +43,7 @@ export const stream_chat = async (messages, options = {}) => {
       body: JSON.stringify({
         messages,
         model,
+        ...(document_id && { document_id }),
       }),
       signal: controller.signal,
     })

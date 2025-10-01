@@ -154,73 +154,24 @@ const FileViewer = ({ file, on_close }) => {
       )
     }
 
-    const file_type = display_file.file_type || 'text'
-    const content = display_file.content || ''
+    // Handle content - convert to string if needed
+    let content = display_file.content || ''
 
-    switch (file_type) {
-      case 'markdown':
-        return (
-          <MarkdownRenderer content={content} />
-        )
-
-      case 'text':
-      case 'javascript':
-      case 'json':
-        return (
-          <pre className="p-6 rounded-lg overflow-auto text-sm text-text-light whitespace-pre-wrap font-mono font-reddit-sans">
-            {content}
-          </pre>
-        )
-
-      case 'pdf':
-        return (
-          <div className="p-8 rounded-lg text-center">
-            <FileText className="w-16 h-16 text-text-muted mx-auto mb-4" />
-            <p className="text-text-light mb-2 font-reddit-sans">PDF Document</p>
-            <p className="text-text-muted text-sm mb-4 font-reddit-sans">
-              {display_file.storage_path || 'PDF file'}
-            </p>
-            <button className="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 mx-auto">
-              <Download className="w-4 h-4" />
-              <span className="font-reddit-sans">Download PDF</span>
-            </button>
-          </div>
-        )
-
-      case 'image':
-        return (
-          <div className="p-8 rounded-lg text-center">
-            <div className="max-w-2xl mx-auto mb-4">
-              <img
-                src={content || display_file.storage_path}
-                alt={display_file.name || display_file.title}
-                className="w-full h-auto rounded-lg shadow-lg max-h-96 object-contain mx-auto"
-                onError={(e) => {
-                  e.target.style.display = 'none'
-                  e.target.nextSibling.style.display = 'flex'
-                }}
-              />
-              <div className="w-48 h-32 bg-gradient-to-br from-primary-200 to-secondary-200 dark:from-primary-800 dark:to-secondary-800 rounded-lg mx-auto flex items-center justify-center" style={{display: 'none'}}>
-                <span className="text-text-muted text-sm font-reddit-sans">Image Preview</span>
-              </div>
-            </div>
-            <p className="text-text-light mb-2 font-reddit-sans">{display_file.name || display_file.title}</p>
-          </div>
-        )
-
-      default:
-        return (
-          <div className="p-8 rounded-lg text-center">
-            <FileText className="w-16 h-16 text-text-muted mx-auto mb-4" />
-            <p className="text-text-light mb-2 font-reddit-sans">
-              Cannot preview this file type
-            </p>
-            <p className="text-text-muted text-sm font-reddit-sans">
-              File type: {file_type}
-            </p>
-          </div>
-        )
+    // If content is an array, join it into a single string
+    if (Array.isArray(content)) {
+      content = content.join('\n')
     }
+
+    // If content is an object, stringify it
+    if (typeof content === 'object' && content !== null) {
+      content = JSON.stringify(content, null, 2)
+    }
+
+    // Ensure content is a string
+    content = String(content)
+
+    // Always render as Markdown
+    return <MarkdownRenderer content={content} />
   }
 
   return (
@@ -230,7 +181,7 @@ const FileViewer = ({ file, on_close }) => {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-xl font-bold text-text-light font-sora">
-              {display_file.name || display_file.title}
+              {display_file.title || display_file.name}
             </h1>
           </div>
 

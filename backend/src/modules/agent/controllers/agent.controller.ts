@@ -13,6 +13,7 @@ const stream_request_schema = z.object({
     timestamp: z.string().optional(),
   })),
   model: z.string().optional().default('gpt-4.1'),
+  document_id: z.string().optional(),
 });
 
 type StreamRequestDto = z.infer<typeof stream_request_schema>;
@@ -33,7 +34,7 @@ export class AgentController {
     const user_id = req.user.id;
     const user_email = req.user.email;
 
-    this.logger.log(`💬 Chat stream request - User: ${user_email}, Messages: ${stream_request.messages.length}, Model: ${stream_request.model}`);
+    this.logger.log(`💬 Chat stream request - User: ${user_email}, Messages: ${stream_request.messages.length}, Model: ${stream_request.model}${stream_request.document_id ? `, Document: ${stream_request.document_id}` : ''}`);
 
     await this.agent_service.stream_chat(stream_request, user_id, user_email, res);
   }

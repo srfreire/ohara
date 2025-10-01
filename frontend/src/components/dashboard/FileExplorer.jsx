@@ -137,7 +137,7 @@ const FileExplorer = ({
           {get_large_icon(file.file_type)}
         </div>
         <span className="text-sm text-text-light text-center max-w-full break-words overflow-hidden text-ellipsis font-reddit-sans">
-          {file.name}
+          {file.title || file.name}
         </span>
       </div>
     );
@@ -222,7 +222,7 @@ const FileExplorer = ({
                 {/* File Info */}
                 <div className="flex-1 min-w-0">
                   <div className="text-text-light text-sm truncate font-reddit-sans">
-                    {file.name}
+                    {file.title || file.name}
                   </div>
                 </div>
               </div>

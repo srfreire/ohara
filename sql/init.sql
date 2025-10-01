@@ -42,8 +42,8 @@ CREATE TABLE IF NOT EXISTS folders (
 CREATE TABLE IF NOT EXISTS documents (
   id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   title         TEXT NOT NULL,
-  storage_path  TEXT NOT NULL,
-  nessie_id TEXT NOT NULL UNIQUE,
+  content  JSONB NOT NULL,
+  nessie_id UUID NOT NULL UNIQUE,
   folder_id UUID NOT NULL REFERENCES folders(id) ON DELETE CASCADE,
   created_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at    TIMESTAMPTZ NOT NULL DEFAULT now()
