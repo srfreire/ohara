@@ -14,7 +14,6 @@ import {
 import { UsersService } from '../services/users.service';
 import {
   create_user_schema,
-  update_user_schema,
   CreateUserDto,
   UpdateUserDto,
 } from '../models/user.model';

@@ -10,6 +10,7 @@ import { FoldersModule } from './modules/folders/folders.module';
 import { CommentsModule } from './modules/comments/comments.module';
 import { ReactionsModule } from './modules/reactions/reactions.module';
 import { AuthModule } from './modules/auth/auth.module';
+import { AgentModule } from './modules/agent/agent.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { AuthModule } from './modules/auth/auth.module';
     CommentsModule,
     ReactionsModule,
     AuthModule,
+    AgentModule,
   ],
   providers: [
     {
