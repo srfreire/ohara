@@ -30,7 +30,7 @@ CREATE TABLE IF NOT EXISTS collections (
 );
 
 -- Tabla de Documentos de Colección (relaciona documentos con colecciones)
-CREATE TABLE IF NOT EXISTS collection_documents (
+CREATE TABLE IF NOT EXISTS documents (
   id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   source_doc_id TEXT NOT NULL,
   collection_id UUID NOT NULL REFERENCES collections(id) ON DELETE CASCADE,
@@ -52,7 +52,7 @@ CREATE TABLE IF NOT EXISTS comments (
 );
 
 -- Tabla de Reacciones a Comentarios
-CREATE TABLE IF NOT EXISTS comment_reactions (
+CREATE TABLE IF NOT EXISTS reactions (
   id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   comment_id   UUID NOT NULL REFERENCES comments(id) ON DELETE CASCADE,
   user_id      UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
