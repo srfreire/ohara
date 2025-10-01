@@ -3,13 +3,42 @@ import Header from '../layout/Header'
 import FileExplorer from './FileExplorer'
 import FileViewer from './FileViewer'
 import ChatAgent from '../chat/ChatAgent'
+import { get_folders } from '../../api/folders'
+import { get_documents } from '../../api/documents'
+import { toast_error } from '../../utils/toast'
 
 const Dashboard = () => {
   const [selected_file, set_selected_file] = useState(null)
-  const [selected_folder, set_selected_folder] = useState('2') // Default to 'Projects' folder
+  const [selected_folder, set_selected_folder] = useState(null)
   const [is_file_explorer_collapsed, set_is_file_explorer_collapsed] = useState(false)
   const [is_chat_collapsed, set_is_chat_collapsed] = useState(false)
   const [current_folder_id, set_current_folder_id] = useState(null) // For icon view navigation
+  const [folders, set_folders] = useState([])
+  const [documents, set_documents] = useState([])
+  const [is_loading, set_is_loading] = useState(true)
+
+  // Fetch folders and documents on mount
+  useEffect(() => {
+    fetch_folders_and_documents()
+  }, [])
+
+  const fetch_folders_and_documents = async () => {
+    try {
+      set_is_loading(true)
+      // Fetch folders with no parent_id filter (get all)
+      const folders_data = await get_folders({ limit: 100 })
+      set_folders(folders_data)
+
+      // Fetch documents
+      const documents_data = await get_documents({ limit: 100 })
+      set_documents(documents_data)
+    } catch (error) {
+      console.error('Error fetching data:', error)
+      toast_error('Failed to load files and folders')
+    } finally {
+      set_is_loading(false)
+    }
+  }
 
   const handle_file_select = (file) => {
     set_selected_file(file)
@@ -95,6 +124,9 @@ const Dashboard = () => {
           current_folder_id={current_folder_id}
           on_folder_navigate={handle_folder_navigate}
           can_collapse={selected_file || is_file_explorer_collapsed}
+          folders={folders}
+          documents={documents}
+          is_loading={is_loading}
         />
 
         {/* File Viewer - Only render when file is selected */}

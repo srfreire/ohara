@@ -1,12 +1,16 @@
 import { useState, useRef, useEffect } from 'react'
-import { Send, Bot, User, PanelLeftClose, PanelLeftOpen } from 'lucide-react'
-import { mock_chat_messages } from '../../utils/mock-data'
+import { Send, Bot, User, PanelLeftClose, PanelLeftOpen, RotateCcw } from 'lucide-react'
+import { stream_chat } from '../../api/agent'
+import { toast_error } from '../../utils/toast'
 
 const ChatAgent = ({ is_collapsed = false, on_toggle_collapse }) => {
-  const [messages, set_messages] = useState(mock_chat_messages)
+  const [messages, set_messages] = useState([])
   const [input_value, set_input_value] = useState('')
   const [is_typing, set_is_typing] = useState(false)
+  const [is_streaming, set_is_streaming] = useState(false)
+  const [current_response, set_current_response] = useState('')
   const messages_end_ref = useRef(null)
+  const abort_controller_ref = useRef(null)
 
   const scroll_to_bottom = () => {
     messages_end_ref.current?.scrollIntoView({ behavior: 'smooth' })
@@ -17,50 +21,126 @@ const ChatAgent = ({ is_collapsed = false, on_toggle_collapse }) => {
   }, [messages])
 
   const handle_send_message = async () => {
-    if (!input_value.trim()) return
+    if (!input_value.trim() || is_streaming) return
 
     const user_message = {
       id: Date.now().toString(),
       type: 'user',
+      role: 'user',
       content: input_value.trim(),
       timestamp: new Date().toISOString(),
     }
 
     set_messages(prev => [...prev, user_message])
+    const user_input = input_value.trim()
     set_input_value('')
     set_is_typing(true)
+    set_is_streaming(true)
+    set_current_response('')
 
-    // Simulate AI response
-    setTimeout(() => {
-      const ai_response = {
-        id: (Date.now() + 1).toString(),
-        type: 'assistant',
-        content: generate_mock_response(input_value),
-        timestamp: new Date().toISOString(),
+    // Create assistant message placeholder
+    const assistant_message_id = (Date.now() + 1).toString()
+
+    // Prepare messages for API (only send role and content)
+    const api_messages = [
+      ...messages.map(msg => ({
+        role: msg.role || msg.type,
+        content: msg.content,
+        timestamp: msg.timestamp
+      })),
+      {
+        role: 'user',
+        content: user_input,
+        timestamp: new Date().toISOString()
       }
-      set_messages(prev => [...prev, ai_response])
-      set_is_typing(false)
-    }, 1000 + Math.random() * 2000)
-  }
-
-  const generate_mock_response = (user_input) => {
-    const responses = [
-      "I can help you navigate through your files and understand their contents. What would you like to know?",
-      "Based on the files I can see, this appears to be a development project with React components and configuration files.",
-      "I notice you have several folders including Documents, Projects, and Images. Would you like me to analyze any specific files?",
-      "That's a great question! Let me look at your file structure to provide you with the most relevant information.",
-      "I can help you understand the code in your files, explain configurations, or assist with file organization.",
     ]
 
-    if (user_input.toLowerCase().includes('file') || user_input.toLowerCase().includes('folder')) {
-      return "I can see your file structure. You have Documents, Projects (containing React Apps), Reports, and Images folders. Which specific files would you like me to help you with?"
+    // Start streaming
+    abort_controller_ref.current = stream_chat(api_messages, {
+      model: 'gpt-4.1',
+      on_token: (token) => {
+        console.log('📨 Received token:', { length: token.length, preview: token.substring(0, 50) })
+        set_is_typing(false)
+        set_current_response(prev => {
+          const new_content = prev + token
+
+          // Update the messages array with the current response
+          set_messages(prev_messages => {
+            const existing_index = prev_messages.findIndex(m => m.id === assistant_message_id)
+
+            if (existing_index >= 0) {
+              // Update existing message
+              const updated = [...prev_messages]
+              updated[existing_index] = {
+                ...updated[existing_index],
+                content: new_content
+              }
+              return updated
+            } else {
+              // Add new message
+              return [...prev_messages, {
+                id: assistant_message_id,
+                type: 'assistant',
+                role: 'assistant',
+                content: new_content,
+                timestamp: new Date().toISOString(),
+              }]
+            }
+          })
+
+          return new_content
+        })
+      },
+      on_done: () => {
+        set_is_typing(false)
+        set_is_streaming(false)
+        set_current_response('')
+        abort_controller_ref.current = null
+      },
+      on_error: (error) => {
+        console.error('Streaming error:', error)
+        set_is_typing(false)
+        set_is_streaming(false)
+        set_current_response('')
+        abort_controller_ref.current = null
+
+        // Show error message
+        toast_error(error.message || 'Failed to get response from AI')
+
+        // Add error message to chat
+        set_messages(prev => [...prev, {
+          id: (Date.now() + 2).toString(),
+          type: 'assistant',
+          role: 'assistant',
+          content: 'Sorry, I encountered an error. Please try again.',
+          timestamp: new Date().toISOString(),
+        }])
+      }
+    })
+  }
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (abort_controller_ref.current) {
+        abort_controller_ref.current()
+      }
+    }
+  }, [])
+
+  const handle_refresh_chat = () => {
+    // Abort any ongoing stream
+    if (abort_controller_ref.current) {
+      abort_controller_ref.current()
+      abort_controller_ref.current = null
     }
 
-    if (user_input.toLowerCase().includes('code') || user_input.toLowerCase().includes('javascript')) {
-      return "I can help you understand the code in your files. I see you have JavaScript configuration files and React components. Would you like me to explain any specific file?"
-    }
-
-    return responses[Math.floor(Math.random() * responses.length)]
+    // Clear all state
+    set_messages([])
+    set_input_value('')
+    set_is_typing(false)
+    set_is_streaming(false)
+    set_current_response('')
   }
 
   const handle_key_press = (e) => {
@@ -97,23 +177,49 @@ const ChatAgent = ({ is_collapsed = false, on_toggle_collapse }) => {
           </div>
         </div>
 
-        {on_toggle_collapse && (
+        <div className="flex items-center space-x-2">
           <button
-            onClick={on_toggle_collapse}
-            className="p-2 rounded-lg text-text-muted hover:text-text-light transition-colors duration-200"
-            aria-label={is_collapsed ? 'Expand chat' : 'Collapse chat'}
+            onClick={handle_refresh_chat}
+            disabled={is_streaming}
+            className="p-2 rounded-lg text-text-muted hover:text-text-light disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+            aria-label="Clear chat"
+            title="Clear chat history"
           >
-            {is_collapsed ? (
-              <PanelLeftClose className="w-5 h-5" />
-            ) : (
-              <PanelLeftOpen className="w-5 h-5" />
-            )}
+            <RotateCcw className="w-5 h-5" />
           </button>
-        )}
+
+          {on_toggle_collapse && (
+            <button
+              onClick={on_toggle_collapse}
+              className="p-2 rounded-lg text-text-muted hover:text-text-light transition-colors duration-200"
+              aria-label={is_collapsed ? 'Expand chat' : 'Collapse chat'}
+            >
+              {is_collapsed ? (
+                <PanelLeftClose className="w-5 h-5" />
+              ) : (
+                <PanelLeftOpen className="w-5 h-5" />
+              )}
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Messages Area */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        {messages.length === 0 && !is_typing && (
+          <div className="flex flex-col items-center justify-center h-full text-center px-4">
+            <div className="w-16 h-16 bg-primary-600 rounded-full flex items-center justify-center mb-4">
+              <Bot className="w-8 h-8 text-white" />
+            </div>
+            <h3 className="text-lg font-semibold text-text-light mb-2 font-sora">
+              AI Assistant
+            </h3>
+            <p className="text-text-muted font-reddit-sans max-w-sm">
+              Ask me anything about your files and documents. I can help you search, analyze, and organize your content.
+            </p>
+          </div>
+        )}
+
         {messages.map((message) => (
           <div
             key={message.id}
@@ -185,7 +291,7 @@ const ChatAgent = ({ is_collapsed = false, on_toggle_collapse }) => {
           />
           <button
             onClick={handle_send_message}
-            disabled={!input_value.trim() || is_typing}
+            disabled={!input_value.trim() || is_streaming}
             className="bg-primary-600 hover:bg-primary-700 disabled:bg-secondary-400 text-white p-2 rounded-lg transition-colors duration-200 flex-shrink-0"
           >
             <Send className="w-4 h-4" />

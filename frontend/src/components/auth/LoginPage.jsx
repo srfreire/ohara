@@ -1,15 +1,54 @@
 import { useNavigate } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { useAuth } from '../../contexts/auth-context'
+import { login_with_google } from '../../api/auth'
 
 const LoginPage = () => {
   const navigate = useNavigate()
+  const { is_authenticated, login } = useAuth()
+  const [is_loading, set_is_loading] = useState(false)
+
+  // Redirect to dashboard if already authenticated
+  useEffect(() => {
+    if (is_authenticated) {
+      navigate('/dashboard')
+    }
+  }, [is_authenticated, navigate])
+
+  // Handle OAuth callback
+  useEffect(() => {
+    // Check if we're returning from OAuth callback
+    const url_params = new URLSearchParams(window.location.search)
+    const access_token = url_params.get('access_token')
+    const user_email = url_params.get('email')
+    const user_name = url_params.get('name')
+    const user_id = url_params.get('id')
+    const avatar_url = url_params.get('avatar_url')
+
+    if (access_token) {
+      // Store token in localStorage
+      localStorage.setItem('access_token', access_token)
+
+      // Store user data
+      const user_data = {
+        id: user_id,
+        email: user_email,
+        name: user_name,
+        avatar_url: avatar_url
+      }
+
+      // Update auth context
+      login(user_data)
+
+      // Redirect to dashboard
+      navigate('/dashboard')
+    }
+  }, [login, navigate])
 
   const handle_google_login = () => {
-    // Mock login - in real app this would handle OAuth
-    console.log('Logging in with Google...')
-    // Simulate successful login
-    setTimeout(() => {
-      navigate('/dashboard')
-    }, 1000)
+    set_is_loading(true)
+    // Redirect to backend OAuth endpoint
+    login_with_google()
   }
 
   return (
@@ -58,7 +97,8 @@ const LoginPage = () => {
             {/* Google Login Button */}
             <button
               onClick={handle_google_login}
-              className="w-full bg-secondary-100 dark:bg-secondary-700 dark:hover:bg-secondary-700 hover:bg-secondary-200 text-text-light font-semibold py-3 px-6 rounded-lg transition-all duration-200 flex items-center justify-center space-x-3 backdrop-blur-sm"
+              disabled={is_loading}
+              className="w-full bg-secondary-100 dark:bg-secondary-700 dark:hover:bg-secondary-700 hover:bg-secondary-200 text-text-light font-semibold py-3 px-6 rounded-lg transition-all duration-200 flex items-center justify-center space-x-3 backdrop-blur-sm disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24">
                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -66,7 +106,9 @@ const LoginPage = () => {
                 <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
                 <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
               </svg>
-              <span className="font-reddit-sans font-medium">Continue with Google</span>
+              <span className="font-reddit-sans font-medium">
+                {is_loading ? 'Redirecting...' : 'Continue with Google'}
+              </span>
             </button>
 
             {/* Terms */}

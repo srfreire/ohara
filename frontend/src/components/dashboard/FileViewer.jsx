@@ -1,6 +1,9 @@
 import { Calendar, FileText, Download, X } from 'lucide-react'
 import { marked } from 'marked'
-import { memo, useMemo } from 'react'
+import { memo, useMemo, useState, useEffect } from 'react'
+import { get_document_by_id } from '../../api/documents'
+import { toast_error } from '../../utils/toast'
+import LoadingSpinner from '../ui/LoadingSpinner'
 
 // Content cache to prevent re-parsing
 const markdown_cache = new Map()
@@ -44,6 +47,41 @@ const MarkdownRenderer = memo(({ content }) => {
 MarkdownRenderer.displayName = 'MarkdownRenderer'
 
 const FileViewer = ({ file, on_close }) => {
+  const [document_data, set_document_data] = useState(null)
+  const [is_loading, set_is_loading] = useState(false)
+
+  // Fetch document content when file changes
+  useEffect(() => {
+    if (!file) {
+      set_document_data(null)
+      return
+    }
+
+    // If file already has content (from mock data), use it directly
+    if (file.content) {
+      set_document_data(file)
+      return
+    }
+
+    // Otherwise, fetch from API
+    const fetch_document = async () => {
+      try {
+        set_is_loading(true)
+        const doc = await get_document_by_id(file.id)
+        set_document_data(doc)
+      } catch (error) {
+        console.error('Error fetching document:', error)
+        toast_error('Failed to load document content')
+        // Use file data as fallback
+        set_document_data(file)
+      } finally {
+        set_is_loading(false)
+      }
+    }
+
+    fetch_document()
+  }, [file])
+
   if (!file) {
     return (
       <div className="flex-1 bg-background-light p-8">
@@ -59,6 +97,37 @@ const FileViewer = ({ file, on_close }) => {
     )
   }
 
+  // Show loading state
+  if (is_loading || !document_data) {
+    return (
+      <div className="h-full bg-white/80 dark:bg-secondary-900/80 backdrop-blur-sm rounded-xl shadow-lg flex flex-col">
+        <div className="rounded-t-xl px-6 py-4 border-b border-white/80 dark:border-secondary-600/50">
+          <div className="flex items-center justify-between">
+            <div className="h-7 w-48 bg-secondary-200 dark:bg-secondary-700 rounded animate-pulse" />
+            {on_close && (
+              <button
+                onClick={on_close}
+                className="p-2 rounded-lg text-text-muted hover:text-text-light"
+                aria-label="Close file viewer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            )}
+          </div>
+        </div>
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <LoadingSpinner size="lg" />
+            <p className="mt-4 text-text-muted font-reddit-sans">Loading document...</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Use document_data instead of file for rendering
+  const display_file = document_data
+
   const format_date = (date_string) => {
     return new Date(date_string).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -70,10 +139,28 @@ const FileViewer = ({ file, on_close }) => {
   }
 
   const render_file_content = () => {
-    switch (file.file_type) {
+    // Check if we have content to display
+    if (!display_file.content && !display_file.storage_path) {
+      return (
+        <div className="p-8 rounded-lg text-center">
+          <FileText className="w-16 h-16 text-text-muted mx-auto mb-4" />
+          <p className="text-text-light mb-2 font-reddit-sans">
+            No content available
+          </p>
+          <p className="text-text-muted text-sm font-reddit-sans">
+            This document has no content to display
+          </p>
+        </div>
+      )
+    }
+
+    const file_type = display_file.file_type || 'text'
+    const content = display_file.content || ''
+
+    switch (file_type) {
       case 'markdown':
         return (
-          <MarkdownRenderer content={file.content} />
+          <MarkdownRenderer content={content} />
         )
 
       case 'text':
@@ -81,7 +168,7 @@ const FileViewer = ({ file, on_close }) => {
       case 'json':
         return (
           <pre className="p-6 rounded-lg overflow-auto text-sm text-text-light whitespace-pre-wrap font-mono font-reddit-sans">
-            {file.content}
+            {content}
           </pre>
         )
 
@@ -91,7 +178,7 @@ const FileViewer = ({ file, on_close }) => {
             <FileText className="w-16 h-16 text-text-muted mx-auto mb-4" />
             <p className="text-text-light mb-2 font-reddit-sans">PDF Document</p>
             <p className="text-text-muted text-sm mb-4 font-reddit-sans">
-              {file.content}
+              {display_file.storage_path || 'PDF file'}
             </p>
             <button className="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 mx-auto">
               <Download className="w-4 h-4" />
@@ -105,8 +192,8 @@ const FileViewer = ({ file, on_close }) => {
           <div className="p-8 rounded-lg text-center">
             <div className="max-w-2xl mx-auto mb-4">
               <img
-                src={file.content}
-                alt={file.name}
+                src={content || display_file.storage_path}
+                alt={display_file.name || display_file.title}
                 className="w-full h-auto rounded-lg shadow-lg max-h-96 object-contain mx-auto"
                 onError={(e) => {
                   e.target.style.display = 'none'
@@ -117,7 +204,7 @@ const FileViewer = ({ file, on_close }) => {
                 <span className="text-text-muted text-sm font-reddit-sans">Image Preview</span>
               </div>
             </div>
-            <p className="text-text-light mb-2 font-reddit-sans">{file.name}</p>
+            <p className="text-text-light mb-2 font-reddit-sans">{display_file.name || display_file.title}</p>
           </div>
         )
 
@@ -129,7 +216,7 @@ const FileViewer = ({ file, on_close }) => {
               Cannot preview this file type
             </p>
             <p className="text-text-muted text-sm font-reddit-sans">
-              File type: {file.file_type}
+              File type: {file_type}
             </p>
           </div>
         )
@@ -143,7 +230,7 @@ const FileViewer = ({ file, on_close }) => {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-xl font-bold text-text-light font-sora">
-              {file.name}
+              {display_file.name || display_file.title}
             </h1>
           </div>
 

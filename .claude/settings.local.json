@@ -14,8 +14,12 @@
       "Bash(grep:*)",
       "Bash(npm test)",
       "Bash(npm run lint)",
+<<<<<<< HEAD
       "Bash(npx tsx:*)",
       "Bash(npx ts-node:*)"
+=======
+      "Bash(cat:*)"
+>>>>>>> 36ce4a2c21f085454ab03d092b1e2523ae5e85f9
     ],
     "deny": [],
     "ask": []

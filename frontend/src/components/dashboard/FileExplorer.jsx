@@ -10,14 +10,8 @@ import {
   Home,
 } from "lucide-react";
 import * as Icons from "lucide-react";
-import {
-  get_root_folders,
-  get_subfolders,
-  get_files_in_folder,
-  get_file_icon,
-  get_folder_by_id,
-  get_folder_path,
-} from "../../utils/mock-data";
+import FileListSkeleton from "../ui/FileListSkeleton";
+import FileGridSkeleton from "../ui/FileGridSkeleton";
 
 const FileExplorer = ({
   selected_file,
@@ -30,10 +24,48 @@ const FileExplorer = ({
   current_folder_id = null,
   on_folder_navigate,
   can_collapse = true,
+  folders = null,
+  documents = null,
+  is_loading = false,
 }) => {
   // Auto-determine view mode based on file selection
   const view_mode = selected_file ? "list" : "icon";
-  const [expanded_folders, set_expanded_folders] = useState(new Set(["2"])); // Expand 'Projects' by default
+  const [expanded_folders, set_expanded_folders] = useState(new Set());
+
+  // Helper functions for API data only
+  const get_root_folders_data = () => {
+    if (!folders) return []
+    return folders.filter(folder => !folder.parent_id)
+  }
+
+  const get_subfolders_data = (parent_id) => {
+    if (!folders) return []
+    return folders.filter(folder => folder.parent_id === parent_id)
+  }
+
+  const get_files_in_folder_data = (folder_id) => {
+    if (!documents) return []
+    return documents.filter(doc => doc.folder_id === folder_id)
+  }
+
+  const get_folder_by_id_data = (folder_id) => {
+    if (!folders) return null
+    return folders.find(folder => folder.id === folder_id)
+  }
+
+  const get_folder_path_data = (folder_id) => {
+    if (!folder_id || !folders) return []
+
+    const path = []
+    let current_folder = get_folder_by_id_data(folder_id)
+
+    while (current_folder) {
+      path.unshift(current_folder)
+      current_folder = current_folder.parent_id ? get_folder_by_id_data(current_folder.parent_id) : null
+    }
+
+    return path
+  }
 
   const toggle_folder = (folder_id) => {
     const new_expanded = new Set(expanded_folders);
@@ -114,8 +146,8 @@ const FileExplorer = ({
   const FolderItem = ({ folder, level = 0 }) => {
     const is_expanded = expanded_folders.has(folder.id);
     const is_selected = selected_folder === folder.id;
-    const subfolders = get_subfolders(folder.id);
-    const files = get_files_in_folder(folder.id);
+    const subfolders = get_subfolders_data(folder.id);
+    const files = get_files_in_folder_data(folder.id);
     const has_children = subfolders.length > 0 || files.length > 0;
 
     return (
@@ -203,12 +235,16 @@ const FileExplorer = ({
 
   // Grid View Layout Component
   const IconGridView = () => {
+    if (is_loading) {
+      return <FileGridSkeleton count={12} />
+    }
+
     const folder_to_show = current_folder_id || null;
     const folders_to_display = folder_to_show
-      ? get_subfolders(folder_to_show)
-      : get_root_folders();
+      ? get_subfolders_data(folder_to_show)
+      : get_root_folders_data();
     const files_to_display = folder_to_show
-      ? get_files_in_folder(folder_to_show)
+      ? get_files_in_folder_data(folder_to_show)
       : [];
 
     return (
@@ -235,7 +271,7 @@ const FileExplorer = ({
 
           {/* Path breadcrumbs */}
           {folder_to_show && (() => {
-            const folder_path = get_folder_path(folder_to_show)
+            const folder_path = get_folder_path_data(folder_to_show)
             return folder_path.map((folder, index) => {
               const is_last = index === folder_path.length - 1
               return (
@@ -263,6 +299,21 @@ const FileExplorer = ({
           })()}
         </div>
 
+        {/* Empty State */}
+        {folders_to_display.length === 0 && files_to_display.length === 0 && (
+          <div className="flex flex-col items-center justify-center text-center min-h-[60vh]">
+            <div className="w-24 h-24 mb-4 opacity-20">
+              <Folder className="w-full h-full text-text-muted" />
+            </div>
+            <h3 className="text-lg font-semibold text-text-light mb-2 font-sora">
+              No files or folders
+            </h3>
+            <p className="text-text-muted font-reddit-sans">
+              {folder_to_show ? "This folder is empty" : "Upload files to get started"}
+            </p>
+          </div>
+        )}
+
         {/* Grid Layout */}
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
           {/* Folders First */}
@@ -283,19 +334,11 @@ const FileExplorer = ({
             />
           ))}
         </div>
-
-        {/* Empty State */}
-        {folders_to_display.length === 0 && files_to_display.length === 0 && (
-          <div className="text-center py-12">
-            <Folder className="w-12 h-12 text-text-muted mx-auto mb-4" />
-            <p className="text-text-muted font-reddit-sans">This folder is empty</p>
-          </div>
-        )}
       </div>
     );
   };
 
-  const root_folders = get_root_folders();
+  const root_folders = get_root_folders_data();
 
   const get_width_class = () => {
     if (is_collapsed) return "w-12"; // Just show the collapse button
@@ -362,11 +405,15 @@ const FileExplorer = ({
               : "opacity-0 transform -translate-x-4 pointer-events-none z-0"
           }`}
         >
-          <div className="p-4 space-y-1">
-            {root_folders.map((folder) => (
-              <FolderItem key={folder.id} folder={folder} />
-            ))}
-          </div>
+          {is_loading ? (
+            <FileListSkeleton count={5} />
+          ) : (
+            <div className="p-4 space-y-1">
+              {root_folders.map((folder) => (
+                <FolderItem key={folder.id} folder={folder} />
+              ))}
+            </div>
+          )}
         </div>
         </div>
       )}

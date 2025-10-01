@@ -1,13 +1,13 @@
 import { LogOut, User, Moon, Sun } from 'lucide-react'
 import { useTheme } from '../../utils/theme'
+import { useAuth } from '../../contexts/auth-context'
 
 const Header = () => {
   const { isDarkMode, toggleTheme } = useTheme()
+  const { user, logout } = useAuth()
 
   const handle_logout = () => {
-    console.log('Logging out...')
-    // In a real app, this would clear auth tokens and redirect
-    window.location.href = '/'
+    logout()
   }
 
   return (
@@ -49,7 +49,9 @@ const Header = () => {
           <div className="p-2 rounded-lg bg-secondary-100 dark:bg-secondary-700">
             <User className="w-5 h-5 text-text-light" />
           </div>
-          <span className="text-text-light font-medium font-reddit-sans">User</span>
+          <span className="text-text-light font-medium font-reddit-sans">
+            {user?.name || 'User'}
+          </span>
         </div>
 
         {/* Logout Button */}
