@@ -1,11 +1,10 @@
 import { useState, useRef, useEffect } from 'react'
-import { Send, Bot, User, PanelLeftClose, PanelLeftOpen } from 'lucide-react'
-import { mock_chat_messages } from '../../utils/mock-data'
+import { Send, Bot, User, PanelLeftClose, PanelLeftOpen, RotateCcw } from 'lucide-react'
 import { stream_chat } from '../../api/agent'
 import { toast_error } from '../../utils/toast'
 
 const ChatAgent = ({ is_collapsed = false, on_toggle_collapse }) => {
-  const [messages, set_messages] = useState(mock_chat_messages)
+  const [messages, set_messages] = useState([])
   const [input_value, set_input_value] = useState('')
   const [is_typing, set_is_typing] = useState(false)
   const [is_streaming, set_is_streaming] = useState(false)
@@ -60,6 +59,7 @@ const ChatAgent = ({ is_collapsed = false, on_toggle_collapse }) => {
     abort_controller_ref.current = stream_chat(api_messages, {
       model: 'gpt-4.1',
       on_token: (token) => {
+        console.log('📨 Received token:', { length: token.length, preview: token.substring(0, 50) })
         set_is_typing(false)
         set_current_response(prev => {
           const new_content = prev + token
@@ -128,6 +128,21 @@ const ChatAgent = ({ is_collapsed = false, on_toggle_collapse }) => {
     }
   }, [])
 
+  const handle_refresh_chat = () => {
+    // Abort any ongoing stream
+    if (abort_controller_ref.current) {
+      abort_controller_ref.current()
+      abort_controller_ref.current = null
+    }
+
+    // Clear all state
+    set_messages([])
+    set_input_value('')
+    set_is_typing(false)
+    set_is_streaming(false)
+    set_current_response('')
+  }
+
   const handle_key_press = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
@@ -162,23 +177,49 @@ const ChatAgent = ({ is_collapsed = false, on_toggle_collapse }) => {
           </div>
         </div>
 
-        {on_toggle_collapse && (
+        <div className="flex items-center space-x-2">
           <button
-            onClick={on_toggle_collapse}
-            className="p-2 rounded-lg text-text-muted hover:text-text-light transition-colors duration-200"
-            aria-label={is_collapsed ? 'Expand chat' : 'Collapse chat'}
+            onClick={handle_refresh_chat}
+            disabled={is_streaming}
+            className="p-2 rounded-lg text-text-muted hover:text-text-light disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+            aria-label="Clear chat"
+            title="Clear chat history"
           >
-            {is_collapsed ? (
-              <PanelLeftClose className="w-5 h-5" />
-            ) : (
-              <PanelLeftOpen className="w-5 h-5" />
-            )}
+            <RotateCcw className="w-5 h-5" />
           </button>
-        )}
+
+          {on_toggle_collapse && (
+            <button
+              onClick={on_toggle_collapse}
+              className="p-2 rounded-lg text-text-muted hover:text-text-light transition-colors duration-200"
+              aria-label={is_collapsed ? 'Expand chat' : 'Collapse chat'}
+            >
+              {is_collapsed ? (
+                <PanelLeftClose className="w-5 h-5" />
+              ) : (
+                <PanelLeftOpen className="w-5 h-5" />
+              )}
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Messages Area */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        {messages.length === 0 && !is_typing && (
+          <div className="flex flex-col items-center justify-center h-full text-center px-4">
+            <div className="w-16 h-16 bg-primary-600 rounded-full flex items-center justify-center mb-4">
+              <Bot className="w-8 h-8 text-white" />
+            </div>
+            <h3 className="text-lg font-semibold text-text-light mb-2 font-sora">
+              AI Assistant
+            </h3>
+            <p className="text-text-muted font-reddit-sans max-w-sm">
+              Ask me anything about your files and documents. I can help you search, analyze, and organize your content.
+            </p>
+          </div>
+        )}
+
         {messages.map((message) => (
           <div
             key={message.id}

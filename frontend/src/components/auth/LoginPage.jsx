@@ -23,6 +23,7 @@ const LoginPage = () => {
     const user_email = url_params.get('email')
     const user_name = url_params.get('name')
     const user_id = url_params.get('id')
+    const avatar_url = url_params.get('avatar_url')
 
     if (access_token) {
       // Store token in localStorage
@@ -32,7 +33,8 @@ const LoginPage = () => {
       const user_data = {
         id: user_id,
         email: user_email,
-        name: user_name
+        name: user_name,
+        avatar_url: avatar_url
       }
 
       // Update auth context

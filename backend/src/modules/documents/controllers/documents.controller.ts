@@ -1,16 +1,21 @@
-import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Param, Query, UseGuards, Logger } from '@nestjs/common';
 import { DocumentsService } from '../services/documents.service';
 import { QueryDocumentsDto } from '../models/document.model';
-import { ApiKeyGuard } from '../../auth/guards/api-key.guard';
+import { ApiKeyOrJwtGuard } from '../../auth/guards/api-key-or-jwt.guard';
 
 @Controller('documents')
-@UseGuards(ApiKeyGuard)
+@UseGuards(ApiKeyOrJwtGuard)
 export class DocumentsController {
+  private readonly logger = new Logger('DocumentsController');
+
   constructor(private readonly documents_service: DocumentsService) {}
 
   @Get()
   async find_all(@Query() query_params: QueryDocumentsDto) {
-    return this.documents_service.find_all(query_params);
+    this.logger.log(`📄 Fetching documents - Params: ${JSON.stringify(query_params)}`);
+    const documents = await this.documents_service.find_all(query_params);
+    this.logger.log(`✅ Returned ${documents.length} documents`);
+    return documents;
   }
 
   @Get(':id')

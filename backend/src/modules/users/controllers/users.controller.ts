@@ -18,7 +18,6 @@ import {
   UpdateUserDto,
 } from '../models/user.model';
 import { ZodValidationPipe } from '../../../common/validation/zod-validation.pipe';
-import { ApiKeyGuard } from '../../auth/guards/api-key.guard';
 import { ApiKeyOrJwtGuard } from '../../auth/guards/api-key-or-jwt.guard';
 
 @Controller('users')
@@ -26,19 +25,19 @@ export class UsersController {
   constructor(private readonly users_service: UsersService) {}
 
   @Get()
-  @UseGuards(ApiKeyGuard)
+  @UseGuards(ApiKeyOrJwtGuard)
   async find_all() {
     return this.users_service.find_all();
   }
 
   @Get(':id')
-  @UseGuards(ApiKeyGuard)
+  @UseGuards(ApiKeyOrJwtGuard)
   async find_by_id(@Param('id') id: string) {
     return this.users_service.find_by_id(id);
   }
 
   @Post()
-  @UseGuards(ApiKeyGuard)
+  @UseGuards(ApiKeyOrJwtGuard)
   @UsePipes(new ZodValidationPipe(create_user_schema))
   async create(@Body() create_user_dto: CreateUserDto) {
     return this.users_service.create(create_user_dto);

@@ -3,7 +3,7 @@
  * Handles SSE (Server-Sent Events) streaming for chat
  */
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/v1'
 
 /**
  * Stream chat messages using Server-Sent Events
@@ -83,12 +83,35 @@ export const stream_chat = async (messages, options = {}) => {
                 const data = JSON.parse(data_str)
 
                 if (data.type === 'token' && data.content) {
+                  // Legacy token-by-token streaming
                   on_token(data.content)
+                } else if (data.type === 'response' && data.content) {
+                  // Structured response from agent (contains text, citations, files)
+                  const response_text = typeof data.content === 'string'
+                    ? data.content
+                    : data.content.text || JSON.stringify(data.content)
+                  console.log('✅ Received final response:', { text_length: response_text.length, preview: response_text.substring(0, 100) })
+
+                  // Send the full text at once
+                  on_token(response_text)
+
+                  // Mark as done
+                  on_done()
+                  return
+                } else if (data.type === 'action') {
+                  // Tool calls - log for debugging but don't display yet
+                  console.log('🔧 Agent calling tools:', data.content)
+                } else if (data.type === 'observation') {
+                  // Tool results - log for debugging but don't display yet
+                  console.log('📊 Tool results:', data.content)
+                } else if (data.type === 'thought') {
+                  // Agent thinking - log for debugging but don't display yet
+                  console.log('💭 Agent thinking:', data.content)
                 } else if (data.type === 'done') {
                   on_done()
                   return
                 } else if (data.type === 'error') {
-                  on_error(new Error(data.message || 'Stream error'))
+                  on_error(new Error(data.content || data.message || 'Stream error'))
                   return
                 }
               } catch (parse_error) {

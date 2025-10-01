@@ -1,17 +1,22 @@
-import { Controller, Get, Post, Put, Delete, Param, Query, Body, UsePipes, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Param, Query, Body, UsePipes, UseGuards, Logger } from '@nestjs/common';
 import { FoldersService } from '../services/folders.service';
 import { QueryFoldersDto, CreateFolderDto, UpdateFolderDto, create_folder_schema, update_folder_schema } from '../models/folder.model';
 import { ZodValidationPipe } from '../../../common/validation/zod-validation.pipe';
-import { ApiKeyGuard } from '../../auth/guards/api-key.guard';
+import { ApiKeyOrJwtGuard } from '../../auth/guards/api-key-or-jwt.guard';
 
 @Controller('folders')
-@UseGuards(ApiKeyGuard)
+@UseGuards(ApiKeyOrJwtGuard)
 export class FoldersController {
+  private readonly logger = new Logger('FoldersController');
+
   constructor(private readonly folders_service: FoldersService) {}
 
   @Get()
   async find_all(@Query() query_params: QueryFoldersDto) {
-    return this.folders_service.find_all(query_params);
+    this.logger.log(`📂 Fetching folders - Params: ${JSON.stringify(query_params)}`);
+    const folders = await this.folders_service.find_all(query_params);
+    this.logger.log(`✅ Returned ${folders.length} folders`);
+    return folders;
   }
 
   @Get(':id')
