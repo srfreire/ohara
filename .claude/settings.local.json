@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install)",
+      "Bash(tree:*)",
+      "Bash(curl:*)",
+      "Bash(taskkill:*)",
+      "Bash(tasklist)",
+      "Bash(findstr:*)",
+      "Bash(npm run start:dev:*)",
+      "Bash(psql:*)",
+      "Bash(bash:*)",
+      "Bash(npm run build:*)",
+      "Bash(grep:*)",
+      "Bash(npm test)",
+      "Bash(npm run lint)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "ecmaVersion": 2022,
+    "sourceType": "module"
+  },
+  "plugins": ["@typescript-eslint"],
+  "extends": [
+    "eslint:recommended"
+  ],
+  "root": true,
+  "env": {
+    "node": true,
+    "es6": true,
+    "jest": true
+  },
+  "ignorePatterns": [
+    "dist/**/*",
+    "node_modules/**/*", 
+    "coverage/**/*",
+    "*.config.js",
+    "*.config.ts",
+    "test-db.ts"
+  ],
+  "rules": {
+    "@typescript-eslint/no-unused-vars": ["warn", { "argsIgnorePattern": "^_" }],
+    "@typescript-eslint/no-explicit-any": "warn",
+    "no-console": "warn",
+    "no-debugger": "error",
+    "no-unused-vars": "off",
+    "prefer-const": "error",
+    "no-var": "error",
+    "eqeqeq": ["error", "always"],
+    "curly": ["warn", "all"]
+  },
+  "overrides": [
+    {
+      "files": ["tests/**/*.ts", "**/*.test.ts", "**/*.spec.ts"],
+      "rules": {
+        "@typescript-eslint/no-explicit-any": "off",
+        "no-console": "off"
+      }
+    },
+    {
+      "files": ["*.config.ts", "*.config.js", "test-db.ts", "src/main.ts"],
+      "rules": {
+        "no-console": "off"
+      }
+    }
+  ]
+}
