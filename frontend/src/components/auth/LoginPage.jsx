@@ -57,7 +57,7 @@ const LoginPage = () => {
       <div
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
         style={{
-          backgroundImage: 'url(/hero.png)',
+          backgroundImage: 'url(/hero.jpg)',
         }}
       >
         {/* Overlay for better contrast - adapts to theme */}
