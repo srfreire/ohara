@@ -1,4 +1,4 @@
-import { Calendar, FileText, Download, X } from 'lucide-react'
+import { FileText, X } from 'lucide-react'
 import { marked } from 'marked'
 import { memo, useMemo, useState, useEffect } from 'react'
 import { get_document_by_id } from '../../api/documents'
@@ -186,9 +186,6 @@ const FileViewer = ({ file, on_close }) => {
           </div>
 
           <div className="flex items-center space-x-2">
-            <button className="p-2 rounded-lg text-text-muted hover:text-text-light">
-              <Download className="w-5 h-5" />
-            </button>
 
             {on_close && (
               <button
