@@ -18,6 +18,8 @@ import {
   get_folder_by_id,
   get_folder_path,
 } from "../../utils/mock-data";
+import FileListSkeleton from "../ui/FileListSkeleton";
+import FileGridSkeleton from "../ui/FileGridSkeleton";
 
 const FileExplorer = ({
   selected_file,
@@ -30,10 +32,53 @@ const FileExplorer = ({
   current_folder_id = null,
   on_folder_navigate,
   can_collapse = true,
+  folders = null,
+  documents = null,
+  is_loading = false,
 }) => {
   // Auto-determine view mode based on file selection
   const view_mode = selected_file ? "list" : "icon";
-  const [expanded_folders, set_expanded_folders] = useState(new Set(["2"])); // Expand 'Projects' by default
+  const [expanded_folders, set_expanded_folders] = useState(new Set());
+
+  // Use API data if available, otherwise fallback to mock data
+  const use_mock_data = !folders || folders.length === 0
+
+  // Helper functions that work with both API and mock data
+  const get_root_folders_data = () => {
+    if (use_mock_data) return get_root_folders()
+    return folders.filter(folder => !folder.parent_id)
+  }
+
+  const get_subfolders_data = (parent_id) => {
+    if (use_mock_data) return get_subfolders(parent_id)
+    return folders.filter(folder => folder.parent_id === parent_id)
+  }
+
+  const get_files_in_folder_data = (folder_id) => {
+    if (use_mock_data) return get_files_in_folder(folder_id)
+    // API uses folder_id field in documents
+    return documents.filter(doc => doc.folder_id === folder_id)
+  }
+
+  const get_folder_by_id_data = (folder_id) => {
+    if (use_mock_data) return get_folder_by_id(folder_id)
+    return folders.find(folder => folder.id === folder_id)
+  }
+
+  const get_folder_path_data = (folder_id) => {
+    if (use_mock_data) return get_folder_path(folder_id)
+    if (!folder_id) return []
+
+    const path = []
+    let current_folder = get_folder_by_id_data(folder_id)
+
+    while (current_folder) {
+      path.unshift(current_folder)
+      current_folder = current_folder.parent_id ? get_folder_by_id_data(current_folder.parent_id) : null
+    }
+
+    return path
+  }
 
   const toggle_folder = (folder_id) => {
     const new_expanded = new Set(expanded_folders);
@@ -114,8 +159,8 @@ const FileExplorer = ({
   const FolderItem = ({ folder, level = 0 }) => {
     const is_expanded = expanded_folders.has(folder.id);
     const is_selected = selected_folder === folder.id;
-    const subfolders = get_subfolders(folder.id);
-    const files = get_files_in_folder(folder.id);
+    const subfolders = get_subfolders_data(folder.id);
+    const files = get_files_in_folder_data(folder.id);
     const has_children = subfolders.length > 0 || files.length > 0;
 
     return (
@@ -203,12 +248,16 @@ const FileExplorer = ({
 
   // Grid View Layout Component
   const IconGridView = () => {
+    if (is_loading) {
+      return <FileGridSkeleton count={12} />
+    }
+
     const folder_to_show = current_folder_id || null;
     const folders_to_display = folder_to_show
-      ? get_subfolders(folder_to_show)
-      : get_root_folders();
+      ? get_subfolders_data(folder_to_show)
+      : get_root_folders_data();
     const files_to_display = folder_to_show
-      ? get_files_in_folder(folder_to_show)
+      ? get_files_in_folder_data(folder_to_show)
       : [];
 
     return (
@@ -235,7 +284,7 @@ const FileExplorer = ({
 
           {/* Path breadcrumbs */}
           {folder_to_show && (() => {
-            const folder_path = get_folder_path(folder_to_show)
+            const folder_path = get_folder_path_data(folder_to_show)
             return folder_path.map((folder, index) => {
               const is_last = index === folder_path.length - 1
               return (
@@ -295,7 +344,7 @@ const FileExplorer = ({
     );
   };
 
-  const root_folders = get_root_folders();
+  const root_folders = get_root_folders_data();
 
   const get_width_class = () => {
     if (is_collapsed) return "w-12"; // Just show the collapse button
@@ -362,11 +411,15 @@ const FileExplorer = ({
               : "opacity-0 transform -translate-x-4 pointer-events-none z-0"
           }`}
         >
-          <div className="p-4 space-y-1">
-            {root_folders.map((folder) => (
-              <FolderItem key={folder.id} folder={folder} />
-            ))}
-          </div>
+          {is_loading ? (
+            <FileListSkeleton count={5} />
+          ) : (
+            <div className="p-4 space-y-1">
+              {root_folders.map((folder) => (
+                <FolderItem key={folder.id} folder={folder} />
+              ))}
+            </div>
+          )}
         </div>
         </div>
       )}
