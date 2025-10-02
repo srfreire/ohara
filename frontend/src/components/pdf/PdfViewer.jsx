@@ -54,8 +54,12 @@ const PdfViewer = ({ pdf_url, document_title }) => {
   // Clear highlights when search text changes
   useEffect(() => {
     if (!search_text) {
-      document.querySelectorAll('.pdf-search-highlight').forEach(el => {
-        el.classList.remove('pdf-search-highlight', 'pdf-search-highlight-current')
+      document.querySelectorAll('.pdf-highlight-wrapper').forEach(wrapper => {
+        const parent = wrapper.parentNode
+        const text = wrapper.textContent
+        const text_node = document.createTextNode(text)
+        parent.replaceChild(text_node, wrapper)
+        parent.normalize()
       })
       set_search_matches([])
       set_current_match_index(0)
@@ -111,9 +115,8 @@ const PdfViewer = ({ pdf_url, document_title }) => {
     set_search_matches(matches)
     set_current_match_index(matches.length > 0 ? 1 : 0)
 
-    // Jump to first match and highlight
+    // Highlight first match (will scroll to it)
     if (matches.length > 0) {
-      jump_to_page(matches[0].page)
       setTimeout(() => highlight_current_match(), 200)
     }
   }
@@ -127,8 +130,8 @@ const PdfViewer = ({ pdf_url, document_title }) => {
 
     const next_index = current_match_index % search_matches.length + 1
     set_current_match_index(next_index)
-    jump_to_page(search_matches[next_index - 1].page)
-    highlight_current_match()
+    // Highlight will scroll to the element
+    setTimeout(() => highlight_current_match(), 50)
   }
 
   const handle_search_prev = () => {
@@ -136,17 +139,25 @@ const PdfViewer = ({ pdf_url, document_title }) => {
 
     const prev_index = current_match_index === 1 ? search_matches.length : current_match_index - 1
     set_current_match_index(prev_index)
-    jump_to_page(search_matches[prev_index - 1].page)
-    highlight_current_match()
+    // Highlight will scroll to the element
+    setTimeout(() => highlight_current_match(), 50)
   }
 
   const highlight_current_match = () => {
-    // Remove previous highlights
-    document.querySelectorAll('.pdf-search-highlight').forEach(el => {
-      el.classList.remove('pdf-search-highlight', 'pdf-search-highlight-current')
+    // Remove previous highlights and restore original content
+    document.querySelectorAll('.pdf-highlight-wrapper').forEach(wrapper => {
+      const parent = wrapper.parentNode
+      const text = wrapper.textContent
+      const text_node = document.createTextNode(text)
+      parent.replaceChild(text_node, wrapper)
+      parent.normalize() // Merge adjacent text nodes
     })
 
     if (search_matches.length === 0 || !search_text) return
+
+    const search_regex = new RegExp(`(${search_text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi')
+    let match_counter = 0
+    let current_match_element = null
 
     // Highlight all matches
     const text_layers = document.querySelectorAll('.react-pdf__Page__textContent')
@@ -154,23 +165,27 @@ const PdfViewer = ({ pdf_url, document_title }) => {
       const text_spans = text_layer.querySelectorAll('span')
       text_spans.forEach(span => {
         const text = span.textContent
-        if (text && text.toLowerCase().includes(search_text.toLowerCase())) {
-          span.classList.add('pdf-search-highlight')
+        if (text && search_regex.test(text)) {
+          // Reset regex lastIndex
+          search_regex.lastIndex = 0
+
+          // Replace text with highlighted version
+          const highlighted_html = text.replace(search_regex, (match) => {
+            match_counter++
+            const is_current = match_counter === current_match_index
+            return `<mark class="pdf-highlight-wrapper ${is_current ? 'pdf-search-highlight-current' : 'pdf-search-highlight'}" data-match-index="${match_counter}">${match}</mark>`
+          })
+
+          span.innerHTML = highlighted_html
         }
       })
     })
 
-    // Highlight current match differently
+    // Scroll to the current match
     setTimeout(() => {
-      const current_page_element = page_refs.current[search_matches[current_match_index - 1]?.page]
-      if (current_page_element) {
-        const text_layer = current_page_element.querySelector('.react-pdf__Page__textContent')
-        if (text_layer) {
-          const text_spans = text_layer.querySelectorAll('span.pdf-search-highlight')
-          if (text_spans[0]) {
-            text_spans[0].classList.add('pdf-search-highlight-current')
-          }
-        }
+      const current_highlight = document.querySelector('.pdf-search-highlight-current')
+      if (current_highlight) {
+        current_highlight.scrollIntoView({ behavior: 'smooth', block: 'center' })
       }
     }, 100)
   }
@@ -185,13 +200,20 @@ const PdfViewer = ({ pdf_url, document_title }) => {
   return (
     <div className="h-full flex flex-col bg-secondary-50 dark:bg-secondary-950 rounded-xl overflow-hidden">
       <style>{`
+        .pdf-highlight-wrapper {
+          padding: 0 !important;
+          margin: 0 !important;
+          border: none !important;
+        }
         .pdf-search-highlight {
           background-color: rgba(74, 124, 84, 0.3) !important;
+          color: inherit !important;
           border-radius: 2px;
-          padding: 1px 0;
+          padding: 2px 1px;
         }
         .pdf-search-highlight-current {
           background-color: rgba(74, 124, 84, 0.6) !important;
+          color: inherit !important;
           outline: 2px solid #4a7c54;
           outline-offset: 1px;
         }
