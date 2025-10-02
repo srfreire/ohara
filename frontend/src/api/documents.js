@@ -32,6 +32,21 @@ export const get_document_by_id = async (id) => {
 }
 
 /**
+ * Get signed URL for document PDF
+ * @param {string} id - Document ID
+ * @returns {Promise<{url: string, expires_in: number}>} Signed URL and expiration time
+ */
+export const get_document_url = async (id) => {
+  try {
+    const response = await api_client.get(`/documents/${id}/url`)
+    return response.data
+  } catch (error) {
+    console.error('Get document URL error:', error)
+    throw error
+  }
+}
+
+/**
  * Create new document
  * @param {Object} document_data - Document data
  */

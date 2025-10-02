@@ -1,87 +1,38 @@
 import { FileText, X, MessageSquare } from 'lucide-react'
-import { marked } from 'marked'
-import { memo, useMemo, useState, useEffect } from 'react'
-import { get_document_by_id } from '../../api/documents'
+import { useState, useEffect } from 'react'
+import { get_document_url } from '../../api/documents'
 import { toast_error } from '../../utils/toast'
 import LoadingSpinner from '../ui/LoadingSpinner'
 import CommentsSection from '../comments/CommentsSection'
-
-// Content cache to prevent re-parsing
-const markdown_cache = new Map()
-
-const MarkdownRenderer = memo(({ content }) => {
-  const html_content = useMemo(() => {
-    // Check cache first
-    const cache_key = content.slice(0, 100) + content.length
-    if (markdown_cache.has(cache_key)) {
-      return markdown_cache.get(cache_key)
-    }
-
-    // Configure marked options for performance
-    marked.setOptions({
-      breaks: true,
-      gfm: true,
-      pedantic: false,
-      sanitize: false
-    })
-
-    const html = marked.parse(content)
-
-    // Cache the result (limit cache size to prevent memory leaks)
-    if (markdown_cache.size > 50) {
-      const first_key = markdown_cache.keys().next().value
-      markdown_cache.delete(first_key)
-    }
-    markdown_cache.set(cache_key, html)
-
-    return html
-  }, [content])
-
-  return (
-    <div
-      className="markdown-content"
-      dangerouslySetInnerHTML={{ __html: html_content }}
-    />
-  )
-})
-
-MarkdownRenderer.displayName = 'MarkdownRenderer'
+import PdfViewer from '../pdf/PdfViewer'
 
 const FileViewer = ({ file, on_close }) => {
-  const [document_data, set_document_data] = useState(null)
+  const [pdf_url, set_pdf_url] = useState(null)
   const [is_loading, set_is_loading] = useState(false)
   const [show_comments, set_show_comments] = useState(false)
 
-  // Fetch document content when file changes
+  // Fetch document PDF URL when file changes
   useEffect(() => {
     if (!file) {
-      set_document_data(null)
+      set_pdf_url(null)
       return
     }
 
-    // If file already has content (from mock data), use it directly
-    if (file.content) {
-      set_document_data(file)
-      return
-    }
-
-    // Otherwise, fetch from API
-    const fetch_document = async () => {
+    const fetch_document_url = async () => {
       try {
         set_is_loading(true)
-        const doc = await get_document_by_id(file.id)
-        set_document_data(doc)
+        const { url } = await get_document_url(file.id)
+        set_pdf_url(url)
       } catch (error) {
-        console.error('Error fetching document:', error)
-        toast_error('Failed to load document content')
-        // Use file data as fallback
-        set_document_data(file)
+        console.error('Error fetching document URL:', error)
+        toast_error('Failed to load document')
+        set_pdf_url(null)
       } finally {
         set_is_loading(false)
       }
     }
 
-    fetch_document()
+    fetch_document_url()
   }, [file])
 
   if (!file) {
@@ -100,7 +51,7 @@ const FileViewer = ({ file, on_close }) => {
   }
 
   // Show loading state
-  if (is_loading || !document_data) {
+  if (is_loading || !pdf_url) {
     return (
       <div className="h-full bg-white/80 dark:bg-secondary-900/80 backdrop-blur-sm rounded-xl shadow-lg flex flex-col">
         <div className="rounded-t-xl px-6 py-4 border-b border-white/80 dark:border-secondary-600/50">
@@ -127,9 +78,6 @@ const FileViewer = ({ file, on_close }) => {
     )
   }
 
-  // Use document_data instead of file for rendering
-  const display_file = document_data
-
   const format_date = (date_string) => {
     return new Date(date_string).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -138,42 +86,6 @@ const FileViewer = ({ file, on_close }) => {
       hour: '2-digit',
       minute: '2-digit'
     })
-  }
-
-  const render_file_content = () => {
-    // Check if we have content to display
-    if (!display_file.content && !display_file.storage_path) {
-      return (
-        <div className="p-8 rounded-lg text-center">
-          <FileText className="w-16 h-16 text-text-muted mx-auto mb-4" />
-          <p className="text-text-light mb-2 font-reddit-sans">
-            No content available
-          </p>
-          <p className="text-text-muted text-sm font-reddit-sans">
-            This document has no content to display
-          </p>
-        </div>
-      )
-    }
-
-    // Handle content - convert to string if needed
-    let content = display_file.content || ''
-
-    // If content is an array, join it into a single string
-    if (Array.isArray(content)) {
-      content = content.join('\n')
-    }
-
-    // If content is an object, stringify it
-    if (typeof content === 'object' && content !== null) {
-      content = JSON.stringify(content, null, 2)
-    }
-
-    // Ensure content is a string
-    content = String(content)
-
-    // Always render as Markdown
-    return <MarkdownRenderer content={content} />
   }
 
   return (
@@ -185,7 +97,7 @@ const FileViewer = ({ file, on_close }) => {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-xl font-bold text-text-light font-sora">
-                {display_file.title || display_file.name}
+                {file.title || file.name}
               </h1>
             </div>
 
@@ -215,16 +127,16 @@ const FileViewer = ({ file, on_close }) => {
           </div>
         </div>
 
-        {/* File Content */}
-        <div className="flex-1 overflow-y-auto p-6 bg-white/40 dark:bg-secondary-900/40 backdrop-blur-sm rounded-b-xl">
-          {render_file_content()}
+        {/* PDF Content */}
+        <div className="flex-1 overflow-hidden rounded-b-xl">
+          <PdfViewer pdf_url={pdf_url} document_title={file.title || file.name} />
         </div>
       </div>
 
       {/* Comments Panel */}
       {show_comments && (
         <div className="w-[450px] flex-shrink-0">
-          <CommentsSection document_id={display_file.id} />
+          <CommentsSection document_id={file.id} />
         </div>
       )}
     </div>

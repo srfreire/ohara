@@ -18,4 +18,9 @@ export class DocumentsController {
   async find_by_id(@Param('id') id: string) {
     return this.documents_service.find_by_id(id);
   }
+
+  @Get(':id/url')
+  async get_document_url(@Param('id') id: string) {
+    return this.documents_service.get_document_signed_url(id);
+  }
 }

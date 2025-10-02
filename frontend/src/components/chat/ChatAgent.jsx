@@ -228,9 +228,9 @@ const ChatAgent = ({ is_collapsed = false, on_toggle_collapse, selected_document
             )}
 
             <div
-              className={`max-w-[80%] rounded-lg p-3 ${
+              className={`max-w-[80%] rounded-lg ${
                 message.type === 'user'
-                  ? 'bg-primary-600 text-white'
+                  ? 'bg-primary-600 text-white p-3'
                   : 'text-text-light'
               }`}
             >
