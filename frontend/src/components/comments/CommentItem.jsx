@@ -7,7 +7,7 @@ const CommentItem = ({
   comment,
   current_user_id,
   current_user_name,
-  reactions = [],
+  reactions_map = {},
   replies = [],
   on_reply,
   on_edit,
@@ -16,6 +16,8 @@ const CommentItem = ({
   on_unreact,
   depth = 0
 }) => {
+  // Get reactions for this specific comment
+  const reactions = reactions_map[comment.id] || []
   const [is_replying, set_is_replying] = useState(false)
   const [is_editing, set_is_editing] = useState(false)
   const [show_menu, set_show_menu] = useState(false)
@@ -178,7 +180,9 @@ const CommentItem = ({
             comment_id={comment.id}
             reactions={reactions}
             current_user_id={current_user_id}
-            on_react={on_react}
+            on_react={(reaction_type, existing_reaction_id) =>
+              on_react(comment.id, reaction_type, existing_reaction_id)
+            }
             on_unreact={on_unreact}
             is_loading={is_loading}
           />
@@ -220,7 +224,7 @@ const CommentItem = ({
               comment={reply}
               current_user_id={current_user_id}
               current_user_name={current_user_name}
-              reactions={reply.reactions || []}
+              reactions_map={reactions_map}
               replies={reply.replies || []}
               on_reply={on_reply}
               on_edit={on_edit}

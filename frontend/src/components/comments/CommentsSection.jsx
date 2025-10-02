@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { MessageSquare } from 'lucide-react'
 import { get_comments, create_comment, update_comment, delete_comment } from '../../api/comments'
-import { get_reactions, create_reaction, update_reaction, delete_reaction } from '../../api/reactions'
+import { get_reactions, create_reaction, delete_reaction } from '../../api/reactions'
 import { toast_error, toast_success } from '../../utils/toast'
 import { useAuth } from '../../contexts/auth-context'
 import CommentInput from './CommentInput'
@@ -56,13 +56,18 @@ const CommentsSection = ({ document_id }) => {
     const comment_map = {}
     const root_comments = []
 
+    // Sort comments by created_at (oldest first)
+    const sorted_comments = [...flat_comments].sort((a, b) =>
+      new Date(a.created_at) - new Date(b.created_at)
+    )
+
     // First pass: create map of all comments
-    flat_comments.forEach(comment => {
+    sorted_comments.forEach(comment => {
       comment_map[comment.id] = { ...comment, replies: [] }
     })
 
     // Second pass: build tree structure
-    flat_comments.forEach(comment => {
+    sorted_comments.forEach(comment => {
       if (comment.parent_comment_id && comment_map[comment.parent_comment_id]) {
         comment_map[comment.parent_comment_id].replies.push(comment_map[comment.id])
       } else {
@@ -70,6 +75,7 @@ const CommentsSection = ({ document_id }) => {
       }
     })
 
+    // Replies are already sorted since we sorted the flat array
     return root_comments
   }
 
@@ -156,8 +162,13 @@ const CommentsSection = ({ document_id }) => {
 
     try {
       if (existing_reaction_id) {
-        // Update existing reaction
-        await update_reaction(existing_reaction_id, { reaction_type })
+        // Delete old reaction and create new one (more reliable than update)
+        await delete_reaction(existing_reaction_id)
+        await create_reaction({
+          comment_id,
+          user_id: user.id,
+          reaction_type
+        })
       } else {
         // Create new reaction
         await create_reaction({
@@ -184,15 +195,9 @@ const CommentsSection = ({ document_id }) => {
     }
   }
 
-  const create_react_handler = (comment_id) => {
-    return async (reaction_type, existing_reaction_id) => {
-      await handle_react(comment_id, reaction_type, existing_reaction_id)
-    }
-  }
-
   if (is_loading) {
     return (
-      <div className="bg-white/80 dark:bg-secondary-900/80 backdrop-blur-sm rounded-xl
+      <div className="h-full bg-white/80 dark:bg-secondary-900/80 backdrop-blur-sm rounded-xl
         shadow-lg p-6 flex items-center justify-center">
         <LoadingSpinner size="md" />
       </div>
@@ -200,9 +205,9 @@ const CommentsSection = ({ document_id }) => {
   }
 
   return (
-    <div className="bg-white/80 dark:bg-secondary-900/80 backdrop-blur-sm rounded-xl shadow-lg">
+    <div className="h-full bg-white/80 dark:bg-secondary-900/80 backdrop-blur-sm rounded-xl shadow-lg flex flex-col">
       {/* Header */}
-      <div className="px-6 py-4 border-b border-white/80 dark:border-secondary-600/50">
+      <div className="px-6 py-5 border-b border-white/80 dark:border-secondary-600/50">
         <div className="flex items-center space-x-2">
           <MessageSquare className="w-5 h-5 text-primary-600" />
           <h2 className="text-lg font-bold text-text-light font-sora">
@@ -224,7 +229,7 @@ const CommentsSection = ({ document_id }) => {
       </div>
 
       {/* Comments List */}
-      <div className="px-6 py-4 max-h-[600px] overflow-y-auto">
+      <div className="flex-1 px-6 py-4 overflow-y-auto">
         {comments.length === 0 ? (
           <div className="text-center py-8">
             <MessageSquare className="w-12 h-12 text-text-muted mx-auto mb-3" />
@@ -240,12 +245,12 @@ const CommentsSection = ({ document_id }) => {
                 comment={comment}
                 current_user_id={user?.id}
                 current_user_name={user?.name}
-                reactions={reactions_map[comment.id] || []}
+                reactions_map={reactions_map}
                 replies={comment.replies || []}
                 on_reply={handle_reply}
                 on_edit={handle_edit}
                 on_delete={handle_delete}
-                on_react={create_react_handler(comment.id)}
+                on_react={handle_react}
                 on_unreact={handle_unreact}
                 depth={0}
               />

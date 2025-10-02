@@ -10,7 +10,6 @@ import { toast_error } from '../../utils/toast'
 const Dashboard = () => {
   const [selected_file, set_selected_file] = useState(null)
   const [selected_folder, set_selected_folder] = useState(null)
-  const [is_file_explorer_collapsed, set_is_file_explorer_collapsed] = useState(false)
   const [is_chat_collapsed, set_is_chat_collapsed] = useState(false)
   const [current_folder_id, set_current_folder_id] = useState(null) // For icon view navigation
   const [folders, set_folders] = useState([])
@@ -55,16 +54,12 @@ const Dashboard = () => {
 
   const handle_close_file = () => {
     set_selected_file(null)
-    // Auto-expand file explorer when returning to icon view
-    set_is_file_explorer_collapsed(false)
   }
 
-  const handle_toggle_file_explorer = () => {
-    // Don't allow collapse if FileViewer is not active (no file selected)
-    if (!selected_file && !is_file_explorer_collapsed) {
-      return // Prevent collapse when FileViewer is not active
-    }
-    set_is_file_explorer_collapsed(!is_file_explorer_collapsed)
+  const handle_breadcrumb_click = (folder_id) => {
+    set_selected_file(null)
+    set_current_folder_id(folder_id)
+    set_selected_folder(folder_id)
   }
 
   const handle_toggle_chat = () => {
@@ -74,12 +69,10 @@ const Dashboard = () => {
   // Keyboard shortcuts
   useEffect(() => {
     const handle_keyboard_shortcuts = (e) => {
-      // ESC key: Close file and return to icon view
+      // ESC key: Close file and return to file explorer
       if (e.key === 'Escape') {
         if (selected_file) {
           set_selected_file(null)
-          // Auto-expand file explorer when returning to icon view
-          set_is_file_explorer_collapsed(false)
           e.preventDefault()
         }
         return
@@ -112,29 +105,33 @@ const Dashboard = () => {
 
       {/* Main Content */}
       <div className="flex-1 flex overflow-hidden gap-4 p-4 relative z-10">
-        {/* File Explorer - Always render as sidebar */}
-        <FileExplorer
-          selected_file={selected_file?.id}
-          on_file_select={handle_file_select}
-          selected_folder={selected_folder}
-          on_folder_select={handle_folder_select}
-          is_collapsed={is_file_explorer_collapsed}
-          on_toggle_collapse={handle_toggle_file_explorer}
-          is_expanded={!selected_file} // Expand when no file selected
-          current_folder_id={current_folder_id}
-          on_folder_navigate={handle_folder_navigate}
-          can_collapse={selected_file || is_file_explorer_collapsed}
-          folders={folders}
-          documents={documents}
-          is_loading={is_loading}
-        />
+        {/* File Explorer - Only show when no file is selected */}
+        {!selected_file && (
+          <FileExplorer
+            selected_file={null}
+            on_file_select={handle_file_select}
+            selected_folder={selected_folder}
+            on_folder_select={handle_folder_select}
+            is_collapsed={false}
+            on_toggle_collapse={() => {}}
+            is_expanded={true}
+            current_folder_id={current_folder_id}
+            on_folder_navigate={handle_folder_navigate}
+            can_collapse={false}
+            folders={folders}
+            documents={documents}
+            is_loading={is_loading}
+          />
+        )}
 
         {/* File Viewer - Only render when file is selected */}
         {selected_file && (
           <div className="flex-1 h-full">
             <FileViewer
               file={selected_file}
+              folders={folders}
               on_close={handle_close_file}
+              on_breadcrumb_click={handle_breadcrumb_click}
             />
           </div>
         )}

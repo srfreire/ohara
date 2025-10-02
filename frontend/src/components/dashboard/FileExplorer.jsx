@@ -1,16 +1,11 @@
 import { useState, Fragment } from "react";
 import {
   ChevronRight,
-  ChevronDown,
   PanelRightClose,
   PanelRightOpen,
-  ArrowLeft,
   Folder,
-  FolderOpen,
   Home,
 } from "lucide-react";
-import * as Icons from "lucide-react";
-import FileListSkeleton from "../ui/FileListSkeleton";
 import FileGridSkeleton from "../ui/FileGridSkeleton";
 
 const FileExplorer = ({
@@ -28,9 +23,6 @@ const FileExplorer = ({
   documents = null,
   is_loading = false,
 }) => {
-  // Auto-determine view mode based on file selection
-  const view_mode = selected_file ? "list" : "icon";
-  const [expanded_folders, set_expanded_folders] = useState(new Set());
 
   // Helper functions for API data only
   const get_root_folders_data = () => {
@@ -66,17 +58,6 @@ const FileExplorer = ({
 
     return path
   }
-
-  const toggle_folder = (folder_id) => {
-    const new_expanded = new Set(expanded_folders);
-    if (new_expanded.has(folder_id)) {
-      new_expanded.delete(folder_id);
-    } else {
-      new_expanded.add(folder_id);
-    }
-    set_expanded_folders(new_expanded);
-    on_folder_select(folder_id);
-  };
 
   const FileIcon = ({ file_type, className, is_selected = false }) => {
     return (
@@ -143,95 +124,6 @@ const FileExplorer = ({
     );
   };
 
-  const FolderItem = ({ folder, level = 0 }) => {
-    const is_expanded = expanded_folders.has(folder.id);
-    const is_selected = selected_folder === folder.id;
-    const subfolders = get_subfolders_data(folder.id);
-    const files = get_files_in_folder_data(folder.id);
-    const has_children = subfolders.length > 0 || files.length > 0;
-
-    return (
-      <div>
-        {/* Folder Row */}
-        <div
-          className={`flex items-center space-x-2 py-2 px-3 cursor-pointer hover:bg-secondary-100 dark:hover:bg-secondary-800 rounded-lg ${
-            is_selected
-              ? "bg-primary-100 dark:bg-primary-900 border border-primary-200 dark:border-primary-700"
-              : ""
-          }`}
-          style={{ marginLeft: `${level * 20}px` }}
-          onClick={() => toggle_folder(folder.id)}
-        >
-          {/* Expand/Collapse Icon */}
-          <div className="w-4 h-4 flex items-center justify-center">
-            {has_children ? (
-              is_expanded ? (
-                <ChevronDown className="w-4 h-4 text-text-muted" />
-              ) : (
-                <ChevronRight className="w-4 h-4 text-text-muted" />
-              )
-            ) : null}
-          </div>
-
-          {/* Folder Icon */}
-          <img
-            src={
-              is_expanded ? "/src/assets/open.png" : "/src/assets/closed.png"
-            }
-            alt={is_expanded ? "Open folder" : "Closed folder"}
-            className="w-5 h-5"
-          />
-
-          {/* Folder Name */}
-          <span className="text-text-light font-medium truncate flex-1 min-w-0 font-reddit-sans">
-            {folder.name}
-          </span>
-        </div>
-
-        {/* Children (when expanded) */}
-        {is_expanded && (
-          <div>
-            {/* Subfolders */}
-            {subfolders.map((subfolder) => (
-              <FolderItem
-                key={subfolder.id}
-                folder={subfolder}
-                level={level + 1}
-              />
-            ))}
-
-            {/* Files */}
-            {files.map((file) => (
-              <div
-                key={file.id}
-                className={`flex items-center space-x-2 py-2 px-3 cursor-pointer hover:bg-secondary-100 dark:hover:bg-secondary-800 rounded-lg ${
-                  selected_file === file.id
-                    ? "bg-secondary-200 dark:bg-secondary-700 border border-secondary-300 dark:border-white/80"
-                    : ""
-                }`}
-                style={{ marginLeft: `${(level + 1) * 20 + 20}px` }}
-                onClick={() => on_file_select(file)}
-              >
-                {/* File Icon */}
-                <FileIcon
-                  file_type={file.file_type}
-                  className="w-4 h-4 text-text-muted"
-                  is_selected={selected_file === file.id}
-                />
-
-                {/* File Info */}
-                <div className="flex-1 min-w-0">
-                  <div className="text-text-light text-sm truncate font-reddit-sans">
-                    {file.title || file.name}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    );
-  };
 
   // Grid View Layout Component
   const IconGridView = () => {
@@ -338,12 +230,9 @@ const FileExplorer = ({
     );
   };
 
-  const root_folders = get_root_folders_data();
-
   const get_width_class = () => {
     if (is_collapsed) return "w-12"; // Just show the collapse button
-    if (is_expanded || !selected_file) return "flex-1";
-    return "w-80";
+    return "flex-1";
   };
 
   return (
@@ -385,36 +274,8 @@ const FileExplorer = ({
 
       {/* Content Area - Only show when not collapsed */}
       {!is_collapsed && (
-        <div className="flex-1 relative min-h-0">
-        {/* Icon Grid View */}
-        <div
-          className={`absolute inset-0 overflow-auto ${
-            view_mode === "icon"
-              ? "opacity-100 transform translate-x-0 pointer-events-auto z-10"
-              : "opacity-0 transform translate-x-4 pointer-events-none z-0"
-          }`}
-        >
+        <div className="flex-1 overflow-auto">
           <IconGridView />
-        </div>
-
-        {/* Traditional List View */}
-        <div
-          className={`absolute inset-0 overflow-auto ${
-            view_mode === "list"
-              ? "opacity-100 transform translate-x-0 pointer-events-auto z-10"
-              : "opacity-0 transform -translate-x-4 pointer-events-none z-0"
-          }`}
-        >
-          {is_loading ? (
-            <FileListSkeleton count={5} />
-          ) : (
-            <div className="p-4 space-y-1">
-              {root_folders.map((folder) => (
-                <FolderItem key={folder.id} folder={folder} />
-              ))}
-            </div>
-          )}
-        </div>
         </div>
       )}
     </div>
