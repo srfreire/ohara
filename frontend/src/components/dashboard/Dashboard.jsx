@@ -15,6 +15,7 @@ const Dashboard = () => {
   const [folders, set_folders] = useState([])
   const [documents, set_documents] = useState([])
   const [is_loading, set_is_loading] = useState(true)
+  const [active_citation, set_active_citation] = useState(null)
 
   // Fetch folders and documents on mount
   useEffect(() => {
@@ -64,6 +65,11 @@ const Dashboard = () => {
 
   const handle_toggle_chat = () => {
     set_is_chat_collapsed(!is_chat_collapsed)
+  }
+
+  const handle_citation_click = (citation, citation_number) => {
+    console.log('📖 Citation clicked:', { citation_number, citation })
+    set_active_citation(citation)
   }
 
   // Keyboard shortcuts
@@ -132,6 +138,7 @@ const Dashboard = () => {
               folders={folders}
               on_close={handle_close_file}
               on_breadcrumb_click={handle_breadcrumb_click}
+              citation_to_highlight={active_citation}
             />
           </div>
         )}
@@ -141,7 +148,8 @@ const Dashboard = () => {
           <ChatAgent
             is_collapsed={is_chat_collapsed}
             on_toggle_collapse={handle_toggle_chat}
-            selected_document_id={selected_file?.id}
+            selected_document_id={selected_file?.nessie_id}
+            on_citation_click={handle_citation_click}
           />
         )}
 

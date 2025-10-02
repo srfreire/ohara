@@ -6,7 +6,7 @@ import LoadingSpinner from '../ui/LoadingSpinner'
 import CommentsSection from '../comments/CommentsSection'
 import PdfViewer from '../pdf/PdfViewer'
 
-const FileViewer = ({ file, folders = [], on_close, on_breadcrumb_click }) => {
+const FileViewer = ({ file, folders = [], on_close, on_breadcrumb_click, citation_to_highlight }) => {
   const [pdf_url, set_pdf_url] = useState(null)
   const [is_loading, set_is_loading] = useState(false)
   const [show_comments, set_show_comments] = useState(false)
@@ -178,7 +178,11 @@ const FileViewer = ({ file, folders = [], on_close, on_breadcrumb_click }) => {
 
         {/* PDF Content */}
         <div className="flex-1 overflow-hidden rounded-b-xl">
-          <PdfViewer pdf_url={pdf_url} document_title={file.title || file.name} />
+          <PdfViewer
+            pdf_url={pdf_url}
+            document_title={file.title || file.name}
+            citation_to_highlight={citation_to_highlight}
+          />
         </div>
       </div>
 

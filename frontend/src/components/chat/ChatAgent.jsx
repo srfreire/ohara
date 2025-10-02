@@ -2,15 +2,22 @@ import { useState, useRef, useEffect } from 'react'
 import { Send, Bot, User, PanelLeftClose, PanelLeftOpen, RotateCcw } from 'lucide-react'
 import { stream_chat } from '../../api/agent'
 import { toast_error } from '../../utils/toast'
+import MessageWithCitations from './MessageWithCitations'
 
-const ChatAgent = ({ is_collapsed = false, on_toggle_collapse, selected_document_id = null }) => {
+const ChatAgent = ({ is_collapsed = false, on_toggle_collapse, selected_document_id = null, on_citation_click }) => {
   const [messages, set_messages] = useState([])
   const [input_value, set_input_value] = useState('')
   const [is_typing, set_is_typing] = useState(false)
   const [is_streaming, set_is_streaming] = useState(false)
   const [current_response, set_current_response] = useState('')
+  const [current_citations, set_current_citations] = useState(null)
   const messages_end_ref = useRef(null)
   const abort_controller_ref = useRef(null)
+
+  // Remove markdown image syntax from text
+  const clean_markdown_images = (text) => {
+    return text.replace(/!\[.*?\]\(.*?\)/g, '')
+  }
 
   const scroll_to_bottom = () => {
     messages_end_ref.current?.scrollIntoView({ behavior: 'smooth' })
@@ -85,6 +92,7 @@ const ChatAgent = ({ is_collapsed = false, on_toggle_collapse, selected_document
                 role: 'assistant',
                 content: new_content,
                 timestamp: new Date().toISOString(),
+                citations: null
               }]
             }
           })
@@ -92,7 +100,35 @@ const ChatAgent = ({ is_collapsed = false, on_toggle_collapse, selected_document
           return new_content
         })
       },
-      on_done: () => {
+      on_citations: (citations) => {
+        console.log('📚 Received citations:', citations)
+        set_current_citations(citations)
+      },
+      on_done: (citations) => {
+        // Use citations parameter, or fall back to current_citations state
+        set_current_citations(current_citations_state => {
+          const final_citations = citations || current_citations_state
+
+          // Update message with final citations
+          if (final_citations && final_citations.length > 0) {
+            set_messages(prev_messages => {
+              const existing_index = prev_messages.findIndex(m => m.id === assistant_message_id)
+              if (existing_index >= 0) {
+                const updated = [...prev_messages]
+                updated[existing_index] = {
+                  ...updated[existing_index],
+                  citations: final_citations
+                }
+                return updated
+              }
+              return prev_messages
+            })
+          }
+
+          // Reset to null
+          return null
+        })
+
         set_is_typing(false)
         set_is_streaming(false)
         set_current_response('')
@@ -103,6 +139,7 @@ const ChatAgent = ({ is_collapsed = false, on_toggle_collapse, selected_document
         set_is_typing(false)
         set_is_streaming(false)
         set_current_response('')
+        set_current_citations(null)
         abort_controller_ref.current = null
 
         // Show error message
@@ -115,6 +152,7 @@ const ChatAgent = ({ is_collapsed = false, on_toggle_collapse, selected_document
           role: 'assistant',
           content: 'Sorry, I encountered an error. Please try again.',
           timestamp: new Date().toISOString(),
+          citations: null
         }])
       }
     })
@@ -142,6 +180,7 @@ const ChatAgent = ({ is_collapsed = false, on_toggle_collapse, selected_document
     set_is_typing(false)
     set_is_streaming(false)
     set_current_response('')
+    set_current_citations(null)
   }
 
   const handle_key_press = (e) => {
@@ -234,7 +273,17 @@ const ChatAgent = ({ is_collapsed = false, on_toggle_collapse, selected_document
                   : 'text-text-light'
               }`}
             >
-              <p className="text-sm whitespace-pre-wrap font-reddit-sans">{message.content}</p>
+              {message.type === 'assistant' && message.citations ? (
+                <MessageWithCitations
+                  content={message.content}
+                  citations={message.citations}
+                  on_citation_click={on_citation_click}
+                />
+              ) : (
+                <p className="text-sm whitespace-pre-wrap font-reddit-sans">
+                  {message.type === 'assistant' ? clean_markdown_images(message.content) : message.content}
+                </p>
+              )}
             </div>
 
             {message.type === 'user' && (

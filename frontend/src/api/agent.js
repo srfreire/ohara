@@ -10,8 +10,9 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000
  * @param {Array} messages - Array of message objects with role, content, timestamp
  * @param {string} model - Model to use (default: gpt-4.1)
  * @param {Function} on_token - Callback for each token received
- * @param {Function} on_done - Callback when stream is complete
+ * @param {Function} on_done - Callback when stream is complete (receives citations if available)
  * @param {Function} on_error - Callback for errors
+ * @param {Function} on_citations - Callback when citations are received
  * @returns {Function} abort function to cancel the stream
  */
 export const stream_chat = async (messages, options = {}) => {
@@ -21,6 +22,7 @@ export const stream_chat = async (messages, options = {}) => {
     on_token = () => {},
     on_done = () => {},
     on_error = () => {},
+    on_citations = () => {},
   } = options
 
   // Get JWT token from localStorage
@@ -89,16 +91,32 @@ export const stream_chat = async (messages, options = {}) => {
                   on_token(data.content)
                 } else if (data.type === 'response' && data.content) {
                   // Structured response from agent (contains text, citations, files)
-                  const response_text = typeof data.content === 'string'
-                    ? data.content
-                    : data.content.text || JSON.stringify(data.content)
-                  console.log('✅ Received final response:', { text_length: response_text.length, preview: response_text.substring(0, 100) })
+                  let response_text = ''
+                  let citations = null
+
+                  if (typeof data.content === 'string') {
+                    response_text = data.content
+                  } else if (typeof data.content === 'object') {
+                    response_text = data.content.text || data.content.content || JSON.stringify(data.content)
+                    citations = data.content.citations || null
+                  }
+
+                  console.log('✅ Received final response:', {
+                    text_length: response_text.length,
+                    preview: response_text.substring(0, 100),
+                    citations_count: citations ? citations.length : 0
+                  })
+
+                  // Send citations if available
+                  if (citations && citations.length > 0) {
+                    on_citations(citations)
+                  }
 
                   // Send the full text at once
                   on_token(response_text)
 
-                  // Mark as done
-                  on_done()
+                  // Mark as done (pass citations)
+                  on_done(citations)
                   return
                 } else if (data.type === 'action') {
                   // Tool calls - log for debugging but don't display yet

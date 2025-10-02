@@ -13,7 +13,61 @@ const CommentsSection = ({ document_id }) => {
   const [comments, set_comments] = useState([])
   const [reactions_map, set_reactions_map] = useState({})
   const [is_loading, set_is_loading] = useState(true)
-  const [is_posting, set_is_posting] = useState(false)
+
+  // Helper: Generate temporary ID for optimistic updates
+  const generate_temp_id = () => `temp_${Date.now()}_${Math.random()}`
+
+  // Helper: Add comment to tree structure
+  const add_comment_to_tree = (tree, new_comment, parent_id = null) => {
+    if (!parent_id) {
+      // Add as root comment
+      return [...tree, { ...new_comment, replies: [] }]
+    }
+
+    // Add as reply to parent
+    return tree.map(comment => {
+      if (comment.id === parent_id) {
+        return {
+          ...comment,
+          replies: [...(comment.replies || []), { ...new_comment, replies: [] }]
+        }
+      }
+      if (comment.replies?.length > 0) {
+        return {
+          ...comment,
+          replies: add_comment_to_tree(comment.replies, new_comment, parent_id)
+        }
+      }
+      return comment
+    })
+  }
+
+  // Helper: Update comment in tree structure
+  const update_comment_in_tree = (tree, comment_id, updates) => {
+    return tree.map(comment => {
+      if (comment.id === comment_id) {
+        return { ...comment, ...updates }
+      }
+      if (comment.replies?.length > 0) {
+        return {
+          ...comment,
+          replies: update_comment_in_tree(comment.replies, comment_id, updates)
+        }
+      }
+      return comment
+    })
+  }
+
+  // Helper: Delete comment from tree structure
+  const delete_comment_from_tree = (tree, comment_id) => {
+    return tree.filter(comment => {
+      if (comment.id === comment_id) return false
+      if (comment.replies?.length > 0) {
+        comment.replies = delete_comment_from_tree(comment.replies, comment_id)
+      }
+      return true
+    })
+  }
 
   // Load comments and reactions
   useEffect(() => {
@@ -86,22 +140,47 @@ const CommentsSection = ({ document_id }) => {
       return
     }
 
+    // Create optimistic comment
+    const temp_id = generate_temp_id()
+    const optimistic_comment = {
+      id: temp_id,
+      document_id,
+      user_id: user.id,
+      user_name: user.name,
+      content,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      parent_comment_id: null,
+      start_offset: 0,
+      end_offset: 1,
+      replies: []
+    }
+
+    // Optimistically add to state
+    set_comments(prev => add_comment_to_tree(prev, optimistic_comment))
+
     try {
-      set_is_posting(true)
-      await create_comment({
+      // Make API call
+      const created_comment = await create_comment({
         document_id,
         user_id: user.id,
         content,
         start_offset: 0,
         end_offset: 1
       })
+
+      // Replace temp comment with real one
+      set_comments(prev => {
+        const without_temp = delete_comment_from_tree(prev, temp_id)
+        return add_comment_to_tree(without_temp, created_comment)
+      })
+
       toast_success('Comment posted successfully')
-      await load_comments()
     } catch (error) {
+      // Rollback on error
+      set_comments(prev => delete_comment_from_tree(prev, temp_id))
       console.error('Failed to create comment:', error)
       toast_error('Failed to post comment')
-    } finally {
-      set_is_posting(false)
     }
   }
 
@@ -112,8 +191,28 @@ const CommentsSection = ({ document_id }) => {
       return
     }
 
+    // Create optimistic reply
+    const temp_id = generate_temp_id()
+    const optimistic_reply = {
+      id: temp_id,
+      document_id,
+      user_id: user.id,
+      user_name: user.name,
+      content,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      parent_comment_id,
+      start_offset: 0,
+      end_offset: 1,
+      replies: []
+    }
+
+    // Optimistically add to state
+    set_comments(prev => add_comment_to_tree(prev, optimistic_reply, parent_comment_id))
+
     try {
-      await create_comment({
+      // Make API call
+      const created_reply = await create_comment({
         document_id,
         user_id: user.id,
         content,
@@ -121,9 +220,17 @@ const CommentsSection = ({ document_id }) => {
         start_offset: 0,
         end_offset: 1
       })
+
+      // Replace temp reply with real one
+      set_comments(prev => {
+        const without_temp = delete_comment_from_tree(prev, temp_id)
+        return add_comment_to_tree(without_temp, created_reply, parent_comment_id)
+      })
+
       toast_success('Reply posted successfully')
-      await load_comments()
     } catch (error) {
+      // Rollback on error
+      set_comments(prev => delete_comment_from_tree(prev, temp_id))
       console.error('Failed to reply:', error)
       toast_error('Failed to post reply')
     }
@@ -131,11 +238,41 @@ const CommentsSection = ({ document_id }) => {
 
   // Edit a comment
   const handle_edit = async (comment_id, content) => {
+    // Save old content for rollback
+    let old_content = null
+    set_comments(prev => {
+      const find_comment = (tree) => {
+        for (const comment of tree) {
+          if (comment.id === comment_id) return comment
+          if (comment.replies?.length > 0) {
+            const found = find_comment(comment.replies)
+            if (found) return found
+          }
+        }
+        return null
+      }
+      const comment = find_comment(prev)
+      if (comment) old_content = comment.content
+      return prev
+    })
+
+    // Optimistically update
+    set_comments(prev => update_comment_in_tree(prev, comment_id, {
+      content,
+      updated_at: new Date().toISOString()
+    }))
+
     try {
+      // Make API call
       await update_comment(comment_id, { content })
       toast_success('Comment updated successfully')
-      await load_comments()
     } catch (error) {
+      // Rollback on error
+      if (old_content !== null) {
+        set_comments(prev => update_comment_in_tree(prev, comment_id, {
+          content: old_content
+        }))
+      }
       console.error('Failed to edit comment:', error)
       toast_error('Failed to update comment')
     }
@@ -143,11 +280,25 @@ const CommentsSection = ({ document_id }) => {
 
   // Delete a comment
   const handle_delete = async (comment_id) => {
+    // Save old state for rollback
+    let old_comments = null
+    set_comments(prev => {
+      old_comments = prev
+      return prev
+    })
+
+    // Optimistically delete
+    set_comments(prev => delete_comment_from_tree(prev, comment_id))
+
     try {
+      // Make API call
       await delete_comment(comment_id)
       toast_success('Comment deleted successfully')
-      await load_comments()
     } catch (error) {
+      // Rollback on error
+      if (old_comments) {
+        set_comments(old_comments)
+      }
       console.error('Failed to delete comment:', error)
       toast_error('Failed to delete comment')
     }
@@ -160,25 +311,67 @@ const CommentsSection = ({ document_id }) => {
       return
     }
 
-    try {
+    // Save old state for rollback
+    const old_reactions_map = { ...reactions_map }
+    const temp_id = generate_temp_id()
+
+    // Optimistically update reactions
+    set_reactions_map(prev => {
+      const comment_reactions = [...(prev[comment_id] || [])]
+
       if (existing_reaction_id) {
-        // Delete old reaction and create new one (more reliable than update)
+        // Remove old reaction and add new one
+        const filtered = comment_reactions.filter(r => r.id !== existing_reaction_id)
+        filtered.push({
+          id: temp_id,
+          comment_id,
+          user_id: user.id,
+          reaction_type,
+          created_at: new Date().toISOString()
+        })
+        return { ...prev, [comment_id]: filtered }
+      } else {
+        // Add new reaction
+        comment_reactions.push({
+          id: temp_id,
+          comment_id,
+          user_id: user.id,
+          reaction_type,
+          created_at: new Date().toISOString()
+        })
+        return { ...prev, [comment_id]: comment_reactions }
+      }
+    })
+
+    try {
+      let created_reaction
+      if (existing_reaction_id) {
+        // Delete old reaction and create new one
         await delete_reaction(existing_reaction_id)
-        await create_reaction({
+        created_reaction = await create_reaction({
           comment_id,
           user_id: user.id,
           reaction_type
         })
       } else {
         // Create new reaction
-        await create_reaction({
+        created_reaction = await create_reaction({
           comment_id,
           user_id: user.id,
           reaction_type
         })
       }
-      await load_comments()
+
+      // Replace temp reaction with real one
+      set_reactions_map(prev => {
+        const comment_reactions = [...(prev[comment_id] || [])]
+        const filtered = comment_reactions.filter(r => r.id !== temp_id)
+        filtered.push(created_reaction)
+        return { ...prev, [comment_id]: filtered }
+      })
     } catch (error) {
+      // Rollback on error
+      set_reactions_map(old_reactions_map)
       console.error('Failed to react:', error)
       toast_error('Failed to add reaction')
     }
@@ -186,10 +379,33 @@ const CommentsSection = ({ document_id }) => {
 
   // Remove reaction
   const handle_unreact = async (reaction_id) => {
+    // Save old state for rollback
+    const old_reactions_map = { ...reactions_map }
+
+    // Find which comment this reaction belongs to
+    let target_comment_id = null
+    for (const [comment_id, reactions] of Object.entries(reactions_map)) {
+      if (reactions.some(r => r.id === reaction_id)) {
+        target_comment_id = comment_id
+        break
+      }
+    }
+
+    if (!target_comment_id) return
+
+    // Optimistically remove reaction
+    set_reactions_map(prev => {
+      const comment_reactions = [...(prev[target_comment_id] || [])]
+      const filtered = comment_reactions.filter(r => r.id !== reaction_id)
+      return { ...prev, [target_comment_id]: filtered }
+    })
+
     try {
+      // Make API call
       await delete_reaction(reaction_id)
-      await load_comments()
     } catch (error) {
+      // Rollback on error
+      set_reactions_map(old_reactions_map)
       console.error('Failed to unreact:', error)
       toast_error('Failed to remove reaction')
     }
@@ -224,7 +440,6 @@ const CommentsSection = ({ document_id }) => {
         <CommentInput
           on_submit={handle_create_comment}
           placeholder="Write a comment..."
-          is_loading={is_posting}
         />
       </div>
 

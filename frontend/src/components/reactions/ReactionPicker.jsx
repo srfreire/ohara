@@ -6,8 +6,7 @@ const ReactionPicker = ({
   reactions = [],
   current_user_id,
   on_react,
-  on_unreact,
-  is_loading = false
+  on_unreact
 }) => {
   const [reaction_counts, set_reaction_counts] = useState({})
   const [user_reaction, set_user_reaction] = useState(null)
@@ -34,8 +33,6 @@ const ReactionPicker = ({
   }, [reactions, current_user_id])
 
   const handle_reaction_click = async (reaction_type) => {
-    if (is_loading) return
-
     // If user already reacted with this type, unreact
     if (user_reaction && user_reaction.type === reaction_type) {
       await on_unreact(user_reaction.id)
@@ -64,14 +61,12 @@ const ReactionPicker = ({
           <button
             key={type}
             onClick={() => handle_reaction_click(type)}
-            disabled={is_loading}
             className={`group relative px-2 py-1 rounded-lg transition-all duration-200
               flex items-center space-x-1 text-sm font-reddit-sans
               ${is_active
                 ? 'bg-primary-600/20 dark:bg-primary-600/30 border border-primary-600/50'
                 : 'bg-white/60 dark:bg-secondary-900/60 border border-white/80 dark:border-secondary-600/50 hover:bg-white/80 dark:hover:bg-secondary-900/80'
-              }
-              disabled:opacity-50 disabled:cursor-not-allowed`}
+              }`}
             aria-label={`${label} reaction`}
             title={label}
           >

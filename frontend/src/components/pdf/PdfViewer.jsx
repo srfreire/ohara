@@ -7,7 +7,7 @@ import 'react-pdf/dist/Page/TextLayer.css'
 // Configure PDF.js worker
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`
 
-const PdfViewer = ({ pdf_url, document_title }) => {
+const PdfViewer = ({ pdf_url, document_title, citation_to_highlight }) => {
   const [num_pages, set_num_pages] = useState(null)
   const [current_page, set_current_page] = useState(1)
   const [scale, set_scale] = useState(1.2)
@@ -65,6 +65,13 @@ const PdfViewer = ({ pdf_url, document_title }) => {
       set_current_match_index(0)
     }
   }, [search_text])
+
+  // Handle citation highlighting when prop changes
+  useEffect(() => {
+    if (citation_to_highlight && pdf_document && num_pages) {
+      highlight_citation(citation_to_highlight)
+    }
+  }, [citation_to_highlight, pdf_document, num_pages])
 
   const zoom_in = () => {
     set_scale(prev => Math.min(prev + 0.2, 3.0))
@@ -197,6 +204,39 @@ const PdfViewer = ({ pdf_url, document_title }) => {
     link.click()
   }
 
+  // Scroll to citation page
+  const highlight_citation = (citation_data) => {
+    if (!citation_data) return
+
+    console.log('📚 Citation data received:', citation_data)
+
+    // Extract page number from citation
+    const page_number = typeof citation_data === 'object' && citation_data.page
+      ? citation_data.page
+      : null
+
+    if (!page_number) {
+      console.warn('⚠️ No page number in citation')
+      return
+    }
+
+    console.log(`📄 Jumping to page ${page_number}`)
+
+    // Jump to the citation page
+    jump_to_page(page_number)
+
+    // Visual feedback: briefly highlight the page number indicator
+    setTimeout(() => {
+      const page_indicator = document.querySelector('.pdf-page-indicator')
+      if (page_indicator) {
+        page_indicator.classList.add('bg-primary-200', 'dark:bg-primary-800')
+        setTimeout(() => {
+          page_indicator.classList.remove('bg-primary-200', 'dark:bg-primary-800')
+        }, 1000)
+      }
+    }, 300)
+  }
+
   return (
     <div className="h-full flex flex-col bg-secondary-50 dark:bg-secondary-950 rounded-xl overflow-hidden">
       <style>{`
@@ -216,6 +256,27 @@ const PdfViewer = ({ pdf_url, document_title }) => {
           color: inherit !important;
           outline: 2px solid #4a7c54;
           outline-offset: 1px;
+        }
+        .pdf-citation-highlight {
+          background-color: rgba(59, 130, 246, 0.3) !important;
+          color: inherit !important;
+          border-radius: 2px;
+          padding: 2px 1px;
+          outline: 2px solid rgba(59, 130, 246, 0.6);
+          outline-offset: 1px;
+        }
+        @keyframes citation-pulse {
+          0%, 100% {
+            background-color: rgba(59, 130, 246, 0.3);
+            outline-color: rgba(59, 130, 246, 0.6);
+          }
+          50% {
+            background-color: rgba(59, 130, 246, 0.6);
+            outline-color: rgba(59, 130, 246, 1);
+          }
+        }
+        .pdf-citation-pulse {
+          animation: citation-pulse 0.8s ease-in-out 3;
         }
       `}</style>
       {/* Toolbar */}

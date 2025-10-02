@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { User, Reply, Edit2, Trash2, MoreVertical } from 'lucide-react'
 import CommentInput from './CommentInput'
 import ReactionPicker from '../reactions/ReactionPicker'
+import ConfirmModal from '../ui/ConfirmModal'
 
 const CommentItem = ({
   comment,
@@ -21,7 +22,7 @@ const CommentItem = ({
   const [is_replying, set_is_replying] = useState(false)
   const [is_editing, set_is_editing] = useState(false)
   const [show_menu, set_show_menu] = useState(false)
-  const [is_loading, set_is_loading] = useState(false)
+  const [show_delete_modal, set_show_delete_modal] = useState(false)
 
   const is_own_comment = comment.user_id === current_user_id
   const display_name = is_own_comment ? current_user_name : (comment.user_name || 'Anonymous User')
@@ -54,39 +55,17 @@ const CommentItem = ({
   }
 
   const handle_reply_submit = async (content) => {
-    set_is_loading(true)
-    try {
-      await on_reply(comment.id, content)
-      set_is_replying(false)
-    } catch (error) {
-      console.error('Failed to reply:', error)
-    } finally {
-      set_is_loading(false)
-    }
+    await on_reply(comment.id, content)
+    set_is_replying(false)
   }
 
   const handle_edit_submit = async (content) => {
-    set_is_loading(true)
-    try {
-      await on_edit(comment.id, content)
-      set_is_editing(false)
-    } catch (error) {
-      console.error('Failed to edit:', error)
-    } finally {
-      set_is_loading(false)
-    }
+    await on_edit(comment.id, content)
+    set_is_editing(false)
   }
 
   const handle_delete = async () => {
-    if (!window.confirm('Are you sure you want to delete this comment?')) return
-    set_is_loading(true)
-    try {
-      await on_delete(comment.id)
-    } catch (error) {
-      console.error('Failed to delete:', error)
-    } finally {
-      set_is_loading(false)
-    }
+    await on_delete(comment.id)
   }
 
   return (
@@ -140,7 +119,7 @@ const CommentItem = ({
                   </button>
                   <button
                     onClick={() => {
-                      handle_delete()
+                      set_show_delete_modal(true)
                       set_show_menu(false)
                     }}
                     className="w-full px-4 py-2 text-left text-sm text-red-600
@@ -165,7 +144,6 @@ const CommentItem = ({
               on_cancel={() => set_is_editing(false)}
               placeholder="Edit your comment..."
               is_reply={true}
-              is_loading={is_loading}
             />
           </div>
         ) : (
@@ -184,16 +162,14 @@ const CommentItem = ({
               on_react(comment.id, reaction_type, existing_reaction_id)
             }
             on_unreact={on_unreact}
-            is_loading={is_loading}
           />
 
           {depth < max_depth && (
             <button
               onClick={() => set_is_replying(!is_replying)}
-              disabled={is_loading}
               className="text-sm text-primary-600 dark:text-primary-400 hover:text-primary-700
                 dark:hover:text-primary-300 transition-colors flex items-center space-x-1
-                font-reddit-sans disabled:opacity-50 disabled:cursor-not-allowed"
+                font-reddit-sans"
             >
               <Reply className="w-3 h-3" />
               <span>Reply</span>
@@ -210,7 +186,6 @@ const CommentItem = ({
             on_cancel={() => set_is_replying(false)}
             placeholder="Write a reply..."
             is_reply={true}
-            is_loading={is_loading}
           />
         </div>
       )}
@@ -236,6 +211,18 @@ const CommentItem = ({
           ))}
         </div>
       )}
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmModal
+        is_open={show_delete_modal}
+        on_close={() => set_show_delete_modal(false)}
+        on_confirm={handle_delete}
+        title="Delete Comment"
+        message="Are you sure you want to delete this comment? This action cannot be undone."
+        confirm_text="Delete"
+        cancel_text="Cancel"
+        variant="danger"
+      />
     </div>
   )
 }

@@ -46,10 +46,10 @@ const Header = () => {
 
         {/* User Menu */}
         <div className="flex items-center space-x-2">
-          <div className="p-2 rounded-lg bg-secondary-100 dark:bg-secondary-700">
-            <User className="w-5 h-5 text-text-light" />
+          <div className="p-2 rounded-lg">
+            <User className="w-4 h-4 text-text-light" />
           </div>
-          <span className="text-text-light font-medium font-reddit-sans">
+          <span className="!m-0 text-text-light font-medium font-reddit-sans">
             {user?.name || 'User'}
           </span>
         </div>
