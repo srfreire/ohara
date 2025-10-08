@@ -1,17 +1,9 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Delete,
-  Param,
-  Body,
-  UsePipes,
-  UseGuards,
-} from '@nestjs/common';
-import { ItemsService } from '../services/items.service';
-import { create_item_schema, CreateItemDto } from '../models/item.model';
+import { Controller, Get, Post, Delete, Param, Body, UsePipes, UseGuards } from '@nestjs/common';
+
 import { ZodValidationPipe } from '../../../common/validation/zod-validation.pipe';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { ItemsService } from '../services/items.service';
+import { create_item_schema, CreateItemDto } from '../models/item.model';
 
 @Controller('collections/:id/items')
 @UseGuards(JwtAuthGuard)
@@ -25,18 +17,12 @@ export class ItemsController {
 
   @Post()
   @UsePipes(new ZodValidationPipe(create_item_schema))
-  async create(
-    @Param('id') collection_id: string,
-    @Body() create_item_dto: CreateItemDto,
-  ) {
+  async create(@Param('id') collection_id: string, @Body() create_item_dto: CreateItemDto) {
     return this.items_service.create(collection_id, create_item_dto);
   }
 
   @Delete(':itemId')
-  async delete(
-    @Param('id') collection_id: string,
-    @Param('itemId') item_id: string,
-  ) {
+  async delete(@Param('id') collection_id: string, @Param('itemId') item_id: string) {
     await this.items_service.delete(collection_id, item_id);
     return { message: 'Item deleted successfully' };
   }

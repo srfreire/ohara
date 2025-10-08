@@ -10,6 +10,9 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
+
+import { ZodValidationPipe } from '../../../common/validation/zod-validation.pipe';
+import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { CollectionsService } from '../services/collections.service';
 import {
   create_collection_schema,
@@ -17,8 +20,6 @@ import {
   CreateCollectionDto,
   UpdateCollectionDto,
 } from '../models/collection.model';
-import { ZodValidationPipe } from '../../../common/validation/zod-validation.pipe';
-import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 
 @Controller('collections')
 @UseGuards(JwtAuthGuard)
@@ -50,19 +51,13 @@ export class CollectionsController {
     @Body() update_collection_dto: UpdateCollectionDto,
     @Req() req: any,
   ) {
-    const user_id = req.user?.id;
-    if (!user_id) {
-      throw new Error('Authentication required');
-    }
+    const user_id = req.user.id;
     return this.collections_service.update(id, user_id, update_collection_dto);
   }
 
   @Delete(':id')
   async delete(@Param('id') id: string, @Req() req: any) {
-    const user_id = req.user?.id;
-    if (!user_id) {
-      throw new Error('Authentication required');
-    }
+    const user_id = req.user.id;
     await this.collections_service.delete(id, user_id);
     return { message: 'Collection deleted successfully' };
   }

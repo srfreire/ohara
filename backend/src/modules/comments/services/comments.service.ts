@@ -1,8 +1,5 @@
-import {
-  Injectable,
-  NotFoundException,
-  BadRequestException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+
 import { get_supabase_client } from '../../../lib/supabase.client';
 import {
   CreateCommentDto,
@@ -38,9 +35,7 @@ export class CommentsService {
   async create(create_comment_dto: CreateCommentDto): Promise<Comment> {
     // Validate start_offset < end_offset (also done in schema)
     if (create_comment_dto.start_offset >= create_comment_dto.end_offset) {
-      throw new BadRequestException(
-        'start_offset must be less than end_offset',
-      );
+      throw new BadRequestException('start_offset must be less than end_offset');
     }
 
     const { data, error } = await this.supabase
@@ -56,10 +51,7 @@ export class CommentsService {
     return data as Comment;
   }
 
-  async update(
-    id: string,
-    update_comment_dto: UpdateCommentDto,
-  ): Promise<Comment> {
+  async update(id: string, update_comment_dto: UpdateCommentDto): Promise<Comment> {
     const { data, error } = await this.supabase
       .from('comments')
       .update(update_comment_dto)

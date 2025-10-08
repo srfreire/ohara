@@ -37,6 +37,8 @@ export class ApiKeyOrJwtGuard implements CanActivate {
       }
     }
 
-    throw new UnauthorizedException('Missing authentication: provide either x-api-key or Bearer token');
+    throw new UnauthorizedException(
+      'Missing authentication: provide either x-api-key or Bearer token',
+    );
   }
 }

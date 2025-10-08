@@ -1,8 +1,5 @@
-import {
-  Injectable,
-  NotFoundException,
-  ConflictException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+
 import { get_supabase_client } from '../../../lib/supabase.client';
 import {
   CreateReactionDto,
@@ -62,10 +59,7 @@ export class ReactionsService {
     return data as Reaction;
   }
 
-  async update(
-    id: string,
-    update_reaction_dto: UpdateReactionDto,
-  ): Promise<Reaction> {
+  async update(id: string, update_reaction_dto: UpdateReactionDto): Promise<Reaction> {
     const { data, error } = await this.supabase
       .from('reactions')
       .update(update_reaction_dto)
@@ -91,10 +85,7 @@ export class ReactionsService {
   }
 
   async delete(id: string): Promise<void> {
-    const { error } = await this.supabase
-      .from('reactions')
-      .delete()
-      .eq('id', id);
+    const { error } = await this.supabase.from('reactions').delete().eq('id', id);
 
     if (error) {
       throw new NotFoundException(`Reaction with id ${id} not found`);

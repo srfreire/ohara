@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException, Logger } from '@nestjs/common';
+
 import { get_supabase_client } from '../../../lib/supabase.client';
 import { Folder, QueryFoldersDto, CreateFolderDto, UpdateFolderDto } from '../models/folder.model';
 
@@ -34,11 +35,7 @@ export class FoldersService {
   }
 
   async find_by_id(id: string): Promise<Folder> {
-    const { data, error } = await this.supabase
-      .from('folders')
-      .select('*')
-      .eq('id', id)
-      .single();
+    const { data, error } = await this.supabase.from('folders').select('*').eq('id', id).single();
 
     if (error || !data) {
       throw new NotFoundException(`Folder with id ${id} not found`);
@@ -81,10 +78,7 @@ export class FoldersService {
   }
 
   async delete(id: string): Promise<void> {
-    const { error } = await this.supabase
-      .from('folders')
-      .delete()
-      .eq('id', id);
+    const { error } = await this.supabase.from('folders').delete().eq('id', id);
 
     if (error) {
       throw new Error(`Failed to delete folder: ${error.message}`);

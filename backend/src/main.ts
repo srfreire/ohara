@@ -13,7 +13,6 @@ async function bootstrap() {
 
   // Global prefix for all routes
   app.setGlobalPrefix('v1');
-  logger.log('Global prefix set to: v1');
 
   const port = process.env.PORT || 3000;
   await app.listen(port);

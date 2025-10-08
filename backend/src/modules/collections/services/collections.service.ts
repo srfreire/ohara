@@ -1,14 +1,7 @@
-import {
-  Injectable,
-  NotFoundException,
-  ForbiddenException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+
 import { get_supabase_client } from '../../../lib/supabase.client';
-import {
-  CreateCollectionDto,
-  UpdateCollectionDto,
-  Collection,
-} from '../models/collection.model';
+import { CreateCollectionDto, UpdateCollectionDto, Collection } from '../models/collection.model';
 
 @Injectable()
 export class CollectionsService {
@@ -50,10 +43,7 @@ export class CollectionsService {
     const collection = data as Collection;
 
     // Check visibility permissions
-    if (
-      collection.visibility === 'private' &&
-      collection.user_id !== user_id
-    ) {
+    if (collection.visibility === 'private' && collection.user_id !== user_id) {
       throw new ForbiddenException('You do not have access to this collection');
     }
 
@@ -108,10 +98,7 @@ export class CollectionsService {
       throw new ForbiddenException('You do not have permission to delete this collection');
     }
 
-    const { error } = await this.supabase
-      .from('collections')
-      .delete()
-      .eq('id', id);
+    const { error } = await this.supabase.from('collections').delete().eq('id', id);
 
     if (error) {
       throw new NotFoundException(`Collection with id ${id} not found`);

@@ -1,12 +1,6 @@
 import { z } from 'zod';
 
-export const reaction_type_enum = z.enum([
-  'like',
-  'love',
-  'insight',
-  'question',
-  'flag',
-]);
+export const reaction_type_enum = z.enum(['like', 'love', 'insight', 'question', 'flag']);
 
 export const reaction_schema = z.object({
   id: z.string().uuid(),

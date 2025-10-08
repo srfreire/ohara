@@ -10,16 +10,18 @@ import {
   UsePipes,
   UseGuards,
 } from '@nestjs/common';
+
+import { ZodValidationPipe } from '../../../common/validation/zod-validation.pipe';
+import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { CommentsService } from '../services/comments.service';
 import {
   create_comment_schema,
   update_comment_schema,
+  query_comments_schema,
   CreateCommentDto,
   UpdateCommentDto,
   QueryCommentsDto,
 } from '../models/comment.model';
-import { ZodValidationPipe } from '../../../common/validation/zod-validation.pipe';
-import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 
 @Controller('comments')
 @UseGuards(JwtAuthGuard)
@@ -27,7 +29,9 @@ export class CommentsController {
   constructor(private readonly comments_service: CommentsService) {}
 
   @Get()
-  async find_all(@Query() query_params: QueryCommentsDto) {
+  async find_all(
+    @Query(new ZodValidationPipe(query_comments_schema)) query_params: QueryCommentsDto,
+  ) {
     return this.comments_service.find_all(query_params);
   }
 
@@ -39,10 +43,7 @@ export class CommentsController {
 
   @Put(':id')
   @UsePipes(new ZodValidationPipe(update_comment_schema))
-  async update(
-    @Param('id') id: string,
-    @Body() update_comment_dto: UpdateCommentDto,
-  ) {
+  async update(@Param('id') id: string, @Body() update_comment_dto: UpdateCommentDto) {
     return this.comments_service.update(id, update_comment_dto);
   }
 

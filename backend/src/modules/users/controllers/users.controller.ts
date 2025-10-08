@@ -11,14 +11,11 @@ import {
   Req,
   ForbiddenException,
 } from '@nestjs/common';
-import { UsersService } from '../services/users.service';
-import {
-  create_user_schema,
-  CreateUserDto,
-  UpdateUserDto,
-} from '../models/user.model';
+
 import { ZodValidationPipe } from '../../../common/validation/zod-validation.pipe';
 import { ApiKeyOrJwtGuard } from '../../auth/guards/api-key-or-jwt.guard';
+import { UsersService } from '../services/users.service';
+import { create_user_schema, CreateUserDto, UpdateUserDto } from '../models/user.model';
 
 @Controller('users')
 export class UsersController {
@@ -45,11 +42,7 @@ export class UsersController {
 
   @Put(':id')
   @UseGuards(ApiKeyOrJwtGuard)
-  async update(
-    @Param('id') id: string,
-    @Body() update_user_dto: UpdateUserDto,
-    @Req() req: any,
-  ) {
+  async update(@Param('id') id: string, @Body() update_user_dto: UpdateUserDto, @Req() req: any) {
     // Allow if admin (API key) or if user is updating themselves
     if (!req.user.is_admin && req.user.id !== id) {
       throw new ForbiddenException('You can only update your own account');

@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+
 import { get_supabase_client } from '../../../lib/supabase.client';
 import { Document, QueryDocumentsDto } from '../models/document.model';
 
@@ -27,11 +28,7 @@ export class DocumentsService {
   }
 
   async find_by_id(id: string): Promise<Document> {
-    const { data, error } = await this.supabase
-      .from('documents')
-      .select('*')
-      .eq('id', id)
-      .single();
+    const { data, error } = await this.supabase.from('documents').select('*').eq('id', id).single();
 
     if (error || !data) {
       throw new NotFoundException(`Document with id ${id} not found`);

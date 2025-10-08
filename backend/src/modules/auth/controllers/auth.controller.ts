@@ -1,6 +1,8 @@
 import { Controller, Get, Req, Res, UseGuards, Logger } from '@nestjs/common';
-import { Response } from 'express';
 import { ConfigService } from '@nestjs/config';
+
+import { Response } from 'express';
+
 import { AuthService } from '../auth.service';
 import { GoogleAuthGuard } from '../guards/google-auth.guard';
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
@@ -18,7 +20,6 @@ export class AuthController {
   @UseGuards(GoogleAuthGuard)
   async login() {
     this.logger.log('🔐 Initiating Google OAuth login flow');
-    // Guard redirects to Google
   }
 
   @Get('callback')
@@ -32,7 +33,9 @@ export class AuthController {
     const frontend_url = this.config_service.get<string>('FRONTEND_URL') || 'http://localhost:5173';
 
     // Redirect to frontend with tokens in query params
-    const avatar_param = result.user.avatar_url ? `&avatar_url=${encodeURIComponent(result.user.avatar_url)}` : '';
+    const avatar_param = result.user.avatar_url
+      ? `&avatar_url=${encodeURIComponent(result.user.avatar_url)}`
+      : '';
     const redirect_url = `${frontend_url}/?access_token=${result.access_token}&id=${result.user.id}&email=${encodeURIComponent(result.user.email || '')}&name=${encodeURIComponent(result.user.name || '')}${avatar_param}`;
 
     this.logger.log(`🔄 Redirecting user ${result.user.email} to frontend`);

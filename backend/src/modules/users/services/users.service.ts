@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+
 import { get_supabase_client } from '../../../lib/supabase.client';
 import { CreateUserDto, UpdateUserDto, User } from '../models/user.model';
 
@@ -20,11 +21,7 @@ export class UsersService {
   }
 
   async find_by_id(id: string): Promise<User> {
-    const { data, error } = await this.supabase
-      .from('users')
-      .select('*')
-      .eq('id', id)
-      .single();
+    const { data, error } = await this.supabase.from('users').select('*').eq('id', id).single();
 
     if (error || !data) {
       throw new NotFoundException(`User with id ${id} not found`);

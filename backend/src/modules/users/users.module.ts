@@ -6,11 +6,7 @@ import { UsersService } from './services/users.service';
 import { AuthModule } from '../auth/auth.module';
 
 @Module({
-  imports: [
-    forwardRef(() => AuthModule),
-    JwtModule,
-    ConfigModule,
-  ],
+  imports: [forwardRef(() => AuthModule), JwtModule, ConfigModule],
   controllers: [UsersController],
   providers: [UsersService],
   exports: [UsersService],

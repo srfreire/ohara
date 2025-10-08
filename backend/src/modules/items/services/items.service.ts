@@ -1,8 +1,5 @@
-import {
-  Injectable,
-  NotFoundException,
-  ConflictException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+
 import { get_supabase_client } from '../../../lib/supabase.client';
 import { CreateItemDto, Item } from '../models/item.model';
 
@@ -24,10 +21,7 @@ export class ItemsService {
     return data as Item[];
   }
 
-  async create(
-    collection_id: string,
-    create_item_dto: CreateItemDto,
-  ): Promise<Item> {
+  async create(collection_id: string, create_item_dto: CreateItemDto): Promise<Item> {
     const { data, error } = await this.supabase
       .from('items')
       .insert({

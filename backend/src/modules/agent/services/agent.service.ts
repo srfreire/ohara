@@ -1,6 +1,7 @@
 import { Injectable, HttpException, HttpStatus, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
+
 import axios from 'axios';
 import { Response } from 'express';
 
@@ -90,20 +91,24 @@ export class AgentService {
       // The ToolExecutor will extract workspace_id from workspace.workspace_id
       const agent_service_token = this.jwt_service.sign(
         {
-          sub: user_email,  // Agent expects 'sub' field
+          sub: user_email, // Agent expects 'sub' field
           user_id: user_id,
           email: user_email,
-          workspace: workspace_id ? {
-            workspace_id: workspace_id,  // Agent ToolExecutor extracts this
-          } : null,
+          workspace: workspace_id
+            ? {
+                workspace_id: workspace_id, // Agent ToolExecutor extracts this
+              }
+            : null,
         },
         {
           secret: agent_jwt_secret,
           expiresIn: '1h',
-        }
+        },
       );
 
-      this.logger.debug(`🎟️  Generated JWT for agent service (length: ${agent_service_token.length}, workspace: ${workspace_id})`);
+      this.logger.debug(
+        `🎟️  Generated JWT for agent service (length: ${agent_service_token.length}, workspace: ${workspace_id})`,
+      );
 
       // Set streaming response headers
       res.setHeader('Content-Type', 'text/plain; charset=utf-8');
@@ -112,7 +117,7 @@ export class AgentService {
 
       // Prepare request for agent service
       const agent_request = {
-        messages: stream_request.messages.map(msg => ({
+        messages: stream_request.messages.map((msg) => ({
           role: msg.role,
           content: msg.content,
           timestamp: msg.timestamp,
@@ -121,7 +126,9 @@ export class AgentService {
         workspace_context: workspace_context,
       };
 
-      this.logger.log(`🤖 Calling agent service - URL: ${agent_service_url}/v1/chat/stream, Messages: ${stream_request.messages.length}, User: ${user_email}`);
+      this.logger.log(
+        `🤖 Calling agent service - URL: ${agent_service_url}/v1/chat/stream, Messages: ${stream_request.messages.length}, User: ${user_email}`,
+      );
 
       // Call agent service for AI processing
       const agent_response = await axios.post(
@@ -130,7 +137,7 @@ export class AgentService {
         {
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${agent_service_token}`,
+            Authorization: `Bearer ${agent_service_token}`,
           },
           timeout: 300000, // 5 minute timeout for streaming
           responseType: 'stream',
@@ -140,10 +147,7 @@ export class AgentService {
       // Validate that we received a proper stream response
       if (!agent_response.data || typeof agent_response.data.on !== 'function') {
         this.logger.error('❌ Agent response is not a stream', agent_response.data);
-        throw new HttpException(
-          'Invalid response from agent service',
-          HttpStatus.BAD_GATEWAY,
-        );
+        throw new HttpException('Invalid response from agent service', HttpStatus.BAD_GATEWAY);
       }
 
       this.logger.log('📡 Streaming response from agent service to client');
@@ -162,7 +166,6 @@ export class AgentService {
         this.logger.error('❌ Agent stream error:', error);
         res.end();
       });
-
     } catch (error) {
       this.logger.error('❌ Chat stream error:', error);
 
@@ -174,13 +177,17 @@ export class AgentService {
           this.logger.error('🔌 Agent service unavailable (connection refused)');
           throw new HttpException('Agent service unavailable', HttpStatus.SERVICE_UNAVAILABLE);
         } else {
-          this.logger.error(`⚠️  Axios error: ${error.code} - Status: ${error.response?.status} ${error.response?.statusText}`);
+          this.logger.error(
+            `⚠️  Axios error: ${error.code} - Status: ${error.response?.status} ${error.response?.statusText}`,
+          );
 
           // Safely log response data (avoid circular references)
           try {
             const response_data = error.response?.data;
             if (response_data && typeof response_data === 'object') {
-              this.logger.error(`Response: ${response_data.message || response_data.error || 'No message'}`);
+              this.logger.error(
+                `Response: ${response_data.message || response_data.error || 'No message'}`,
+              );
             }
           } catch (e) {
             this.logger.error('Could not parse response data');
