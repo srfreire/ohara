@@ -68,8 +68,10 @@
 
 
 /* Base styles */
-body {
+html, body {
   @apply bg-background-light text-text-light transition-colors duration-200 font-reddit-sans;
+  overscroll-behavior: none;
+  overflow: hidden;
 }
 
 /* Global font families */
