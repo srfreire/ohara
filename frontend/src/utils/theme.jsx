@@ -33,9 +33,15 @@ export const ThemeProvider = ({ children }) => {
       return
     }
 
-    // Get click coordinates for the circular transition
-    const x = event?.clientX ?? window.innerWidth / 2
-    const y = event?.clientY ?? window.innerHeight / 2
+    // Get button center coordinates for the circular transition
+    let x = window.innerWidth / 2
+    let y = window.innerHeight / 2
+
+    if (event?.currentTarget) {
+      const rect = event.currentTarget.getBoundingClientRect()
+      x = rect.left + rect.width / 2
+      y = rect.top + rect.height / 2
+    }
 
     // Calculate the maximum distance to ensure the circle covers the entire viewport
     const endRadius = Math.hypot(
@@ -48,8 +54,12 @@ export const ThemeProvider = ({ children }) => {
     document.documentElement.style.setProperty('--y', `${y}px`)
     document.documentElement.style.setProperty('--end-radius', `${endRadius}px`)
 
+    // Determine theme direction: true if going to dark mode, false if going to light
+    const goingToDark = !isDarkMode
+    document.documentElement.setAttribute('data-theme-transition', goingToDark ? 'to-dark' : 'to-light')
+
     // Start the view transition
-    const transition = document.startViewTransition(() => {
+    document.startViewTransition(() => {
       setIsDarkMode(prev => !prev)
     })
   }
