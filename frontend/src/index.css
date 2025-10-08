@@ -260,3 +260,35 @@ h1, h2, h3, h4, h5, h6, .font-heading {
 .markdown-content th {
   @apply bg-secondary-100 dark:bg-secondary-700 font-bold;
 }
+
+/* View Transitions API - Circular theme transition */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+::view-transition-old(root) {
+  z-index: 1;
+}
+
+::view-transition-new(root) {
+  z-index: 2;
+  animation: circle-expand 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes circle-expand {
+  from {
+    clip-path: circle(0% at var(--x, 50%) var(--y, 50%));
+  }
+  to {
+    clip-path: circle(var(--end-radius, 100%) at var(--x, 50%) var(--y, 50%));
+  }
+}
+
+/* Fallback for browsers that don't support View Transitions */
+@supports not (clip-path: circle(0% at 0 0)) {
+  ::view-transition-new(root) {
+    animation: fade-in 0.3s ease-out;
+  }
+}

@@ -26,8 +26,32 @@ export const ThemeProvider = ({ children }) => {
     }
   }, [isDarkMode])
 
-  const toggleTheme = () => {
-    setIsDarkMode(prev => !prev)
+  const toggleTheme = (event) => {
+    // Check if View Transitions API is supported
+    if (!document.startViewTransition) {
+      setIsDarkMode(prev => !prev)
+      return
+    }
+
+    // Get click coordinates for the circular transition
+    const x = event?.clientX ?? window.innerWidth / 2
+    const y = event?.clientY ?? window.innerHeight / 2
+
+    // Calculate the maximum distance to ensure the circle covers the entire viewport
+    const endRadius = Math.hypot(
+      Math.max(x, window.innerWidth - x),
+      Math.max(y, window.innerHeight - y)
+    )
+
+    // Store coordinates as CSS custom properties
+    document.documentElement.style.setProperty('--x', `${x}px`)
+    document.documentElement.style.setProperty('--y', `${y}px`)
+    document.documentElement.style.setProperty('--end-radius', `${endRadius}px`)
+
+    // Start the view transition
+    const transition = document.startViewTransition(() => {
+      setIsDarkMode(prev => !prev)
+    })
   }
 
   const value = {

@@ -33,7 +33,7 @@ const Header = () => {
       <div className="flex items-center space-x-4">
         {/* Dark Mode Toggle */}
         <button
-          onClick={toggleTheme}
+          onClick={(e) => toggleTheme(e)}
           className="p-2 rounded-lg bg-secondary-100 dark:bg-secondary-700 hover:bg-secondary-200 dark:hover:bg-secondary-600 text-text-light transition-colors duration-200"
           aria-label={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
         >
