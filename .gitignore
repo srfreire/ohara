@@ -12,7 +12,8 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
+**/lib/
+!backend/src/lib/
 lib64/
 parts/
 sdist/
@@ -411,3 +412,5 @@ downloads/
 # Generated files
 *.generated.*
 generated/
+
+agent/

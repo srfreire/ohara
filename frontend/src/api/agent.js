@@ -3,7 +3,9 @@
  * Handles SSE (Server-Sent Events) streaming for chat
  */
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/v1'
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
+const API_VERSION = 'v1' // API version prefix
+const API_BASE_URL = `${BASE_URL}/${API_VERSION}`
 
 /**
  * Stream chat messages using Server-Sent Events

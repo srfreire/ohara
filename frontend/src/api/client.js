@@ -2,10 +2,11 @@ import axios from 'axios'
 import toast from 'react-hot-toast'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'
+const API_VERSION = 'v1' // API version prefix
 
-// Create axios instance
+// Create axios instance with /v1 prefix
 const api_client = axios.create({
-  baseURL: API_BASE_URL,
+  baseURL: `${API_BASE_URL}/${API_VERSION}`,
   headers: {
     'Content-Type': 'application/json',
   },
