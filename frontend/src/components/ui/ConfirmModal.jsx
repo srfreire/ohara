@@ -27,7 +27,7 @@ const ConfirmModal = ({
 
       {/* Modal */}
       <div className="relative bg-white dark:bg-secondary-900 rounded-xl shadow-2xl
-        border border-white/80 dark:border-secondary-600/50 p-6 max-w-md w-full mx-4
+        border border-secondary-200 dark:border-secondary-600/50 p-6 max-w-md w-full mx-4
         animate-in fade-in zoom-in duration-200">
 
         {/* Close button */}

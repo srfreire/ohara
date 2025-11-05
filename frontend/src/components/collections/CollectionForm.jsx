@@ -75,7 +75,7 @@ const CollectionForm = ({
       />
 
       {/* Modal */}
-      <div className="relative bg-white dark:bg-secondary-900 rounded-xl shadow-2xl border border-white/80 dark:border-secondary-600/50 p-6 max-w-lg w-full mx-4 animate-in fade-in zoom-in duration-200">
+      <div className="relative bg-white dark:bg-secondary-900 rounded-xl shadow-2xl border border-secondary-200 dark:border-secondary-600/50 p-6 max-w-lg w-full mx-4 animate-in fade-in zoom-in duration-200">
         {/* Close button */}
         <button
           onClick={handle_close}
@@ -88,7 +88,7 @@ const CollectionForm = ({
 
         {/* Icon */}
         <div className="w-12 h-12 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center mb-4">
-          <BookMarked className="w-6 h-6 text-primary-600 dark:text-primary-400" />
+          <BookMarked className="w-6 h-6 text-primary-600 dark:text-primary-400 fill-current" />
         </div>
 
         {/* Title */}

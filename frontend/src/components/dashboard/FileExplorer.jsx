@@ -278,7 +278,7 @@ const FileExplorer = ({
             className="absolute top-2 right-2 z-50 p-1.5 rounded bg-white/90 dark:bg-secondary-700/90 hover:bg-primary-100 dark:hover:bg-primary-900/50 text-secondary-600 dark:text-secondary-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors shadow-sm"
             title="Add to collection"
           >
-            <BookmarkPlus className="w-4 h-4" />
+            <BookmarkPlus className={`w-4 h-4 ${collection_count > 0 ? 'fill-current' : ''}`} />
           </button>
         )}
 

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { X, BookMarked, Plus, Check } from 'lucide-react';
 import { useCollectionsStore } from '../../stores/collections-store';
+import { useAuth } from '../../contexts/auth-context';
 import toast from 'react-hot-toast';
 
 const CollectionPicker = ({
@@ -15,6 +16,8 @@ const CollectionPicker = ({
   const [show_create_inline, set_show_create_inline] = useState(false);
   const [new_collection_name, set_new_collection_name] = useState('');
   const [is_creating, set_is_creating] = useState(false);
+
+  const { user } = useAuth();
 
   const {
     collections,
@@ -85,6 +88,7 @@ const CollectionPicker = ({
       const new_collection = await create_collection_action({
         name: new_collection_name.trim(),
         visibility: 'private',
+        user_id: user.id,
       });
 
       toast.success('Collection created');
@@ -178,7 +182,7 @@ const CollectionPicker = ({
       />
 
       {/* Modal */}
-      <div className="relative bg-white dark:bg-secondary-900 rounded-xl shadow-2xl border border-white/80 dark:border-secondary-600/50 p-6 max-w-md w-full mx-4 max-h-[80vh] flex flex-col animate-in fade-in zoom-in duration-200">
+      <div className="relative bg-white dark:bg-secondary-900 rounded-xl shadow-2xl border border-secondary-200 dark:border-secondary-600/50 p-6 max-w-md w-full mx-4 max-h-[80vh] flex flex-col animate-in fade-in zoom-in duration-200">
         {/* Close button */}
         <button
           onClick={handle_close}
@@ -191,7 +195,7 @@ const CollectionPicker = ({
 
         {/* Icon */}
         <div className="w-12 h-12 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center mb-4">
-          <BookMarked className="w-6 h-6 text-primary-600 dark:text-primary-400" />
+          <BookMarked className="w-6 h-6 text-primary-600 dark:text-primary-400 fill-current" />
         </div>
 
         {/* Title */}
@@ -218,8 +222,8 @@ const CollectionPicker = ({
                     key={collection.id}
                   className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
                     is_selected
-                      ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20'
-                      : 'border-secondary-300 dark:border-secondary-600 hover:bg-secondary-50 dark:hover:bg-secondary-800'
+                      ? 'border-primary-500 bg-primary-50 dark:bg-secondary-800/50'
+                      : 'border-secondary-300 dark:border-secondary-600 bg-white dark:bg-secondary-800/50 hover:bg-secondary-50 dark:hover:bg-secondary-800'
                   }`}
                 >
                   <div className="flex items-center h-5">
@@ -256,7 +260,7 @@ const CollectionPicker = ({
 
           {/* Inline create form */}
           {show_create_inline && (
-            <div className="p-3 rounded-lg border border-primary-500 bg-primary-50 dark:bg-primary-900/20">
+            <div className="p-3 rounded-lg border border-primary-500 bg-secondary-100 dark:bg-secondary-800/50">
               <input
                 type="text"
                 value={new_collection_name}
@@ -272,7 +276,7 @@ const CollectionPicker = ({
                 placeholder="Collection name"
                 disabled={is_creating}
                 autoFocus
-                className="w-full px-3 py-2 rounded-lg border border-secondary-300 dark:border-secondary-600 bg-white dark:bg-secondary-800 text-text-light placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50 font-reddit-sans text-sm mb-2"
+                className="w-full px-3 py-2 rounded border border-secondary-300 dark:border-secondary-600 bg-white dark:bg-secondary-800 text-text-light placeholder-text-muted focus:outline-none focus:ring-1 focus:ring-primary-500 disabled:opacity-50 font-reddit-sans text-sm mb-2"
               />
               <div className="flex gap-2">
                 <button

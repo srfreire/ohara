@@ -71,7 +71,7 @@ const CollectionCard = ({
       {/* Collection icon */}
       <div className="w-16 h-16 mb-3 flex items-center justify-center mx-auto">
         <div className="w-14 h-14 rounded-lg bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center">
-          <BookMarked className="w-8 h-8 text-primary-600 dark:text-primary-400" />
+          <BookMarked className="w-8 h-8 text-primary-600 dark:text-primary-400 fill-current" />
         </div>
       </div>
 
