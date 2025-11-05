@@ -1,5 +1,6 @@
 import { Controller, Get, Req, Res, UseGuards, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 
 import { Response } from 'express';
 
@@ -7,6 +8,7 @@ import { AuthService } from '../auth.service';
 import { GoogleAuthGuard } from '../guards/google-auth.guard';
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 
+@ApiTags('auth')
 @Controller('auth')
 export class AuthController {
   private readonly logger = new Logger('AuthController');
@@ -18,12 +20,28 @@ export class AuthController {
 
   @Get('login')
   @UseGuards(GoogleAuthGuard)
+  @ApiOperation({
+    summary: 'Initiate Google OAuth login',
+    description:
+      'Redirects to Google OAuth consent screen. After authentication, user is redirected to /auth/callback.',
+  })
+  @ApiResponse({ status: 302, description: 'Redirects to Google OAuth' })
   async login() {
     this.logger.log('🔐 Initiating Google OAuth login flow');
   }
 
   @Get('callback')
   @UseGuards(GoogleAuthGuard)
+  @ApiOperation({
+    summary: 'Google OAuth callback',
+    description:
+      'Handles Google OAuth callback, creates/updates user, generates JWT, and redirects to frontend with tokens.',
+  })
+  @ApiResponse({
+    status: 302,
+    description: 'Redirects to frontend with access_token in query params',
+  })
+  @ApiResponse({ status: 401, description: 'OAuth authentication failed' })
   async callback(@Req() req: any, @Res() res: Response) {
     this.logger.log(`📥 OAuth callback received for user: ${req.user?.email || 'unknown'}`);
 
@@ -45,6 +63,17 @@ export class AuthController {
 
   @Get('refresh')
   @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({
+    summary: 'Refresh JWT token',
+    description: 'Generate a new JWT token using a valid existing token. Token expires in 7 days.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'New JWT token generated',
+    schema: { example: { access_token: 'jwt_token_string' } },
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized - Invalid or expired token' })
   async refresh(@Req() req: any) {
     this.logger.log(`🔄 Token refresh requested for user: ${req.user?.email || req.user?.id}`);
     return this.auth_service.refresh_token(req.user.id, req.user.email);

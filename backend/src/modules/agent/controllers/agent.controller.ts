@@ -1,4 +1,5 @@
 import { Controller, Post, Body, Res, UseGuards, Request, Logger } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiBody } from '@nestjs/swagger';
 
 import { Response } from 'express';
 import { z } from 'zod';
@@ -22,6 +23,8 @@ const stream_request_schema = z.object({
 
 type StreamRequestDto = z.infer<typeof stream_request_schema>;
 
+@ApiTags('agent')
+@ApiBearerAuth('JWT-auth')
 @Controller('agent')
 @UseGuards(JwtAuthGuard)
 export class AgentController {
@@ -30,6 +33,26 @@ export class AgentController {
   constructor(private readonly agent_service: AgentService) {}
 
   @Post('stream')
+  @ApiOperation({
+    summary: 'Stream AI chat responses',
+    description:
+      'Send messages to the AI agent and receive streamed responses via Server-Sent Events (SSE). Supports document context.',
+  })
+  @ApiBody({
+    description: 'Chat request with message history',
+    schema: {
+      example: {
+        messages: [
+          { role: 'user', content: 'Summarize this document', timestamp: '2025-01-10T12:00:00Z' },
+        ],
+        model: 'gpt-4.1',
+        document_id: 'uuid-optional',
+      },
+    },
+  })
+  @ApiResponse({ status: 200, description: 'Streaming response started (text/event-stream)' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 500, description: 'Agent service unavailable' })
   async stream(
     @Body(new ZodValidationPipe(stream_request_schema)) stream_request: StreamRequestDto,
     @Request() req: any,

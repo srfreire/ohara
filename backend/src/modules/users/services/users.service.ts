@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 
 import { get_supabase_client } from '../../../lib/supabase.client';
-import { CreateUserDto, UpdateUserDto, User } from '../models/user.model';
+import { CreateUserDto, UpdateUserDto, User, UserPatchArray } from '../models/user.model';
 
 @Injectable()
 export class UsersService {
@@ -68,6 +68,53 @@ export class UsersService {
 
     if (error || !data) {
       throw new NotFoundException(`User with id ${id} not found`);
+    }
+
+    return data as User;
+  }
+
+  async patch(id: string, patch_operations: UserPatchArray): Promise<User> {
+    // First, get the current user
+    const { data: existing_user, error: fetch_error } = await this.supabase
+      .from('users')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (fetch_error || !existing_user) {
+      throw new NotFoundException(`User with id ${id} not found`);
+    }
+
+    // Apply JSON Patch operations (RFC 6902)
+    const updated_user: any = { ...existing_user };
+
+    for (const operation of patch_operations) {
+      if (operation.op === 'replace') {
+        const field = operation.path.substring(1); // Remove leading '/'
+        if (field === 'email') {
+          updated_user.email = operation.value as string;
+        } else if (field === 'name') {
+          updated_user.name = operation.value as string;
+        } else if (field === 'avatar_url') {
+          updated_user.avatar_url = operation.value as string | null;
+        }
+      }
+    }
+
+    // Update the user in the database
+    const { data, error } = await this.supabase
+      .from('users')
+      .update({
+        email: updated_user.email,
+        name: updated_user.name,
+        avatar_url: updated_user.avatar_url,
+      })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error || !data) {
+      throw new Error(`Failed to patch user: ${error?.message || 'Unknown error'}`);
     }
 
     return data as User;

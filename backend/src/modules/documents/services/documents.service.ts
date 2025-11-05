@@ -2,20 +2,50 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 
 import { get_supabase_client } from '../../../lib/supabase.client';
 import { Document, QueryDocumentsDto } from '../models/document.model';
+import { parse_cursor_query, apply_cursor_conditions } from '../../../common/pagination';
 
 @Injectable()
 export class DocumentsService {
   private supabase = get_supabase_client();
 
   async find_all(query_params: QueryDocumentsDto): Promise<Document[]> {
-    let query_builder = this.supabase
-      .from('documents')
-      .select('*')
-      .order('created_at', { ascending: false })
-      .range(query_params.offset, query_params.offset + query_params.limit - 1);
+    let query_builder = this.supabase.from('documents').select('*');
 
+    // Apply folder filter
     if (query_params.folder_id) {
       query_builder = query_builder.eq('folder_id', query_params.folder_id);
+    }
+
+    // Apply search filter (case-insensitive search on title)
+    if (query_params.search) {
+      query_builder = query_builder.ilike('title', `%${query_params.search}%`);
+    }
+
+    // Apply date range filters
+    if (query_params.created_after) {
+      query_builder = query_builder.gte('created_at', query_params.created_after);
+    }
+
+    if (query_params.created_before) {
+      query_builder = query_builder.lte('created_at', query_params.created_before);
+    }
+
+    // Apply sorting
+    const sort_by = query_params.sort_by || 'created_at';
+    const order = query_params.order || 'desc';
+    const ascending = order === 'asc';
+
+    // Apply cursor-based pagination if cursor is provided, otherwise use offset
+    if (query_params.cursor) {
+      const cursor_conditions = parse_cursor_query(query_params.cursor, sort_by, ascending);
+      query_builder = apply_cursor_conditions(query_builder, cursor_conditions);
+      // Fetch limit + 1 to check if there are more results
+      query_builder = query_builder.order(sort_by, { ascending }).limit(query_params.limit + 1);
+    } else {
+      // Offset-based pagination
+      query_builder = query_builder
+        .order(sort_by, { ascending })
+        .range(query_params.offset, query_params.offset + query_params.limit - 1);
     }
 
     const { data, error } = await query_builder;
