@@ -45,10 +45,9 @@ export class CollectionsController {
   }
 
   @Put(':id')
-  @UsePipes(new ZodValidationPipe(update_collection_schema))
   async update(
     @Param('id') id: string,
-    @Body() update_collection_dto: UpdateCollectionDto,
+    @Body(new ZodValidationPipe(update_collection_schema)) update_collection_dto: UpdateCollectionDto,
     @Req() req: any,
   ) {
     const user_id = req.user.id;

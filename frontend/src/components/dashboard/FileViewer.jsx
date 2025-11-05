@@ -5,6 +5,7 @@ import { toast_error } from '../../utils/toast'
 import LoadingSpinner from '../ui/LoadingSpinner'
 import CommentsSection from '../comments/CommentsSection'
 import PdfViewer from '../pdf/PdfViewer'
+import AddToCollectionButton from '../collections/AddToCollectionButton'
 
 const FileViewer = ({ file, folders = [], on_close, on_breadcrumb_click, citation_to_highlight }) => {
   const [pdf_url, set_pdf_url] = useState(null)
@@ -151,6 +152,15 @@ const FileViewer = ({ file, folders = [], on_close, on_breadcrumb_click, citatio
             </div>
 
             <div className="flex items-center space-x-2 ml-4">
+              {/* Add to Collection Button */}
+              {file.id && (
+                <AddToCollectionButton
+                  document_id={file.id}
+                  variant="icon"
+                  className="p-2"
+                />
+              )}
+
               <button
                 onClick={() => set_show_comments(!show_comments)}
                 className={`p-2 rounded-lg ${

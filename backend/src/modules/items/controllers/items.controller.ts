@@ -16,8 +16,16 @@ export class ItemsController {
   }
 
   @Post()
-  @UsePipes(new ZodValidationPipe(create_item_schema))
-  async create(@Param('id') collection_id: string, @Body() create_item_dto: CreateItemDto) {
+  async create(
+    @Param('id') collection_id: string,
+    @Body(new ZodValidationPipe(create_item_schema)) create_item_dto: CreateItemDto,
+  ) {
+    console.log('=== CREATE ITEM REQUEST ===');
+    console.log('Collection ID:', collection_id);
+    console.log('Raw body:', create_item_dto);
+    console.log('Document ID:', create_item_dto.document_id);
+    console.log('Document ID type:', typeof create_item_dto.document_id);
+
     return this.items_service.create(collection_id, create_item_dto);
   }
 

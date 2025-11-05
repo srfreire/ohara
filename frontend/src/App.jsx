@@ -23,6 +23,26 @@ function App() {
                   borderRadius: '0.75rem',
                   fontSize: '0.875rem',
                 },
+                success: {
+                  style: {
+                    background: '#4a7c54', // forest green (primary-600)
+                    color: '#ffffff',
+                  },
+                  iconTheme: {
+                    primary: '#ffffff',
+                    secondary: '#4a7c54',
+                  },
+                },
+                error: {
+                  style: {
+                    background: '#dc2626', // red for errors
+                    color: '#ffffff',
+                  },
+                  iconTheme: {
+                    primary: '#ffffff',
+                    secondary: '#dc2626',
+                  },
+                },
               }}
             />
 

@@ -96,10 +96,21 @@ export const get_collection_items = async (id) => {
  */
 export const add_item_to_collection = async (id, document_id) => {
   try {
+    console.log('=== ADD ITEM TO COLLECTION ===')
+    console.log('Collection ID:', id)
+    console.log('Document ID:', document_id)
+    console.log('Document ID type:', typeof document_id)
+    console.log('Payload being sent:', JSON.stringify({ document_id }))
+
     const response = await api_client.post(`/collections/${id}/items`, { document_id })
+    console.log('Add item response:', response.data)
     return response.data
   } catch (error) {
-    console.error('Add item to collection error:', error)
+    console.error('❌ Add item to collection error:', error)
+    console.error('Full error object:', JSON.stringify(error.response?.data, null, 2))
+    console.error('Error response data:', error.response?.data)
+    console.error('Error status:', error.response?.status)
+    console.error('Request config:', error.config)
     throw error
   }
 }

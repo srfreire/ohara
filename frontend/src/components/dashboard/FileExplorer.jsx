@@ -1,12 +1,22 @@
-import { useState, Fragment } from "react";
+import { useState, Fragment, useEffect } from "react";
 import {
   ChevronRight,
   PanelRightClose,
   PanelRightOpen,
   Folder,
   Home,
+  Bookmark,
+  BookmarkPlus,
 } from "lucide-react";
+import toast from 'react-hot-toast';
 import FileGridSkeleton from "../ui/FileGridSkeleton";
+import CollectionGrid from "../collections/CollectionGrid";
+import CollectionDetail from "../collections/CollectionDetail";
+import CollectionForm from "../collections/CollectionForm";
+import CollectionPicker from "../collections/CollectionPicker";
+import ConfirmModal from "../ui/ConfirmModal";
+import { useCollectionsStore } from "../../stores/collections-store";
+import { useAuth } from "../../contexts/auth-context";
 
 const FileExplorer = ({
   selected_file,
@@ -23,6 +33,129 @@ const FileExplorer = ({
   documents = null,
   is_loading = false,
 }) => {
+  // Collections state and store
+  const { user } = useAuth();
+  const [view_mode, set_view_mode] = useState('files'); // 'files' or 'collections'
+  const [selected_collection, set_selected_collection] = useState(null);
+  const [is_form_open, set_is_form_open] = useState(false);
+  const [collection_to_edit, set_collection_to_edit] = useState(null);
+  const [collection_to_delete, set_collection_to_delete] = useState(null);
+  const [is_saving, set_is_saving] = useState(false);
+
+  const {
+    collections,
+    items_by_collection,
+    loading: collections_loading,
+    fetch_collections,
+    fetch_collection_items,
+    create_collection_action,
+    update_collection_action,
+    delete_collection_action,
+    remove_item,
+  } = useCollectionsStore();
+
+  // Fetch collections when switching to collections view
+  useEffect(() => {
+    if (view_mode === 'collections' && user) {
+      fetch_collections().catch((error) => {
+        console.error('Error fetching collections:', error);
+        toast.error('Failed to load collections');
+      });
+    }
+  }, [view_mode, user, fetch_collections]);
+
+  // Fetch items when selecting a collection
+  useEffect(() => {
+    if (selected_collection && user) {
+      fetch_collection_items(selected_collection.id).catch((error) => {
+        console.error('Error fetching collection items:', error);
+        toast.error('Failed to load collection items');
+      });
+    }
+  }, [selected_collection, user, fetch_collection_items]);
+
+  // Collections handlers
+  const handle_view_toggle = () => {
+    set_view_mode(view_mode === 'files' ? 'collections' : 'files');
+    set_selected_collection(null);
+  };
+
+  const handle_collection_click = (collection) => {
+    set_selected_collection(collection);
+  };
+
+  const handle_collection_back = () => {
+    set_selected_collection(null);
+  };
+
+  const handle_create_new = () => {
+    set_collection_to_edit(null);
+    set_is_form_open(true);
+  };
+
+  const handle_collection_edit = (collection) => {
+    set_collection_to_edit(collection);
+    set_is_form_open(true);
+  };
+
+  const handle_collection_delete = (collection) => {
+    set_collection_to_delete(collection);
+  };
+
+  const handle_form_save = async (collection_data) => {
+    set_is_saving(true);
+    try {
+      if (collection_to_edit) {
+        // Edit existing collection
+        await update_collection_action(collection_to_edit.id, collection_data);
+        toast.success('Collection updated successfully');
+      } else {
+        // Create new collection
+        const new_collection_data = {
+          ...collection_data,
+          user_id: user.id,
+        };
+        await create_collection_action(new_collection_data);
+        toast.success('Collection created successfully');
+      }
+      set_is_form_open(false);
+      set_collection_to_edit(null);
+    } catch (error) {
+      console.error('Error saving collection:', error);
+      toast.error(error.message || 'Failed to save collection');
+    } finally {
+      set_is_saving(false);
+    }
+  };
+
+  const handle_delete_confirm = async () => {
+    if (!collection_to_delete) return;
+
+    try {
+      await delete_collection_action(collection_to_delete.id);
+      toast.success('Collection deleted successfully');
+
+      // If we're viewing the deleted collection, go back
+      if (selected_collection?.id === collection_to_delete.id) {
+        set_selected_collection(null);
+      }
+    } catch (error) {
+      console.error('Error deleting collection:', error);
+      toast.error('Failed to delete collection');
+    }
+  };
+
+  const handle_item_remove = async (item) => {
+    if (!selected_collection) return;
+
+    try {
+      await remove_item(selected_collection.id, item.id);
+      toast.success('Removed from collection');
+    } catch (error) {
+      console.error('Error removing item:', error);
+      toast.error('Failed to remove item');
+    }
+  };
 
   // Helper functions for API data only
   const get_root_folders_data = () => {
@@ -94,8 +227,18 @@ const FileExplorer = ({
     );
   };
 
+  // State for collection picker at FileExplorer level
+  const [picker_document_id, set_picker_document_id] = useState(null);
+
   const FileIconItem = ({ file, animation_delay = 0 }) => {
     const [is_hovered, set_is_hovered] = useState(false);
+    const { document_collections } = useCollectionsStore();
+
+    // Debug: Log file structure
+    if (is_hovered && file.id) {
+      console.log('FileIconItem - File object:', file);
+      console.log('FileIconItem - file.id:', file.id, 'type:', typeof file.id);
+    }
 
     const get_large_icon = (file_type) => {
       return (
@@ -107,13 +250,48 @@ const FileExplorer = ({
       );
     };
 
+    const collection_count = document_collections[file.id]?.length || 0;
+    const collection_names = collection_count > 0
+      ? (collections || [])
+          .filter((c) => c != null && c.id && document_collections[file.id]?.includes(c.id))
+          .map((c) => c.name)
+          .join(', ')
+      : '';
+
     return (
       <div
-        className="flex flex-col items-center p-4 rounded-lg cursor-pointer hover:bg-secondary-100 dark:hover:bg-secondary-800 group"
+        className="flex flex-col items-center p-4 rounded-lg cursor-pointer hover:bg-secondary-100 dark:hover:bg-secondary-800 group relative"
         onClick={() => on_file_select && on_file_select(file)}
         onMouseEnter={() => set_is_hovered(true)}
         onMouseLeave={() => set_is_hovered(false)}
       >
+        {/* Add to collection button - show on hover */}
+        {is_hovered && file.id && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              e.preventDefault();
+              console.log('🔘 Opening picker for:', file.id);
+              set_picker_document_id(file.id);
+            }}
+            className="absolute top-2 right-2 z-50 p-1.5 rounded bg-white/90 dark:bg-secondary-700/90 hover:bg-primary-100 dark:hover:bg-primary-900/50 text-secondary-600 dark:text-secondary-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors shadow-sm"
+            title="Add to collection"
+          >
+            <BookmarkPlus className="w-4 h-4" />
+          </button>
+        )}
+
+        {/* Collection badge - show when not hovering and in collections */}
+        {!is_hovered && collection_count > 0 && (
+          <div
+            className="absolute top-2 right-2 px-1.5 py-0.5 rounded-full bg-primary-600 text-white text-xs font-medium shadow-sm z-10"
+            title={`In collections: ${collection_names}`}
+          >
+            {collection_count}
+          </div>
+        )}
+
         <div className="w-16 h-16 mb-2 flex items-center justify-center">
           {get_large_icon(file.file_type)}
         </div>
@@ -246,38 +424,125 @@ const FileExplorer = ({
         {!is_collapsed && (
           <div className="min-w-0 flex-1">
             <h2 className="text-lg font-semibold text-text-light truncate font-sora">
-              File Explorer
+              {view_mode === 'files' ? 'File Explorer' : 'Collections'}
             </h2>
           </div>
         )}
 
-        {/* Collapse Button - Always reserve space to prevent layout shift */}
-        <div className="w-9 h-9 flex items-center justify-center">
-          {(can_collapse || is_collapsed) && (
+        {/* Right side buttons */}
+        {!is_collapsed && (
+          <div className="flex items-center gap-2">
+            {/* Bookmark toggle button */}
             <button
-              onClick={on_toggle_collapse}
-              className={`p-2 rounded-lg text-text-muted hover:text-text-light ${
-                !can_collapse && !is_collapsed ? 'opacity-50 cursor-not-allowed' : ''
+              onClick={handle_view_toggle}
+              className={`p-2 rounded-lg transition-colors ${
+                view_mode === 'collections'
+                  ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400'
+                  : 'text-text-muted hover:text-primary-600 dark:hover:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20'
               }`}
-              aria-label={is_collapsed ? "Expand file explorer" : "Collapse file explorer"}
-              disabled={!can_collapse && !is_collapsed}
+              title={view_mode === 'files' ? 'View Collections' : 'View Files'}
             >
-              {is_collapsed ? (
-                <PanelRightClose className="w-5 h-5" />
-              ) : (
-                <PanelRightOpen className="w-5 h-5" />
-              )}
+              <Bookmark className={`w-5 h-5 ${view_mode === 'collections' ? 'fill-current' : ''}`} />
             </button>
-          )}
-        </div>
+
+            {/* Collapse Button */}
+            {(can_collapse || is_collapsed) && (
+              <button
+                onClick={on_toggle_collapse}
+                className={`p-2 rounded-lg text-text-muted hover:text-text-light ${
+                  !can_collapse && !is_collapsed ? 'opacity-50 cursor-not-allowed' : ''
+                }`}
+                aria-label={is_collapsed ? "Expand file explorer" : "Collapse file explorer"}
+                disabled={!can_collapse && !is_collapsed}
+              >
+                <PanelRightOpen className="w-5 h-5" />
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* Collapse button when collapsed */}
+        {is_collapsed && (can_collapse || is_collapsed) && (
+          <button
+            onClick={on_toggle_collapse}
+            className="p-2 rounded-lg text-text-muted hover:text-text-light"
+            aria-label="Expand file explorer"
+          >
+            <PanelRightClose className="w-5 h-5" />
+          </button>
+        )}
       </div>
 
       {/* Content Area - Only show when not collapsed */}
       {!is_collapsed && (
         <div className="flex-1 overflow-auto">
-          <IconGridView />
+          {view_mode === 'files' ? (
+            <IconGridView />
+          ) : (
+            <>
+              {selected_collection ? (
+                <CollectionDetail
+                  collection={selected_collection}
+                  items={items_by_collection[selected_collection.id] || []}
+                  documents={documents || []}
+                  is_loading={collections_loading}
+                  on_back={handle_collection_back}
+                  on_item_remove={handle_item_remove}
+                  on_document_click={on_file_select}
+                />
+              ) : (
+                <CollectionGrid
+                  collections={collections || []}
+                  items_by_collection={items_by_collection || {}}
+                  is_loading={collections_loading}
+                  on_collection_click={handle_collection_click}
+                  on_collection_edit={handle_collection_edit}
+                  on_collection_delete={handle_collection_delete}
+                  on_create_new={handle_create_new}
+                />
+              )}
+            </>
+          )}
         </div>
       )}
+
+      {/* Collection Form Modal */}
+      <CollectionForm
+        is_open={is_form_open}
+        on_close={() => {
+          set_is_form_open(false);
+          set_collection_to_edit(null);
+        }}
+        on_save={handle_form_save}
+        collection={collection_to_edit}
+        is_loading={is_saving}
+      />
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmModal
+        is_open={collection_to_delete !== null}
+        on_close={() => set_collection_to_delete(null)}
+        on_confirm={() => {
+          handle_delete_confirm();
+          set_collection_to_delete(null);
+        }}
+        title="Delete Collection"
+        message={`Are you sure you want to delete "${collection_to_delete?.name}"? This action cannot be undone.`}
+        confirm_text="Delete"
+        cancel_text="Cancel"
+        variant="danger"
+      />
+
+      {/* Collection Picker Modal - Rendered at FileExplorer level */}
+      <CollectionPicker
+        is_open={picker_document_id !== null}
+        on_close={() => set_picker_document_id(null)}
+        document_id={picker_document_id}
+        on_complete={() => {
+          console.log('Collection picker completed for:', picker_document_id);
+          set_picker_document_id(null);
+        }}
+      />
     </div>
   );
 };
