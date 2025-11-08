@@ -3,8 +3,7 @@ import { z } from 'zod';
 export const document_schema = z.object({
   id: z.string().uuid(),
   title: z.string(),
-  storage_path: z.string(),
-  nessie_id: z.string(),
+  nessie_id: z.string().uuid(), // UNIQUE in DB
   folder_id: z.string().uuid(),
   created_at: z.string(),
   updated_at: z.string(),

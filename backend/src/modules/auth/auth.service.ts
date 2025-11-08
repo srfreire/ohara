@@ -3,6 +3,8 @@ import { JwtService } from '@nestjs/jwt';
 import { get_supabase_client } from '../../lib/supabase.client';
 import { UsersService } from '../users/services/users.service';
 
+const OAUTH_TOKEN_EXPIRY_MS = 3600 * 1000; // 1 hour
+
 @Injectable()
 export class AuthService {
   private readonly logger = new Logger('AuthService');
@@ -38,7 +40,7 @@ export class AuthService {
         source_user_id: google_user.source_user_id,
         access_token: google_user.access_token,
         refresh_token: google_user.refresh_token,
-        expires_at: new Date(Date.now() + 3600 * 1000).toISOString(), // 1 hour from now
+        expires_at: new Date(Date.now() + OAUTH_TOKEN_EXPIRY_MS).toISOString(),
       });
 
       this.logger.log(`💾 Google OAuth tokens stored for user: ${user.id}`);

@@ -24,9 +24,6 @@ async function bootstrap() {
   });
   logger.log('X-API-Version header middleware registered');
 
-  // Global prefix for all routes (note: controllers already have v2/ prefix)
-  // app.setGlobalPrefix('v2');  // Commented out - controllers handle versioning
-
   // Swagger API Documentation
   const config = new DocumentBuilder()
     .setTitle('Ohara API')
