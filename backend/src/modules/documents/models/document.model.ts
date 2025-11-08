@@ -17,7 +17,7 @@ export const query_documents_schema = z.object({
   cursor: z.string().optional(), // Base64 encoded cursor for cursor-based pagination
   // Filters
   folder_id: z.string().uuid().optional(),
-  search: z.string().max(100).optional(), // Search by title (max 100 chars for security)
+  search: z.string().optional(), // Search by title
   created_after: z.string().datetime().optional(), // Filter by creation date
   created_before: z.string().datetime().optional(),
   // Sorting

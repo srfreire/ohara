@@ -103,19 +103,6 @@ export function parse_cursor_query(
 }
 
 /**
- * Whitelist of allowed field names for cursor pagination to prevent SQL injection
- */
-const ALLOWED_TIMESTAMP_FIELDS = [
-  'created_at',
-  'updated_at',
-  'name',
-  'title',
-  'content',
-  'reaction_type',
-  'email',
-];
-
-/**
  * Apply cursor conditions to a Supabase query builder
  * This implements keyset pagination using (timestamp, id) composite cursor
  */
@@ -128,11 +115,6 @@ export function apply_cursor_conditions(
   }
 
   const { timestamp_field, timestamp_value, id_value, ascending } = conditions;
-
-  // Security: Validate field name against whitelist to prevent SQL injection
-  if (!ALLOWED_TIMESTAMP_FIELDS.includes(timestamp_field)) {
-    throw new Error(`Invalid timestamp field: ${timestamp_field}`);
-  }
 
   if (ascending) {
     // For ascending order: get items after cursor
