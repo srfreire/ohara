@@ -7,6 +7,7 @@ import {
   Delete,
   Param,
   Body,
+  Query,
   UsePipes,
   Req,
   UseGuards,
@@ -18,6 +19,7 @@ import {
   ApiBearerAuth,
   ApiParam,
   ApiBody,
+  ApiQuery,
 } from '@nestjs/swagger';
 
 import { ZodValidationPipe } from '../../../common/validation/zod-validation.pipe';
@@ -27,9 +29,11 @@ import {
   create_collection_schema,
   update_collection_schema,
   collection_patch_array_schema,
+  query_collections_schema,
   CreateCollectionDto,
   UpdateCollectionDto,
   CollectionPatchArray,
+  QueryCollectionsDto,
 } from '../models/collection.model';
 
 @ApiTags('collections')
@@ -43,13 +47,47 @@ export class CollectionsController {
   @ApiOperation({
     summary: 'Get all collections',
     description:
-      "Retrieve collections based on visibility and ownership. Returns user's own collections plus public/unlisted ones.",
+      "Retrieve collections based on visibility and ownership. Returns user's own collections plus public/unlisted ones. Supports cursor and offset pagination.",
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: Number,
+    description: 'Number of items per page (1-100, default: 25)',
+  })
+  @ApiQuery({
+    name: 'offset',
+    required: false,
+    type: Number,
+    description: 'Offset for pagination (default: 0)',
+  })
+  @ApiQuery({
+    name: 'cursor',
+    required: false,
+    type: String,
+    description: 'Base64 encoded cursor for cursor-based pagination',
+  })
+  @ApiQuery({
+    name: 'sort_by',
+    required: false,
+    enum: ['created_at', 'name'],
+    description: 'Sort by field (default: created_at)',
+  })
+  @ApiQuery({
+    name: 'order',
+    required: false,
+    enum: ['asc', 'desc'],
+    description: 'Sort order (default: desc)',
   })
   @ApiResponse({ status: 200, description: 'List of collections' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  async find_all(@Req() req: any) {
+  async find_all(
+    @Query(new ZodValidationPipe(query_collections_schema)) query_params: QueryCollectionsDto,
+    @Req() req: any,
+  ) {
+    // Inject user_id from JWT token into query params
     const user_id = req.user?.id;
-    return this.collections_service.find_all(user_id);
+    return this.collections_service.find_all({ ...query_params, user_id });
   }
 
   @Get(':id')

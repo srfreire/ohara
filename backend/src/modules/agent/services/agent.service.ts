@@ -5,6 +5,10 @@ import { JwtService } from '@nestjs/jwt';
 import axios from 'axios';
 import { Response } from 'express';
 
+// Constants
+const AGENT_HEALTH_CHECK_TIMEOUT_MS = 2000; // 2 seconds
+const AGENT_STREAM_TIMEOUT_MS = 300000; // 5 minutes
+
 interface StreamRequestDto {
   messages: Array<{
     role: string;
@@ -43,7 +47,7 @@ export class AgentService {
 
       // Check if agent service is reachable
       try {
-        await axios.get(`${agent_service_url}/health`, { timeout: 2000 });
+        await axios.get(`${agent_service_url}/health`, { timeout: AGENT_HEALTH_CHECK_TIMEOUT_MS });
       } catch (error) {
         this.logger.error(`🔌 Agent service not reachable at ${agent_service_url}`);
         throw new HttpException(
@@ -139,7 +143,7 @@ export class AgentService {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${agent_service_token}`,
           },
-          timeout: 300000, // 5 minute timeout for streaming
+          timeout: AGENT_STREAM_TIMEOUT_MS,
           responseType: 'stream',
         },
       );

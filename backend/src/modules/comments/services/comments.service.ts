@@ -8,13 +8,20 @@ import {
   QueryCommentsDto,
   CommentPatchArray,
 } from '../models/comment.model';
-import { parse_cursor_query, apply_cursor_conditions } from '../../../common/pagination';
+import {
+  parse_cursor_query,
+  apply_cursor_conditions,
+  build_cursor_response,
+  CursorPaginatedResponse,
+} from '../../../common/pagination';
 
 @Injectable()
 export class CommentsService {
   private supabase = get_supabase_client();
 
-  async find_all(query_params: QueryCommentsDto): Promise<Comment[]> {
+  async find_all(
+    query_params: QueryCommentsDto,
+  ): Promise<CursorPaginatedResponse<Comment> | Comment[]> {
     let query_builder = this.supabase.from('comments').select('*');
 
     // Apply filters
@@ -41,20 +48,30 @@ export class CommentsService {
       query_builder = apply_cursor_conditions(query_builder, cursor_conditions);
       // Fetch limit + 1 to check if there are more results
       query_builder = query_builder.order(sort_by, { ascending }).limit(query_params.limit + 1);
+
+      const { data, error } = await query_builder;
+
+      if (error) {
+        throw new Error(`Failed to fetch comments: ${error.message}`);
+      }
+
+      return build_cursor_response(data as Comment[], query_params.limit, sort_by);
     } else {
       // Offset-based pagination
       query_builder = query_builder
         .order(sort_by, { ascending })
         .range(query_params.offset, query_params.offset + query_params.limit - 1);
+
+      const { data, error } = await query_builder;
+
+      if (error) {
+        throw new Error(`Failed to fetch comments: ${error.message}`);
+      }
+
+      // For offset pagination, return raw array for backwards compatibility
+      // TODO: Consider wrapping offset responses too for consistency
+      return data as Comment[];
     }
-
-    const { data, error } = await query_builder;
-
-    if (error) {
-      throw new Error(`Failed to fetch comments: ${error.message}`);
-    }
-
-    return data as Comment[];
   }
 
   async create(create_comment_dto: CreateCommentDto): Promise<Comment> {

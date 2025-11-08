@@ -46,18 +46,21 @@ src/
 - **TypeScript** with strict type checking
 - **NestJS Framework** with modular architecture
 - **JWT Authentication** with guards and decorators
-- **PostgreSQL Database** via TypeORM
+- **Supabase** for PostgreSQL database and storage
+- **Cursor & Offset Pagination** for efficient data retrieval
+- **Zod Validation** with TypeScript type inference
+- **Swagger/OpenAPI** documentation
+- **JSON Patch (RFC 6902)** support for partial updates
 - **Modular Design** with controllers and services
 - **Global Error Handling** with exception filters
-- **Configuration Management** with @nestjs/config
+- **Configuration Management** with environment variables
 - **AI Agent Integration** for intelligent features
-- **Unit Testing** with Jest and TypeScript support
 
 ## Database
 
-The backend uses PostgreSQL with TypeORM for database management.
+The backend uses Supabase (PostgreSQL) for database management and file storage.
 
-Database schema and entities are defined in each module's service layer.
+Database queries are handled through the Supabase client, providing real-time capabilities and built-in Row Level Security.
 
 ## Prerequisites
 
@@ -212,20 +215,24 @@ NODE_ENV=production npm start
 
 - [x] **Module Structure**: Auth, Users, Collections, Items, Documents, Folders, Comments, Reactions, Agent
 - [x] **NestJS Framework**: Modern TypeScript backend
-- [x] **Global Error Handling**: Exception filters
+- [x] **Supabase Integration**: Database and file storage
+- [x] **Authentication**: Google OAuth + JWT + API Key strategies
+- [x] **Pagination**: Cursor-based and offset-based pagination
+- [x] **Validation**: Zod schemas with type inference
+- [x] **Swagger Documentation**: OpenAPI 3.0 spec with examples
+- [x] **JSON Patch**: RFC 6902 compliant partial updates
+- [x] **Global Error Handling**: Exception filters with logging
 - [x] **Configuration Management**: Environment variables
 - [x] **TypeScript**: Full type safety with strict configuration
 - [x] **Build System**: Production-ready compilation
 
-### 🔄 **Planned Enhancements**
+### 🔄 **Potential Enhancements**
 
-- [ ] Database integration (TypeORM setup)
-- [ ] Authentication guards and strategies
-- [ ] API documentation with Swagger
 - [ ] Rate limiting middleware
-- [ ] Database migration scripts
 - [ ] E2E testing suite
-- [ ] Logging system (Winston/Pino)
+- [ ] Advanced logging system (Winston/Pino)
+- [ ] Caching layer (Redis)
+- [ ] GraphQL support
 
 ## Support
 
@@ -236,4 +243,4 @@ For issues and questions:
 
 ---
 
-**Migration In Progress** 🔄 - Backend migrated to NestJS framework.
+**Production Ready** ✅ - Modern NestJS backend with comprehensive feature set.

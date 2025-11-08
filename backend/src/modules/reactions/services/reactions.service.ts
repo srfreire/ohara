@@ -8,7 +8,12 @@ import {
   QueryReactionsDto,
   ReactionPatchArray,
 } from '../models/reaction.model';
-import { parse_cursor_query, apply_cursor_conditions } from '../../../common/pagination';
+import {
+  parse_cursor_query,
+  apply_cursor_conditions,
+  build_cursor_response,
+  CursorPaginatedResponse,
+} from '../../../common/pagination';
 
 @Injectable()
 export class ReactionsService {
@@ -21,7 +26,9 @@ export class ReactionsService {
     return 'Unknown error';
   }
 
-  async find_all(query_params: QueryReactionsDto): Promise<Reaction[]> {
+  async find_all(
+    query_params: QueryReactionsDto,
+  ): Promise<CursorPaginatedResponse<Reaction> | Reaction[]> {
     let query_builder = this.supabase.from('reactions').select('*');
 
     // Apply filters
@@ -48,20 +55,30 @@ export class ReactionsService {
       query_builder = apply_cursor_conditions(query_builder, cursor_conditions);
       // Fetch limit + 1 to check if there are more results
       query_builder = query_builder.order(sort_by, { ascending }).limit(query_params.limit + 1);
+
+      const { data, error } = await query_builder;
+
+      if (error) {
+        throw new Error(`Failed to fetch reactions: ${this.get_error_message(error)}`);
+      }
+
+      return build_cursor_response(data as Reaction[], query_params.limit, sort_by);
     } else {
       // Offset-based pagination
       query_builder = query_builder
         .order(sort_by, { ascending })
         .range(query_params.offset, query_params.offset + query_params.limit - 1);
+
+      const { data, error } = await query_builder;
+
+      if (error) {
+        throw new Error(`Failed to fetch reactions: ${this.get_error_message(error)}`);
+      }
+
+      // For offset pagination, return raw array for backwards compatibility
+      // TODO: Consider wrapping offset responses too for consistency
+      return data as Reaction[];
     }
-
-    const { data, error } = await query_builder;
-
-    if (error) {
-      throw new Error(`Failed to fetch reactions: ${this.get_error_message(error)}`);
-    }
-
-    return data as Reaction[];
   }
 
   async create(create_reaction_dto: CreateReactionDto): Promise<Reaction> {

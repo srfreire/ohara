@@ -7,6 +7,7 @@ import {
   Delete,
   Param,
   Body,
+  Query,
   UsePipes,
   UseGuards,
   Req,
@@ -20,6 +21,7 @@ import {
   ApiSecurity,
   ApiParam,
   ApiBody,
+  ApiQuery,
 } from '@nestjs/swagger';
 
 import { ZodValidationPipe } from '../../../common/validation/zod-validation.pipe';
@@ -28,9 +30,11 @@ import { UsersService } from '../services/users.service';
 import {
   create_user_schema,
   user_patch_array_schema,
+  query_users_schema,
   CreateUserDto,
   UpdateUserDto,
   UserPatchArray,
+  QueryUsersDto,
 } from '../models/user.model';
 
 @ApiTags('users')
@@ -44,12 +48,43 @@ export class UsersController {
   @UseGuards(ApiKeyOrJwtGuard)
   @ApiOperation({
     summary: 'Get all users',
-    description: 'Retrieve all users (admin or authenticated users)',
+    description:
+      'Retrieve all users (admin or authenticated users). Supports cursor and offset pagination.',
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: Number,
+    description: 'Number of items per page (1-100, default: 25)',
+  })
+  @ApiQuery({
+    name: 'offset',
+    required: false,
+    type: Number,
+    description: 'Offset for pagination (default: 0)',
+  })
+  @ApiQuery({
+    name: 'cursor',
+    required: false,
+    type: String,
+    description: 'Base64 encoded cursor for cursor-based pagination',
+  })
+  @ApiQuery({
+    name: 'sort_by',
+    required: false,
+    enum: ['created_at', 'email', 'name'],
+    description: 'Sort by field (default: created_at)',
+  })
+  @ApiQuery({
+    name: 'order',
+    required: false,
+    enum: ['asc', 'desc'],
+    description: 'Sort order (default: desc)',
   })
   @ApiResponse({ status: 200, description: 'List of users' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  async find_all() {
-    return this.users_service.find_all();
+  async find_all(@Query(new ZodValidationPipe(query_users_schema)) query_params: QueryUsersDto) {
+    return this.users_service.find_all(query_params);
   }
 
   @Get(':id')

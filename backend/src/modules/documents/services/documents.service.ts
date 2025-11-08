@@ -2,13 +2,23 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 
 import { get_supabase_client } from '../../../lib/supabase.client';
 import { Document, QueryDocumentsDto } from '../models/document.model';
-import { parse_cursor_query, apply_cursor_conditions } from '../../../common/pagination';
+import {
+  parse_cursor_query,
+  apply_cursor_conditions,
+  build_cursor_response,
+  CursorPaginatedResponse,
+} from '../../../common/pagination';
+
+// Constants
+const SIGNED_URL_EXPIRES_IN_SECONDS = 3600; // 1 hour
 
 @Injectable()
 export class DocumentsService {
   private supabase = get_supabase_client();
 
-  async find_all(query_params: QueryDocumentsDto): Promise<Document[]> {
+  async find_all(
+    query_params: QueryDocumentsDto,
+  ): Promise<CursorPaginatedResponse<Document> | Document[]> {
     let query_builder = this.supabase.from('documents').select('*');
 
     // Apply folder filter
@@ -41,20 +51,30 @@ export class DocumentsService {
       query_builder = apply_cursor_conditions(query_builder, cursor_conditions);
       // Fetch limit + 1 to check if there are more results
       query_builder = query_builder.order(sort_by, { ascending }).limit(query_params.limit + 1);
+
+      const { data, error } = await query_builder;
+
+      if (error) {
+        throw new Error(`Failed to fetch documents: ${error.message}`);
+      }
+
+      return build_cursor_response(data as Document[], query_params.limit, sort_by);
     } else {
       // Offset-based pagination
       query_builder = query_builder
         .order(sort_by, { ascending })
         .range(query_params.offset, query_params.offset + query_params.limit - 1);
+
+      const { data, error } = await query_builder;
+
+      if (error) {
+        throw new Error(`Failed to fetch documents: ${error.message}`);
+      }
+
+      // For offset pagination, return raw array for backwards compatibility
+      // TODO: Consider wrapping offset responses too for consistency
+      return data as Document[];
     }
-
-    const { data, error } = await query_builder;
-
-    if (error) {
-      throw new Error(`Failed to fetch documents: ${error.message}`);
-    }
-
-    return data as Document[];
   }
 
   async find_by_id(id: string): Promise<Document> {
@@ -74,11 +94,10 @@ export class DocumentsService {
     // Generate signed URL for the PDF in the documents bucket
     // The file is stored as {uuid}.pdf in the bucket
     const file_path = `${document.id}.pdf`;
-    const expires_in = 3600; // 1 hour in seconds
 
     const { data, error } = await this.supabase.storage
       .from('documents')
-      .createSignedUrl(file_path, expires_in);
+      .createSignedUrl(file_path, SIGNED_URL_EXPIRES_IN_SECONDS);
 
     if (error || !data) {
       throw new Error(`Failed to generate signed URL: ${error?.message || 'Unknown error'}`);
@@ -86,7 +105,7 @@ export class DocumentsService {
 
     return {
       url: data.signedUrl,
-      expires_in: expires_in,
+      expires_in: SIGNED_URL_EXPIRES_IN_SECONDS,
     };
   }
 }

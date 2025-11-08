@@ -25,16 +25,6 @@ export const update_collection_schema = z.object({
   visibility: visibility_enum.optional(),
 });
 
-// Response view schemas
-export const collection_list_view_schema = z.object({
-  id: z.string().uuid(),
-  name: z.string(),
-  visibility: visibility_enum,
-  created_at: z.string(),
-});
-
-export const collection_detail_view_schema = collection_schema;
-
 // JSON Patch operation schema (RFC 6902)
 export const collection_patch_operation_schema = z.discriminatedUnion('op', [
   z.object({
@@ -46,11 +36,20 @@ export const collection_patch_operation_schema = z.discriminatedUnion('op', [
 
 export const collection_patch_array_schema = z.array(collection_patch_operation_schema);
 
+// Query parameters for pagination
+export const query_collections_schema = z.object({
+  limit: z.coerce.number().min(1).max(100).optional().default(25),
+  offset: z.coerce.number().min(0).optional().default(0),
+  cursor: z.string().optional(),
+  user_id: z.string().uuid().optional(),
+  sort_by: z.enum(['created_at', 'name']).optional().default('created_at'),
+  order: z.enum(['asc', 'desc']).optional().default('desc'),
+});
+
 export type Visibility = z.infer<typeof visibility_enum>;
 export type Collection = z.infer<typeof collection_schema>;
 export type CreateCollectionDto = z.infer<typeof create_collection_schema>;
 export type UpdateCollectionDto = z.infer<typeof update_collection_schema>;
-export type CollectionListView = z.infer<typeof collection_list_view_schema>;
-export type CollectionDetailView = z.infer<typeof collection_detail_view_schema>;
 export type CollectionPatchOperation = z.infer<typeof collection_patch_operation_schema>;
 export type CollectionPatchArray = z.infer<typeof collection_patch_array_schema>;
+export type QueryCollectionsDto = z.infer<typeof query_collections_schema>;

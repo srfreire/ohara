@@ -34,16 +34,6 @@ export const query_reactions_schema = z.object({
   order: z.enum(['asc', 'desc']).optional().default('desc'),
 });
 
-// Response view schemas
-export const reaction_list_view_schema = z.object({
-  id: z.string().uuid(),
-  reaction_type: reaction_type_enum,
-  user_id: z.string().uuid(),
-  created_at: z.string(),
-});
-
-export const reaction_detail_view_schema = reaction_schema;
-
 // JSON Patch operation schema (RFC 6902)
 export const reaction_patch_schema = z.object({
   op: z.enum(['replace']),
@@ -58,7 +48,5 @@ export type Reaction = z.infer<typeof reaction_schema>;
 export type CreateReactionDto = z.infer<typeof create_reaction_schema>;
 export type UpdateReactionDto = z.infer<typeof update_reaction_schema>;
 export type QueryReactionsDto = z.infer<typeof query_reactions_schema>;
-export type ReactionListView = z.infer<typeof reaction_list_view_schema>;
-export type ReactionDetailView = z.infer<typeof reaction_detail_view_schema>;
 export type ReactionPatch = z.infer<typeof reaction_patch_schema>;
 export type ReactionPatchArray = z.infer<typeof reaction_patch_array_schema>;

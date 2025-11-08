@@ -58,17 +58,6 @@ export const query_comments_schema = z.object({
   order: z.enum(['asc', 'desc']).optional().default('desc'),
 });
 
-// Response view schemas
-export const comment_list_view_schema = z.object({
-  id: z.string().uuid(),
-  user_id: z.string().uuid(),
-  content: z.string(),
-  created_at: z.string(),
-  parent_comment_id: z.string().uuid().nullable(),
-});
-
-export const comment_detail_view_schema = comment_schema;
-
 // JSON Patch operation schema (RFC 6902)
 export const comment_patch_operation_schema = z.discriminatedUnion('op', [
   z.object({
@@ -84,7 +73,5 @@ export type Comment = z.infer<typeof comment_schema>;
 export type CreateCommentDto = z.infer<typeof create_comment_schema>;
 export type UpdateCommentDto = z.infer<typeof update_comment_schema>;
 export type QueryCommentsDto = z.infer<typeof query_comments_schema>;
-export type CommentListView = z.infer<typeof comment_list_view_schema>;
-export type CommentDetailView = z.infer<typeof comment_detail_view_schema>;
 export type CommentPatchOperation = z.infer<typeof comment_patch_operation_schema>;
 export type CommentPatchArray = z.infer<typeof comment_patch_array_schema>;

@@ -1,4 +1,14 @@
-import { Controller, Get, Post, Delete, Param, Body, UsePipes, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Delete,
+  Param,
+  Body,
+  Query,
+  UsePipes,
+  UseGuards,
+} from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,
@@ -6,12 +16,18 @@ import {
   ApiBearerAuth,
   ApiParam,
   ApiBody,
+  ApiQuery,
 } from '@nestjs/swagger';
 
 import { ZodValidationPipe } from '../../../common/validation/zod-validation.pipe';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { ItemsService } from '../services/items.service';
-import { create_item_schema, CreateItemDto } from '../models/item.model';
+import {
+  create_item_schema,
+  query_items_schema,
+  CreateItemDto,
+  QueryItemsDto,
+} from '../models/item.model';
 
 @ApiTags('items')
 @ApiBearerAuth('JWT-auth')
@@ -23,13 +39,41 @@ export class ItemsController {
   @Get()
   @ApiOperation({
     summary: 'Get collection items',
-    description: 'Retrieve all items (documents) in a collection',
+    description:
+      'Retrieve all items (documents) in a collection. Supports cursor and offset pagination.',
   })
   @ApiParam({ name: 'id', type: String, description: 'Collection UUID' })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: Number,
+    description: 'Number of items per page (1-100, default: 25)',
+  })
+  @ApiQuery({
+    name: 'offset',
+    required: false,
+    type: Number,
+    description: 'Offset for pagination (default: 0)',
+  })
+  @ApiQuery({
+    name: 'cursor',
+    required: false,
+    type: String,
+    description: 'Base64 encoded cursor for cursor-based pagination',
+  })
+  @ApiQuery({
+    name: 'order',
+    required: false,
+    enum: ['asc', 'desc'],
+    description: 'Sort order (default: desc)',
+  })
   @ApiResponse({ status: 200, description: 'List of items in the collection' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  async find_by_collection_id(@Param('id') collection_id: string) {
-    return this.items_service.find_by_collection_id(collection_id);
+  async find_by_collection_id(
+    @Param('id') collection_id: string,
+    @Query(new ZodValidationPipe(query_items_schema)) query_params: QueryItemsDto,
+  ) {
+    return this.items_service.find_by_collection_id(collection_id, query_params);
   }
 
   @Post()
@@ -46,12 +90,6 @@ export class ItemsController {
     @Param('id') collection_id: string,
     @Body(new ZodValidationPipe(create_item_schema)) create_item_dto: CreateItemDto,
   ) {
-    console.log('=== CREATE ITEM REQUEST ===');
-    console.log('Collection ID:', collection_id);
-    console.log('Raw body:', create_item_dto);
-    console.log('Document ID:', create_item_dto.document_id);
-    console.log('Document ID type:', typeof create_item_dto.document_id);
-
     return this.items_service.create(collection_id, create_item_dto);
   }
 

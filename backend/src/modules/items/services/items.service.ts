@@ -1,24 +1,59 @@
 import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 
 import { get_supabase_client } from '../../../lib/supabase.client';
-import { CreateItemDto, Item } from '../models/item.model';
+import { CreateItemDto, Item, QueryItemsDto } from '../models/item.model';
+import {
+  parse_cursor_query,
+  apply_cursor_conditions,
+  build_cursor_response,
+  CursorPaginatedResponse,
+} from '../../../common/pagination';
 
 @Injectable()
 export class ItemsService {
   private supabase = get_supabase_client();
 
-  async find_by_collection_id(collection_id: string): Promise<Item[]> {
-    const { data, error } = await this.supabase
-      .from('items')
-      .select('*')
-      .eq('collection_id', collection_id)
-      .order('created_at', { ascending: false });
+  async find_by_collection_id(
+    collection_id: string,
+    query_params: QueryItemsDto,
+  ): Promise<CursorPaginatedResponse<Item> | Item[]> {
+    let query_builder = this.supabase.from('items').select('*').eq('collection_id', collection_id);
 
-    if (error) {
-      throw new Error(`Failed to fetch items: ${error.message}`);
+    // Apply sorting
+    const sort_by = query_params.sort_by || 'created_at';
+    const order = query_params.order || 'desc';
+    const ascending = order === 'asc';
+
+    // Apply cursor-based pagination if cursor is provided, otherwise use offset
+    if (query_params.cursor) {
+      const cursor_conditions = parse_cursor_query(query_params.cursor, sort_by, ascending);
+      query_builder = apply_cursor_conditions(query_builder, cursor_conditions);
+      // Fetch limit + 1 to check if there are more results
+      query_builder = query_builder.order(sort_by, { ascending }).limit(query_params.limit + 1);
+
+      const { data, error } = await query_builder;
+
+      if (error) {
+        throw new Error(`Failed to fetch items: ${error.message}`);
+      }
+
+      return build_cursor_response(data as Item[], query_params.limit, sort_by);
+    } else {
+      // Offset-based pagination
+      query_builder = query_builder
+        .order(sort_by, { ascending })
+        .range(query_params.offset, query_params.offset + query_params.limit - 1);
+
+      const { data, error } = await query_builder;
+
+      if (error) {
+        throw new Error(`Failed to fetch items: ${error.message}`);
+      }
+
+      // For offset pagination, return raw array for backwards compatibility
+      // TODO: Consider wrapping offset responses too for consistency
+      return data as Item[];
     }
-
-    return data as Item[];
   }
 
   async create(collection_id: string, create_item_dto: CreateItemDto): Promise<Item> {
