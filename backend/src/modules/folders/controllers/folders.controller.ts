@@ -36,7 +36,7 @@ import {
 @ApiTags('folders')
 @ApiBearerAuth('JWT-auth')
 @ApiSecurity('api-key')
-@Controller('folders')
+@Controller('v2/folders')
 @UseGuards(ApiKeyOrJwtGuard)
 export class FoldersController {
   constructor(private readonly folders_service: FoldersService) {}
@@ -53,10 +53,10 @@ export class FoldersController {
     description: 'Number of items per page (1-100, default: 25)',
   })
   @ApiQuery({
-    name: 'offset',
+    name: 'cursor',
     required: false,
-    type: Number,
-    description: 'Offset for pagination (default: 0)',
+    type: String,
+    description: 'Base64 encoded cursor for cursor-based pagination',
   })
   @ApiQuery({
     name: 'parent_id',
@@ -125,6 +125,6 @@ export class FoldersController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async delete(@Param('id') id: string) {
     await this.folders_service.delete(id);
-    return { message: 'Folder deleted successfully' };
+    return { data: null, message: 'Folder deleted successfully' };
   }
 }

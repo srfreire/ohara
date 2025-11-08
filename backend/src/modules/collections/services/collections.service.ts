@@ -20,9 +20,7 @@ import {
 export class CollectionsService {
   private supabase = get_supabase_client();
 
-  async find_all(
-    query_params: QueryCollectionsDto,
-  ): Promise<CursorPaginatedResponse<Collection> | Collection[]> {
+  async find_all(query_params: QueryCollectionsDto): Promise<CursorPaginatedResponse<Collection>> {
     let query_builder = this.supabase.from('collections').select('*');
 
     // If user_id is provided, show their collections + public/unlisted
@@ -40,36 +38,20 @@ export class CollectionsService {
     const order = query_params.order || 'desc';
     const ascending = order === 'asc';
 
-    // Apply cursor-based pagination if cursor is provided, otherwise use offset
-    if (query_params.cursor) {
-      const cursor_conditions = parse_cursor_query(query_params.cursor, sort_by, ascending);
-      query_builder = apply_cursor_conditions(query_builder, cursor_conditions);
-      // Fetch limit + 1 to check if there are more results
-      query_builder = query_builder.order(sort_by, { ascending }).limit(query_params.limit + 1);
+    // Apply cursor-based pagination
+    const cursor_conditions = parse_cursor_query(query_params.cursor, sort_by, ascending);
+    query_builder = apply_cursor_conditions(query_builder, cursor_conditions);
 
-      const { data, error } = await query_builder;
+    // Fetch limit + 1 to check if there are more results
+    query_builder = query_builder.order(sort_by, { ascending }).limit(query_params.limit + 1);
 
-      if (error) {
-        throw new Error(`Failed to fetch collections: ${error.message}`);
-      }
+    const { data, error } = await query_builder;
 
-      return build_cursor_response(data as Collection[], query_params.limit, sort_by);
-    } else {
-      // Offset-based pagination
-      query_builder = query_builder
-        .order(sort_by, { ascending })
-        .range(query_params.offset, query_params.offset + query_params.limit - 1);
-
-      const { data, error } = await query_builder;
-
-      if (error) {
-        throw new Error(`Failed to fetch collections: ${error.message}`);
-      }
-
-      // For offset pagination, return raw array for backwards compatibility
-      // TODO: Consider wrapping offset responses too for consistency
-      return data as Collection[];
+    if (error) {
+      throw new Error(`Failed to fetch collections: ${error.message}`);
     }
+
+    return build_cursor_response(data as Collection[], query_params.limit, sort_by);
   }
 
   async find_by_id(id: string, user_id?: string): Promise<Collection> {

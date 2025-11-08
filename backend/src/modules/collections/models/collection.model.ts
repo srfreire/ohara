@@ -36,10 +36,9 @@ export const collection_patch_operation_schema = z.discriminatedUnion('op', [
 
 export const collection_patch_array_schema = z.array(collection_patch_operation_schema);
 
-// Query parameters for pagination
+// Query parameters for cursor-based pagination
 export const query_collections_schema = z.object({
   limit: z.coerce.number().min(1).max(100).optional().default(25),
-  offset: z.coerce.number().min(0).optional().default(0),
   cursor: z.string().optional(),
   user_id: z.string().uuid().optional(),
   sort_by: z.enum(['created_at', 'name']).optional().default('created_at'),

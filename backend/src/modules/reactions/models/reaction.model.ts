@@ -21,9 +21,8 @@ export const update_reaction_schema = z.object({
 });
 
 export const query_reactions_schema = z.object({
-  // Pagination (offset-based or cursor-based)
+  // Pagination (cursor-based)
   limit: z.coerce.number().min(1).max(100).optional().default(25),
-  offset: z.coerce.number().min(0).optional().default(0),
   cursor: z.string().optional(), // Base64 encoded cursor for cursor-based pagination
   // Filters
   commentId: z.string().uuid().optional(),

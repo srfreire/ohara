@@ -1,14 +1,4 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Delete,
-  Param,
-  Body,
-  Query,
-  UsePipes,
-  UseGuards,
-} from '@nestjs/common';
+import { Controller, Get, Post, Delete, Param, Body, Query, UseGuards } from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,
@@ -31,7 +21,7 @@ import {
 
 @ApiTags('items')
 @ApiBearerAuth('JWT-auth')
-@Controller('collections/:id/items')
+@Controller('v2/collections/:id/items')
 @UseGuards(JwtAuthGuard)
 export class ItemsController {
   constructor(private readonly items_service: ItemsService) {}
@@ -40,7 +30,7 @@ export class ItemsController {
   @ApiOperation({
     summary: 'Get collection items',
     description:
-      'Retrieve all items (documents) in a collection. Supports cursor and offset pagination.',
+      'Retrieve all items (documents) in a collection. Supports cursor-based pagination.',
   })
   @ApiParam({ name: 'id', type: String, description: 'Collection UUID' })
   @ApiQuery({
@@ -48,12 +38,6 @@ export class ItemsController {
     required: false,
     type: Number,
     description: 'Number of items per page (1-100, default: 25)',
-  })
-  @ApiQuery({
-    name: 'offset',
-    required: false,
-    type: Number,
-    description: 'Offset for pagination (default: 0)',
   })
   @ApiQuery({
     name: 'cursor',
@@ -105,6 +89,6 @@ export class ItemsController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async delete(@Param('id') collection_id: string, @Param('itemId') item_id: string) {
     await this.items_service.delete(collection_id, item_id);
-    return { message: 'Item deleted successfully' };
+    return { data: null, message: 'Item deleted successfully' };
   }
 }

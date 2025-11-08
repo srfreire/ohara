@@ -38,7 +38,7 @@ import {
 
 @ApiTags('collections')
 @ApiBearerAuth('JWT-auth')
-@Controller('collections')
+@Controller('v2/collections')
 @UseGuards(JwtAuthGuard)
 export class CollectionsController {
   constructor(private readonly collections_service: CollectionsService) {}
@@ -47,19 +47,13 @@ export class CollectionsController {
   @ApiOperation({
     summary: 'Get all collections',
     description:
-      "Retrieve collections based on visibility and ownership. Returns user's own collections plus public/unlisted ones. Supports cursor and offset pagination.",
+      "Retrieve collections based on visibility and ownership. Returns user's own collections plus public/unlisted ones. Supports cursor-based pagination.",
   })
   @ApiQuery({
     name: 'limit',
     required: false,
     type: Number,
     description: 'Number of items per page (1-100, default: 25)',
-  })
-  @ApiQuery({
-    name: 'offset',
-    required: false,
-    type: Number,
-    description: 'Offset for pagination (default: 0)',
   })
   @ApiQuery({
     name: 'cursor',
@@ -190,6 +184,6 @@ export class CollectionsController {
   async delete(@Param('id') id: string, @Req() req: any) {
     const user_id = req.user.id;
     await this.collections_service.delete(id, user_id);
-    return { message: 'Collection deleted successfully' };
+    return { data: null, message: 'Collection deleted successfully' };
   }
 }

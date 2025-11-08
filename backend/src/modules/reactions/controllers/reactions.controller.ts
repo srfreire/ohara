@@ -37,7 +37,7 @@ import {
 
 @ApiTags('reactions')
 @ApiBearerAuth('JWT-auth')
-@Controller('reactions')
+@Controller('v2/reactions')
 @UseGuards(JwtAuthGuard)
 export class ReactionsController {
   constructor(private readonly reactions_service: ReactionsService) {}
@@ -53,12 +53,6 @@ export class ReactionsController {
     required: false,
     type: Number,
     description: 'Number of items per page (1-100, default: 25)',
-  })
-  @ApiQuery({
-    name: 'offset',
-    required: false,
-    type: Number,
-    description: 'Offset for pagination (default: 0)',
   })
   @ApiQuery({
     name: 'cursor',
@@ -157,6 +151,6 @@ export class ReactionsController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async delete(@Param('id') id: string) {
     await this.reactions_service.delete(id);
-    return { message: 'Reaction deleted successfully' };
+    return { data: null, message: 'Reaction deleted successfully' };
   }
 }

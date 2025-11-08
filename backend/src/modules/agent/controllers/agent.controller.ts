@@ -2,30 +2,16 @@ import { Controller, Post, Body, Res, UseGuards, Request, Logger } from '@nestjs
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiBody } from '@nestjs/swagger';
 
 import { Response } from 'express';
-import { z } from 'zod';
 
 import { ZodValidationPipe } from '../../../common/validation/zod-validation.pipe';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { AgentService } from '../services/agent.service';
-
-// Zod schema for stream request validation
-const stream_request_schema = z.object({
-  messages: z.array(
-    z.object({
-      role: z.string(),
-      content: z.string(),
-      timestamp: z.string().optional(),
-    }),
-  ),
-  model: z.string().optional().default('gpt-4.1'),
-  document_id: z.string().optional(),
-});
-
-type StreamRequestDto = z.infer<typeof stream_request_schema>;
+import { stream_request_schema, StreamRequestDto } from '../models/agent.model';
+import { SkipTransform } from '../../../common/interceptors/transform.interceptor';
 
 @ApiTags('agent')
 @ApiBearerAuth('JWT-auth')
-@Controller('agent')
+@Controller('v2/agent')
 @UseGuards(JwtAuthGuard)
 export class AgentController {
   private readonly logger = new Logger('AgentController');
@@ -33,6 +19,7 @@ export class AgentController {
   constructor(private readonly agent_service: AgentService) {}
 
   @Post('stream')
+  @SkipTransform()
   @ApiOperation({
     summary: 'Stream AI chat responses',
     description:

@@ -40,7 +40,7 @@ import {
 @ApiTags('users')
 @ApiBearerAuth('JWT-auth')
 @ApiSecurity('api-key')
-@Controller('users')
+@Controller('v2/users')
 export class UsersController {
   constructor(private readonly users_service: UsersService) {}
 
@@ -49,19 +49,13 @@ export class UsersController {
   @ApiOperation({
     summary: 'Get all users',
     description:
-      'Retrieve all users (admin or authenticated users). Supports cursor and offset pagination.',
+      'Retrieve all users (admin or authenticated users). Supports cursor-based pagination.',
   })
   @ApiQuery({
     name: 'limit',
     required: false,
     type: Number,
     description: 'Number of items per page (1-100, default: 25)',
-  })
-  @ApiQuery({
-    name: 'offset',
-    required: false,
-    type: Number,
-    description: 'Offset for pagination (default: 0)',
   })
   @ApiQuery({
     name: 'cursor',
@@ -181,6 +175,6 @@ export class UsersController {
       throw new ForbiddenException('You can only delete your own account');
     }
     await this.users_service.delete(id);
-    return { message: 'User deleted successfully' };
+    return { data: null, message: 'User deleted successfully' };
   }
 }

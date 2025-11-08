@@ -9,7 +9,7 @@ import { GoogleAuthGuard } from '../guards/google-auth.guard';
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 
 @ApiTags('auth')
-@Controller('auth')
+@Controller('v2/auth')
 export class AuthController {
   private readonly logger = new Logger('AuthController');
 

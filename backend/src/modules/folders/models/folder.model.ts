@@ -20,7 +20,6 @@ export const update_folder_schema = z.object({
 
 export const query_folders_schema = z.object({
   limit: z.coerce.number().min(1).max(100).optional().default(25),
-  offset: z.coerce.number().min(0).optional().default(0),
   cursor: z.string().optional(),
   parent_id: z.string().uuid().optional(),
   sort_by: z.enum(['created_at', 'name']).optional().default('created_at'),

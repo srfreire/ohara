@@ -17,7 +17,7 @@ import { QueryDocumentsDto, query_documents_schema } from '../models/document.mo
 @ApiTags('documents')
 @ApiBearerAuth('JWT-auth')
 @ApiSecurity('api-key')
-@Controller('documents')
+@Controller('v2/documents')
 @UseGuards(ApiKeyOrJwtGuard)
 export class DocumentsController {
   constructor(private readonly documents_service: DocumentsService) {}
@@ -25,20 +25,13 @@ export class DocumentsController {
   @Get()
   @ApiOperation({
     summary: 'Get all documents',
-    description:
-      'Retrieve documents with search, filtering, sorting, and pagination (offset or cursor-based)',
+    description: 'Retrieve documents with search, filtering, sorting, and cursor-based pagination',
   })
   @ApiQuery({
     name: 'limit',
     required: false,
     type: Number,
     description: 'Number of items per page (1-100, default: 25)',
-  })
-  @ApiQuery({
-    name: 'offset',
-    required: false,
-    type: Number,
-    description: 'Offset for pagination (default: 0)',
   })
   @ApiQuery({
     name: 'cursor',

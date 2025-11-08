@@ -32,10 +32,9 @@ export const user_patch_operation_schema = z.discriminatedUnion('op', [
 
 export const user_patch_array_schema = z.array(user_patch_operation_schema);
 
-// Query parameters for pagination
+// Query parameters for cursor-based pagination
 export const query_users_schema = z.object({
   limit: z.coerce.number().min(1).max(100).optional().default(25),
-  offset: z.coerce.number().min(0).optional().default(0),
   cursor: z.string().optional(),
   sort_by: z.enum(['created_at', 'email', 'name']).optional().default('created_at'),
   order: z.enum(['asc', 'desc']).optional().default('desc'),

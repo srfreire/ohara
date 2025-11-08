@@ -37,7 +37,7 @@ import {
 
 @ApiTags('comments')
 @ApiBearerAuth('JWT-auth')
-@Controller('comments')
+@Controller('v2/comments')
 @UseGuards(JwtAuthGuard)
 export class CommentsController {
   constructor(private readonly comments_service: CommentsService) {}
@@ -53,12 +53,6 @@ export class CommentsController {
     required: false,
     type: Number,
     description: 'Number of items per page (1-100, default: 25)',
-  })
-  @ApiQuery({
-    name: 'offset',
-    required: false,
-    type: Number,
-    description: 'Offset for pagination (default: 0)',
   })
   @ApiQuery({
     name: 'cursor',
@@ -170,6 +164,6 @@ export class CommentsController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async delete(@Param('id') id: string) {
     await this.comments_service.delete(id);
-    return { message: 'Comment deleted successfully' };
+    return { data: null, message: 'Comment deleted successfully' };
   }
 }
