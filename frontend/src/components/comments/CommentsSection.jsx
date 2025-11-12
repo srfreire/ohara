@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { MessageSquare } from 'lucide-react'
-import { get_comments, create_comment, update_comment, delete_comment } from '../../api/comments'
-import { get_reactions, create_reaction, delete_reaction } from '../../api/reactions'
+import { get_comments, create_comment, update_comment, delete_comment } from '../../api/comments' // Updated to use .ts file
+import { get_reactions, create_reaction, delete_reaction } from '../../api/reactions' // Updated to use .ts file
 import { toast_error, toast_success } from '../../utils/toast'
 import { useAuth } from '../../contexts/auth-context'
 import CommentInput from './CommentInput'
@@ -79,10 +79,15 @@ const CommentsSection = ({ document_id }) => {
   const load_comments = async () => {
     try {
       set_is_loading(true)
-      const [comments_data, reactions_data] = await Promise.all([
-        get_comments(document_id),
-        get_reactions({ document_id })
+      // v2 API: Use cursor pagination, fetch with high limit
+      const [comments_result, reactions_result] = await Promise.all([
+        get_comments({ documentId: document_id, limit: 100 }),
+        get_reactions({ commentId: undefined, limit: 100 }) // Get all reactions for comments
       ])
+
+      // Extract data from v2 response format
+      const comments_data = comments_result.comments
+      const reactions_data = reactions_result.reactions
 
       // Build comment tree
       const comment_tree = build_comment_tree(comments_data)

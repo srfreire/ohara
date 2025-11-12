@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { get_reaction_emoji, REACTION_TYPES } from '../../api/reactions'
+import { get_reaction_emoji, REACTION_TYPES } from '../../api/reactions' // Updated to use .ts file
 
 const ReactionPicker = ({
   comment_id,

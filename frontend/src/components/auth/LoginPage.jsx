@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import { useAuth } from '../../contexts/auth-context'
-import { login_with_google } from '../../api/auth'
+import { login_with_google } from '../../api/auth' // Updated to use .ts file
 
 const LoginPage = () => {
   const navigate = useNavigate()

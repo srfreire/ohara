@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { Send, Bot, User, PanelLeftClose, PanelLeftOpen, RotateCcw } from 'lucide-react'
-import { stream_chat } from '../../api/agent'
+import { stream_chat } from '../../api/agent' // Updated to use .ts file
 import { toast_error } from '../../utils/toast'
 import MessageWithCitations from './MessageWithCitations'
 
