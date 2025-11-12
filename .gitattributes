@@ -93,3 +93,5 @@ coverage/* linguist-generated
 node_modules/* linguist-vendored
 vendor/* linguist-vendored
 third_party/* linguist-vendored
+
+/agent/
