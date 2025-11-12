@@ -11,23 +11,20 @@ async function bootstrap() {
 
   // Enable CORS
   app.enableCors();
-  logger.log('CORS enabled');
 
   // Register global response transform interceptor
   app.useGlobalInterceptors(new TransformInterceptor(app.get(Reflector)));
-  logger.log('Global response transform interceptor registered');
 
   // Add X-API-Version header to all responses
   app.use((req: any, res: any, next: any) => {
     res.setHeader('X-API-Version', '2.0');
     next();
   });
-  logger.log('X-API-Version header middleware registered');
 
   // Swagger API Documentation
   const config = new DocumentBuilder()
     .setTitle('Ohara API')
-    .setDescription('REST API for Ohara document management system with AI agent integration')
+    .setDescription('REST API for Ohara App developed por EnSer management system with AI agent integration')
     .setVersion('2.0.0')
     .addBearerAuth(
       {
