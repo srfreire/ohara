@@ -24,7 +24,9 @@ async function bootstrap() {
   // Swagger API Documentation
   const config = new DocumentBuilder()
     .setTitle('Ohara API')
-    .setDescription('REST API for Ohara App developed por EnSer management system with AI agent integration')
+    .setDescription(
+      'REST API for Ohara App developed por EnSer management system with AI agent integration',
+    )
     .setVersion('2.0.0')
     .addBearerAuth(
       {
@@ -47,7 +49,6 @@ async function bootstrap() {
       'api-key',
     )
     .addServer('http://localhost:3000', 'Local Development')
-    .addServer('https://api.ohara.osix.tech', 'Production')
     .addTag('auth', 'Authentication endpoints (Google OAuth, JWT)')
     .addTag('users', 'User management')
     .addTag('collections', 'User collections with visibility controls')
@@ -62,8 +63,10 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api/docs', app, document, {
     customSiteTitle: 'Ohara API Docs',
-    customfavIcon: 'https://nestjs.com/img/logo-small.svg',
-    customCss: '.swagger-ui .topbar { display: none }',
+    customCss: `
+      .topbar-wrapper img { content: url('https://raw.githubusercontent.com/swagger-api/swagger-ui/master/src/img/logo_small.png'); width: 40px; height: 40px; }
+      .topbar-wrapper .link { display: inline-flex; align-items: center; }
+    `,
     swaggerOptions: {
       persistAuthorization: true,
       docExpansion: 'none',
@@ -75,10 +78,10 @@ async function bootstrap() {
   const port = process.env.PORT || 3000;
   await app.listen(port);
 
-  logger.log(`🚀 Application started successfully`);
-  logger.log(`📡 Server running on: http://localhost:${port}/v2`);
-  logger.log(`📚 API Docs: http://localhost:${port}/api/docs`);
-  logger.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+  logger.log(`Application started successfully`);
+  logger.log(`Server running on: http://localhost:${port}/v2`);
+  logger.log(`API Docs: http://localhost:${port}/api/docs`);
+  logger.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
 }
 
 bootstrap().catch((error) => {

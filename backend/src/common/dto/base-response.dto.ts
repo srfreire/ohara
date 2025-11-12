@@ -1,8 +1,6 @@
 import { z } from 'zod';
 
-/**
- * Standard cursor-based pagination metadata
- */
+// Standard cursor-based pagination metadata
 export const cursor_pagination_meta_schema = z.object({
   next_cursor: z.string().nullable(),
   has_more: z.boolean(),
@@ -11,18 +9,14 @@ export const cursor_pagination_meta_schema = z.object({
 
 export type CursorPaginationMeta = z.infer<typeof cursor_pagination_meta_schema>;
 
-/**
- * Standard success response wrapper (no pagination)
- */
+// Standard success response wrapper
 export const success_response_schema = <T extends z.ZodTypeAny>(data_schema: T) =>
   z.object({
     success: z.literal(true),
     data: data_schema,
   });
 
-/**
- * Standard success response wrapper with pagination
- */
+// Standard paginated response wrapper with pagination
 export const paginated_response_schema = <T extends z.ZodTypeAny>(data_schema: T) =>
   z.object({
     success: z.literal(true),
