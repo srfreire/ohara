@@ -1,11 +1,12 @@
-import axios from 'axios'
+import axios, { AxiosInstance, AxiosResponse, InternalAxiosRequestConfig } from 'axios'
 import toast from 'react-hot-toast'
+import type { ApiSuccessResponse, ApiListResponse, ApiDeleteResponse, ApiErrorResponse } from '../types/api'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'
-const API_VERSION = 'v1' // API version prefix
+const API_VERSION = 'v2' // Updated to v2
 
-// Create axios instance with /v1 prefix
-const api_client = axios.create({
+// Create axios instance with /v2 prefix
+const api_client: AxiosInstance = axios.create({
   baseURL: `${API_BASE_URL}/${API_VERSION}`,
   headers: {
     'Content-Type': 'application/json',
@@ -13,13 +14,13 @@ const api_client = axios.create({
 })
 
 // Helper to get JWT token from localStorage
-const get_jwt_token = () => {
+const get_jwt_token = (): string | null => {
   return localStorage.getItem('access_token')
 }
 
 // Request interceptor - Add JWT Bearer token authentication
 api_client.interceptors.request.use(
-  (config) => {
+  (config: InternalAxiosRequestConfig) => {
     // Add JWT Bearer token from localStorage
     const token = get_jwt_token()
     if (token) {
@@ -33,15 +34,19 @@ api_client.interceptors.request.use(
   }
 )
 
-// Response interceptor - Handle errors globally
+// Response interceptor - Handle errors globally and unwrap v2 response format
 api_client.interceptors.response.use(
-  (response) => {
+  (response: AxiosResponse) => {
+    // For v2 API, unwrap the standard response format
+    // Response format: { success: true, data: ..., pagination?: ... }
+    // We'll keep the full response and let individual API functions handle unwrapping
     return response
   },
   (error) => {
     // Handle different error scenarios
     if (error.response) {
       const { status, data } = error.response
+      const error_data = data as ApiErrorResponse
 
       switch (status) {
         case 401:
@@ -61,7 +66,7 @@ api_client.interceptors.response.use(
           break
 
         case 404:
-          toast.error(data.message || 'Resource not found.')
+          toast.error(error_data.message || 'Resource not found.')
           break
 
         case 500:
@@ -69,7 +74,7 @@ api_client.interceptors.response.use(
           break
 
         default:
-          toast.error(data.message || 'An error occurred.')
+          toast.error(error_data.message || 'An error occurred.')
       }
     } else if (error.request) {
       // Request made but no response received
@@ -84,7 +89,17 @@ api_client.interceptors.response.use(
 )
 
 // Helper function to handle API calls with loading state
-export const api_call = async (promise, options = {}) => {
+interface ApiCallOptions {
+  show_success?: boolean
+  success_message?: string
+  show_error?: boolean
+  silent?: boolean
+}
+
+export const api_call = async <T>(
+  promise: Promise<AxiosResponse<T>>,
+  options: ApiCallOptions = {}
+): Promise<T> => {
   const {
     show_success = false,
     success_message = 'Success!',
@@ -105,6 +120,22 @@ export const api_call = async (promise, options = {}) => {
     }
     throw error
   }
+}
+
+// Type-safe wrapper for standard v2 API responses
+export const unwrap_response = <T>(response: AxiosResponse<ApiSuccessResponse<T>>): T => {
+  return response.data.data
+}
+
+export const unwrap_list_response = <T>(response: AxiosResponse<ApiListResponse<T>>): { data: T[], pagination: ApiListResponse<T>['pagination'] } => {
+  return {
+    data: response.data.data,
+    pagination: response.data.pagination
+  }
+}
+
+export const unwrap_delete_response = (response: AxiosResponse<ApiDeleteResponse>): string => {
+  return response.data.message
 }
 
 export default api_client

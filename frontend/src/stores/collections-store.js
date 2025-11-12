@@ -8,7 +8,7 @@ import {
   get_collection_items,
   add_item_to_collection,
   remove_item_from_collection,
-} from '../api/collections';
+} from '../api/collections'; // Updated to use .ts file
 
 export const useCollectionsStore = create((set, get) => ({
   // State
@@ -18,13 +18,13 @@ export const useCollectionsStore = create((set, get) => ({
   loading: false,
   error: null,
 
-  // Fetch all collections
+  // Fetch all collections (v2 API with cursor pagination)
   fetch_collections: async () => {
     set({ loading: true, error: null });
     try {
-      const data = await get_collections();
-      set({ collections: data, loading: false });
-      return data;
+      const result = await get_collections({ limit: 100 }); // Fetch all with high limit
+      set({ collections: result.collections, loading: false });
+      return result.collections;
     } catch (error) {
       set({ error: error.message, loading: false });
       throw error;
@@ -124,17 +124,17 @@ export const useCollectionsStore = create((set, get) => ({
     }
   },
 
-  // Fetch items in a collection
+  // Fetch items in a collection (v2 API with cursor pagination)
   fetch_collection_items: async (collection_id) => {
     set({ loading: true, error: null });
     try {
-      const items = await get_collection_items(collection_id);
+      const result = await get_collection_items(collection_id, { limit: 100 }); // Fetch all with high limit
 
       // Cache items for this collection
       set((state) => ({
         items_by_collection: {
           ...state.items_by_collection,
-          [collection_id]: items,
+          [collection_id]: result.items,
         },
         loading: false,
       }));
@@ -142,7 +142,7 @@ export const useCollectionsStore = create((set, get) => ({
       // Update document_collections mapping
       get().recalculate_document_collections();
 
-      return items;
+      return result.items;
     } catch (error) {
       set({ error: error.message, loading: false });
       throw error;

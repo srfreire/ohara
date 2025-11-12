@@ -3,8 +3,8 @@ import Header from '../layout/Header'
 import FileExplorer from './FileExplorer'
 import FileViewer from './FileViewer'
 import ChatAgent from '../chat/ChatAgent'
-import { get_folders } from '../../api/folders'
-import { get_documents } from '../../api/documents'
+import { get_folders } from '../../api/folders' // Updated to use .ts file
+import { get_documents } from '../../api/documents' // Updated to use .ts file
 import { toast_error } from '../../utils/toast'
 
 const Dashboard = () => {
@@ -25,13 +25,16 @@ const Dashboard = () => {
   const fetch_folders_and_documents = async () => {
     try {
       set_is_loading(true)
-      // Fetch folders with no parent_id filter (get all)
-      const folders_data = await get_folders({ limit: 100 })
-      set_folders(folders_data)
+      // v2 API: Fetch folders and documents with cursor pagination
+      // Using high limit to fetch all at once (can be optimized with infinite scroll later)
+      const [folders_result, documents_result] = await Promise.all([
+        get_folders({ limit: 100 }),
+        get_documents({ limit: 100 })
+      ])
 
-      // Fetch documents
-      const documents_data = await get_documents({ limit: 100 })
-      set_documents(documents_data)
+      // Extract data from v2 response format
+      set_folders(folders_result.folders)
+      set_documents(documents_result.documents)
     } catch (error) {
       console.error('Error fetching data:', error)
       toast_error('Failed to load files and folders')

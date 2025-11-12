@@ -1,6 +1,6 @@
 import { FileText, X, MessageSquare, Home, ChevronRight } from 'lucide-react'
 import { useState, useEffect } from 'react'
-import { get_document_url } from '../../api/documents'
+import { get_document_url } from '../../api/documents' // Updated to use .ts file
 import { toast_error } from '../../utils/toast'
 import LoadingSpinner from '../ui/LoadingSpinner'
 import CommentsSection from '../comments/CommentsSection'

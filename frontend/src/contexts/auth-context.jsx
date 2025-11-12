@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react'
-import { is_authenticated, logout as api_logout } from '../api/auth'
+import { is_authenticated, logout as api_logout } from '../api/auth' // Updated to use .ts file
 import { useNavigate } from 'react-router-dom'
 
 const AuthContext = createContext(null)

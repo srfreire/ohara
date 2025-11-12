@@ -3,21 +3,73 @@
  * Handles SSE (Server-Sent Events) streaming for chat
  */
 
+import type { ChatMessage, ChatStreamRequest } from '../types/api'
+
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
-const API_VERSION = 'v1' // API version prefix
+const API_VERSION = 'v2' // Updated to v2
 const API_BASE_URL = `${BASE_URL}/${API_VERSION}`
 
 /**
- * Stream chat messages using Server-Sent Events
- * @param {Array} messages - Array of message objects with role, content, timestamp
- * @param {string} model - Model to use (default: gpt-4.1)
- * @param {Function} on_token - Callback for each token received
- * @param {Function} on_done - Callback when stream is complete (receives citations if available)
- * @param {Function} on_error - Callback for errors
- * @param {Function} on_citations - Callback when citations are received
- * @returns {Function} abort function to cancel the stream
+ * SSE stream event types
  */
-export const stream_chat = async (messages, options = {}) => {
+interface SSETokenEvent {
+  type: 'token'
+  content: string
+}
+
+interface SSEResponseEvent {
+  type: 'response'
+  content: string | {
+    text?: string
+    content?: string
+    citations?: any[]
+  }
+}
+
+interface SSEActionEvent {
+  type: 'action'
+  content: any
+}
+
+interface SSEObservationEvent {
+  type: 'observation'
+  content: any
+}
+
+interface SSEThoughtEvent {
+  type: 'thought'
+  content: any
+}
+
+interface SSEDoneEvent {
+  type: 'done'
+}
+
+interface SSEErrorEvent {
+  type: 'error'
+  content?: string
+  message?: string
+}
+
+type SSEEvent = SSETokenEvent | SSEResponseEvent | SSEActionEvent | SSEObservationEvent | SSEThoughtEvent | SSEDoneEvent | SSEErrorEvent
+
+/**
+ * Options for stream_chat
+ */
+interface StreamChatOptions {
+  model?: string
+  document_id?: string | null
+  on_token?: (token: string) => void
+  on_done?: (citations?: any[] | null) => void
+  on_error?: (error: Error) => void
+  on_citations?: (citations: any[]) => void
+}
+
+/**
+ * Stream chat messages using Server-Sent Events
+ * POST /v2/agent/stream
+ */
+export const stream_chat = async (messages: ChatMessage[], options: StreamChatOptions = {}): Promise<() => void> => {
   const {
     model = 'gpt-4.1',
     document_id = null,
@@ -35,7 +87,7 @@ export const stream_chat = async (messages, options = {}) => {
     return () => {}
   }
 
-  let controller = new AbortController()
+  const controller = new AbortController()
 
   try {
     const response = await fetch(`${API_BASE_URL}/agent/stream`, {
@@ -48,7 +100,7 @@ export const stream_chat = async (messages, options = {}) => {
         messages,
         model,
         ...(document_id && { document_id }),
-      }),
+      } as ChatStreamRequest),
       signal: controller.signal,
     })
 
@@ -58,7 +110,11 @@ export const stream_chat = async (messages, options = {}) => {
     }
 
     // Read the response as a stream
-    const reader = response.body.getReader()
+    const reader = response.body?.getReader()
+    if (!reader) {
+      throw new Error('Failed to get response reader')
+    }
+
     const decoder = new TextDecoder()
 
     // Process the stream
@@ -86,7 +142,7 @@ export const stream_chat = async (messages, options = {}) => {
               if (!data_str) continue
 
               try {
-                const data = JSON.parse(data_str)
+                const data = JSON.parse(data_str) as SSEEvent
 
                 if (data.type === 'token' && data.content) {
                   // Legacy token-by-token streaming
@@ -94,7 +150,7 @@ export const stream_chat = async (messages, options = {}) => {
                 } else if (data.type === 'response' && data.content) {
                   // Structured response from agent (contains text, citations, files)
                   let response_text = ''
-                  let citations = null
+                  let citations: any[] | null = null
 
                   if (typeof data.content === 'string') {
                     response_text = data.content
@@ -143,8 +199,8 @@ export const stream_chat = async (messages, options = {}) => {
           }
         }
       } catch (error) {
-        if (error.name !== 'AbortError') {
-          on_error(error)
+        if ((error as any).name !== 'AbortError') {
+          on_error(error as Error)
         }
       }
     }
@@ -153,8 +209,8 @@ export const stream_chat = async (messages, options = {}) => {
     process_stream()
 
   } catch (error) {
-    if (error.name !== 'AbortError') {
-      on_error(error)
+    if ((error as any).name !== 'AbortError') {
+      on_error(error as Error)
     }
   }
 
@@ -166,11 +222,9 @@ export const stream_chat = async (messages, options = {}) => {
 
 /**
  * Send a single chat message (non-streaming)
- * @param {Array} messages - Array of message objects
- * @param {string} model - Model to use
- * @returns {Promise} Response data
+ * POST /v2/agent/chat
  */
-export const send_chat_message = async (messages, model = 'gpt-4.1') => {
+export const send_chat_message = async (messages: ChatMessage[], model: string = 'gpt-4.1'): Promise<any> => {
   const access_token = localStorage.getItem('access_token')
 
   if (!access_token) {
