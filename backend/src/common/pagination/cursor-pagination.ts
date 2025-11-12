@@ -1,17 +1,53 @@
 import { z } from 'zod';
+import { CursorPaginationMeta } from '../dto/base-response.dto';
 
-/**
- * Cursor pagination utilities for efficient pagination of large datasets
- * Uses base64-encoded cursor format: {timestamp}_{id}
- */
+// ============================================================================
+// CURSOR PAGINATION UTILITIES
+// ============================================================================
+// Keyset pagination using composite cursor: base64({timestamp}_{id})
+// Services fetch limit+1, build_cursor_response() truncates and generates next_cursor
 
+// ============================================================================
+// TYPESCRIPT TYPES
+// ============================================================================
+
+// Decoded cursor structure
 export interface CursorData {
   timestamp: string; // ISO timestamp (created_at)
   id: string; // UUID for uniqueness
 }
 
+// Query conditions for Supabase filtering
+export interface CursorQueryConditions {
+  timestamp_field: string;
+  timestamp_value: string;
+  id_value: string;
+  ascending: boolean;
+}
+
+// Service layer response (before HTTP transformation)
+export interface CursorPaginatedResponse<T> {
+  data: T[];
+  pagination: CursorPaginationMeta;
+}
+
+// ============================================================================
+// ZOD VALIDATION SCHEMA
+// ============================================================================
+
+export const cursor_query_schema = z.object({
+  cursor: z.string().optional(),
+  limit: z.coerce.number().min(1).max(100).optional().default(25),
+});
+
+export type CursorQuery = z.infer<typeof cursor_query_schema>;
+
+// ============================================================================
+// CURSOR ENCODING/DECODING
+// ============================================================================
+
 /**
- * Encode cursor data to base64 string
+ * Encode cursor to base64: {timestamp}_{id}
  */
 export function encode_cursor(data: CursorData): string {
   const cursor_string = `${data.timestamp}_${data.id}`;
@@ -19,7 +55,7 @@ export function encode_cursor(data: CursorData): string {
 }
 
 /**
- * Decode base64 cursor string to cursor data
+ * Decode base64 cursor to CursorData
  */
 export function decode_cursor(cursor: string): CursorData {
   try {
@@ -36,8 +72,12 @@ export function decode_cursor(cursor: string): CursorData {
   }
 }
 
+// ============================================================================
+// CURSOR GENERATION
+// ============================================================================
+
 /**
- * Get next cursor from the last item in the result set
+ * Generate next cursor from last item in result set
  */
 export function get_next_cursor(
   items: any[],
@@ -58,30 +98,13 @@ export function get_next_cursor(
   return encode_cursor({ timestamp, id });
 }
 
-/**
- * Zod schema for cursor-based pagination query parameters
- */
-export const cursor_query_schema = z.object({
-  cursor: z.string().optional(), // Base64 encoded cursor
-  limit: z.coerce.number().min(1).max(100).optional().default(25),
-});
-
-export type CursorQuery = z.infer<typeof cursor_query_schema>;
+// ============================================================================
+// CURSOR QUERY PARSING
+// ============================================================================
 
 /**
- * Build cursor-based query conditions for Supabase
- * For descending order (newest first): WHERE (created_at, id) < (cursor_timestamp, cursor_id)
- * For ascending order (oldest first): WHERE (created_at, id) > (cursor_timestamp, cursor_id)
- */
-export interface CursorQueryConditions {
-  timestamp_field: string;
-  timestamp_value: string;
-  id_value: string;
-  ascending: boolean;
-}
-
-/**
- * Parse cursor query parameters and return conditions
+ * Parse cursor and return filter conditions
+ * Returns null for first page (no cursor)
  */
 export function parse_cursor_query(
   cursor: string | undefined,
@@ -102,29 +125,37 @@ export function parse_cursor_query(
   };
 }
 
+// ============================================================================
+// SUPABASE QUERY BUILDER INTEGRATION
+// ============================================================================
+
 /**
- * Apply cursor conditions to a Supabase query builder
- * This implements keyset pagination using (timestamp, id) composite cursor
+ * Apply cursor conditions to Supabase query builder
+ * Implements keyset pagination using (timestamp, id) composite cursor
  */
 export function apply_cursor_conditions(
   query_builder: any,
   conditions: CursorQueryConditions | null,
 ): any {
+  // ========================================================================
+  // NO CURSOR: RETURN UNMODIFIED QUERY (FIRST PAGE)
+  // ========================================================================
   if (!conditions) {
     return query_builder;
   }
 
   const { timestamp_field, timestamp_value, id_value, ascending } = conditions;
 
+  // ========================================================================
+  // APPLY CURSOR FILTERING BASED ON SORT ORDER
+  // ========================================================================
   if (ascending) {
-    // For ascending order: get items after cursor
-    // WHERE (timestamp > cursor_timestamp) OR (timestamp = cursor_timestamp AND id > cursor_id)
+    // Fetch items after cursor (forward in time)
     query_builder = query_builder.or(
       `${timestamp_field}.gt.${timestamp_value},and(${timestamp_field}.eq.${timestamp_value},id.gt.${id_value})`,
     );
   } else {
-    // For descending order: get items before cursor
-    // WHERE (timestamp < cursor_timestamp) OR (timestamp = cursor_timestamp AND id < cursor_id)
+    // Fetch items before cursor (backward in time)
     query_builder = query_builder.or(
       `${timestamp_field}.lt.${timestamp_value},and(${timestamp_field}.eq.${timestamp_value},id.lt.${id_value})`,
     );
@@ -133,31 +164,34 @@ export function apply_cursor_conditions(
   return query_builder;
 }
 
-/**
- * Create a paginated response with cursor metadata
- */
-export interface CursorPaginatedResponse<T> {
-  data: T[];
-  pagination: {
-    next_cursor: string | null;
-    has_more: boolean;
-    limit: number;
-  };
-}
+// ============================================================================
+// RESPONSE BUILDER
+// ============================================================================
 
 /**
- * Build cursor paginated response
+ * Build paginated response from limit+1 items
+ * Truncates to limit and generates cursor if more pages exist
  */
 export function build_cursor_response<T>(
   items: T[],
   limit: number,
   timestamp_field: string = 'created_at',
 ): CursorPaginatedResponse<T> {
-  // Check if there are more items by fetching limit + 1 and trimming
+  // ========================================================================
+  // DETECT IF MORE PAGES EXIST
+  // ========================================================================
+  // If we got more items than limit, there are more pages
   const has_more = items.length > limit;
   const data = has_more ? items.slice(0, limit) : items;
+
+  // ========================================================================
+  // GENERATE NEXT CURSOR FROM LAST ITEM
+  // ========================================================================
   const next_cursor = has_more ? get_next_cursor(data, timestamp_field) : null;
 
+  // ========================================================================
+  // BUILD PAGINATED RESPONSE
+  // ========================================================================
   return {
     data,
     pagination: {
