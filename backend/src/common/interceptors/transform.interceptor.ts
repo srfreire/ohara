@@ -1,88 +1,68 @@
-import {
-  Injectable,
-  NestInterceptor,
-  ExecutionContext,
-  CallHandler,
-} from '@nestjs/common';
+import { Injectable, NestInterceptor, ExecutionContext, CallHandler } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { Reflector } from '@nestjs/core';
+import {
+  SuccessResponse,
+  PaginatedResponse,
+  MessageResponse,
+  CursorPaginationMeta,
+} from '../dto/base-response.dto';
 
-/**
- * Response structure that services can return
- */
-export interface ServiceResponse<T = any> {
+// ============================================================================
+// TYPESCRIPT TYPES
+// ============================================================================
+
+// Union type for all possible standard response formats
+export type StandardResponse<T = any> = SuccessResponse<T> | PaginatedResponse<T> | MessageResponse;
+
+// Internal type for service responses before transformation
+interface ServiceResponse<T = any> {
   data: T;
-  pagination?: {
-    next_cursor: string | null;
-    has_more: boolean;
-    limit: number;
-  };
+  pagination?: CursorPaginationMeta;
   message?: string;
 }
 
-/**
- * Standard API response format
- */
-export interface StandardResponse<T = any> {
-  success: true;
-  data: T;
-  pagination?: {
-    next_cursor: string | null;
-    has_more: boolean;
-    limit: number;
-  };
-  message?: string;
-}
+// ============================================================================
+// DECORATOR & METADATA KEY
+// ============================================================================
 
-/**
- * Metadata key to mark routes that should skip transformation
- */
 export const SKIP_TRANSFORM_KEY = 'skipTransform';
 
-/**
- * Decorator to skip response transformation (for SSE, file downloads, etc.)
- */
-export const SkipTransform = () =>
-  Reflect.metadata(SKIP_TRANSFORM_KEY, true);
+export const SkipTransform = () => Reflect.metadata(SKIP_TRANSFORM_KEY, true);
 
-/**
- * Global interceptor that wraps all responses in a standard format
- *
- * Transforms:
- * - Raw data → { success: true, data: ... }
- * - { data, pagination } → { success: true, data, pagination }
- * - { data, message } → { success: true, data: null, message }
- *
- * Skips transformation for:
- * - Routes decorated with @SkipTransform()
- * - Server-Sent Events (SSE)
- * - File downloads
- * - Responses already in standard format
- */
+// ============================================================================
+// GLOBAL RESPONSE TRANSFORM INTERCEPTOR
+// ============================================================================
+// Automatically wraps all controller responses in a standardized format:
+// { success: true, data: ..., pagination?: ..., message?: ... }
+//
+// Registered globally in main.ts with app.useGlobalInterceptors()
+
 @Injectable()
-export class TransformInterceptor<T>
-  implements NestInterceptor<T, StandardResponse<T>>
-{
+export class TransformInterceptor<T> implements NestInterceptor<T, StandardResponse<T>> {
   constructor(private reflector: Reflector) {}
 
-  intercept(
-    context: ExecutionContext,
-    next: CallHandler,
-  ): Observable<StandardResponse<T>> {
-    // Check if this route should skip transformation
-    const skip_transform = this.reflector.getAllAndOverride<boolean>(
-      SKIP_TRANSFORM_KEY,
-      [context.getHandler(), context.getClass()],
-    );
+  intercept(context: ExecutionContext, next: CallHandler): Observable<StandardResponse<T>> {
+    // ========================================================================
+    // CHECK IF TRANSFORMATION SHOULD BE SKIPPED
+    // ========================================================================
+    // Routes decorated with @SkipTransform() bypass this interceptor
+    const skip_transform = this.reflector.getAllAndOverride<boolean>(SKIP_TRANSFORM_KEY, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
 
     if (skip_transform) {
       return next.handle();
     }
 
+    // ========================================================================
+    // TRANSFORM RESPONSE BASED ON DATA TYPE
+    // ========================================================================
     return next.handle().pipe(
       map((data) => {
-        // If data is null or undefined, return success with null data
+        // Case 1: Null or undefined data
         if (data === null || data === undefined) {
           return {
             success: true,
@@ -90,41 +70,51 @@ export class TransformInterceptor<T>
           };
         }
 
-        // If already in standard format, return as-is
+        // Case 2: Already in standard format
         if (this.is_standard_response(data)) {
           return data;
         }
 
-        // If service returned a structured response { data, pagination?, message? }
+        // Case 3: Service response with structured data
         if (this.is_service_response(data)) {
-          const response: StandardResponse<T> = {
+          // Has pagination: return PaginatedResponse
+          if (data.pagination) {
+            return {
+              success: true,
+              data: data.data,
+              pagination: data.pagination,
+            } as PaginatedResponse<any>;
+          }
+
+          // Has message: return MessageResponse
+          if (data.message) {
+            return {
+              success: true,
+              data: data.data,
+              message: data.message,
+            } as MessageResponse;
+          }
+
+          // Just data: return SuccessResponse
+          return {
             success: true,
             data: data.data,
-          };
-
-          if (data.pagination) {
-            response.pagination = data.pagination;
-          }
-
-          if (data.message) {
-            response.message = data.message;
-          }
-
-          return response;
+          } as SuccessResponse<any>;
         }
 
-        // Default: wrap raw data
+        // Case 4: Raw data (default)
         return {
           success: true,
           data,
-        };
+        } as SuccessResponse<T>;
       }),
     );
   }
 
-  /**
-   * Check if response is already in standard format
-   */
+  // ==========================================================================
+  // HELPER METHODS (Type Guards)
+  // ==========================================================================
+
   private is_standard_response(data: any): data is StandardResponse {
     return (
       typeof data === 'object' &&
@@ -135,15 +125,7 @@ export class TransformInterceptor<T>
     );
   }
 
-  /**
-   * Check if response is a service response structure
-   */
   private is_service_response(data: any): data is ServiceResponse {
-    return (
-      typeof data === 'object' &&
-      data !== null &&
-      'data' in data &&
-      !('success' in data)
-    );
+    return typeof data === 'object' && data !== null && 'data' in data && !('success' in data);
   }
 }
