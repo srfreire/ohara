@@ -22,7 +22,6 @@ export class CommentsService {
   async find_all(query_params: QueryCommentsDto): Promise<CursorPaginatedResponse<Comment>> {
     let query_builder = this.supabase.from('comments').select('*');
 
-    // Apply filters
     if (query_params.documentId) {
       query_builder = query_builder.eq('document_id', query_params.documentId);
     }
@@ -35,16 +34,13 @@ export class CommentsService {
       query_builder = query_builder.eq('parent_comment_id', query_params.parent_comment_id);
     }
 
-    // Apply sorting
     const sort_by = query_params.sort_by || 'created_at';
     const order = query_params.order || 'desc';
     const ascending = order === 'asc';
 
-    // Apply cursor-based pagination
     const cursor_conditions = parse_cursor_query(query_params.cursor, sort_by, ascending);
     query_builder = apply_cursor_conditions(query_builder, cursor_conditions);
 
-    // Fetch limit + 1 to check if there are more results
     query_builder = query_builder.order(sort_by, { ascending }).limit(query_params.limit + 1);
 
     const { data, error } = await query_builder;
@@ -57,7 +53,6 @@ export class CommentsService {
   }
 
   async create(create_comment_dto: CreateCommentDto): Promise<Comment> {
-    // Validate start_offset < end_offset (also done in schema)
     if (create_comment_dto.start_offset >= create_comment_dto.end_offset) {
       throw new BadRequestException('start_offset must be less than end_offset');
     }
@@ -91,7 +86,6 @@ export class CommentsService {
   }
 
   async patch(id: string, patch_operations: CommentPatchArray): Promise<Comment> {
-    // First, get the current comment
     const { data: existing_comment, error: fetch_error } = await this.supabase
       .from('comments')
       .select('*')
@@ -102,12 +96,11 @@ export class CommentsService {
       throw new NotFoundException(`Comment with id ${id} not found`);
     }
 
-    // Apply JSON Patch operations (RFC 6902)
     const updated_comment: any = { ...existing_comment };
 
     for (const operation of patch_operations) {
       if (operation.op === 'replace') {
-        const field = operation.path.substring(1); // Remove leading '/'
+        const field = operation.path.substring(1);
         if (field === 'content') {
           updated_comment.content = operation.value as string;
         } else if (field === 'start_offset') {
@@ -118,12 +111,10 @@ export class CommentsService {
       }
     }
 
-    // Validate offsets
     if (updated_comment.start_offset >= updated_comment.end_offset) {
       throw new BadRequestException('start_offset must be less than end_offset');
     }
 
-    // Update the comment in the database
     const { data, error } = await this.supabase
       .from('comments')
       .update({

@@ -15,25 +15,19 @@ export class FoldersService {
   private supabase = get_supabase_client();
 
   async find_all(query_params: QueryFoldersDto): Promise<CursorPaginatedResponse<Folder>> {
-    this.logger.debug(`Building query with params: ${JSON.stringify(query_params)}`);
-
     let query_builder = this.supabase.from('folders').select('*');
 
-    // Apply parent_id filter
     if (query_params.parent_id) {
       query_builder = query_builder.eq('parent_id', query_params.parent_id);
     }
 
-    // Apply sorting
     const sort_by = query_params.sort_by || 'created_at';
     const order = query_params.order || 'desc';
     const ascending = order === 'asc';
 
-    // Apply cursor-based pagination
     const cursor_conditions = parse_cursor_query(query_params.cursor, sort_by, ascending);
     query_builder = apply_cursor_conditions(query_builder, cursor_conditions);
 
-    // Fetch limit + 1 to check if there are more results
     query_builder = query_builder.order(sort_by, { ascending }).limit(query_params.limit + 1);
 
     const { data, error } = await query_builder;
@@ -42,9 +36,6 @@ export class FoldersService {
       this.logger.error(`Supabase error: ${error.message}`, error);
       throw new Error(`Failed to fetch folders: ${error.message}`);
     }
-
-    this.logger.debug(`Supabase returned: ${data?.length || 0} folders`);
-    this.logger.debug(`Sample data: ${JSON.stringify(data?.[0] || 'none')}`);
 
     return build_cursor_response(data as Folder[], query_params.limit, sort_by);
   }

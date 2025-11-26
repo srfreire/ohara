@@ -9,8 +9,7 @@ import {
   CursorPaginatedResponse,
 } from '../../../common/pagination';
 
-// Constants
-const SIGNED_URL_EXPIRES_IN_SECONDS = 3600; // 1 hour
+const SIGNED_URL_EXPIRES_IN_SECONDS = 3600;
 
 @Injectable()
 export class DocumentsService {
@@ -19,17 +18,14 @@ export class DocumentsService {
   async find_all(query_params: QueryDocumentsDto): Promise<CursorPaginatedResponse<Document>> {
     let query_builder = this.supabase.from('documents').select('*');
 
-    // Apply folder filter
     if (query_params.folder_id) {
       query_builder = query_builder.eq('folder_id', query_params.folder_id);
     }
 
-    // Apply search filter (case-insensitive search on title)
     if (query_params.search) {
       query_builder = query_builder.ilike('title', `%${query_params.search}%`);
     }
 
-    // Apply date range filters
     if (query_params.created_after) {
       query_builder = query_builder.gte('created_at', query_params.created_after);
     }
@@ -38,16 +34,13 @@ export class DocumentsService {
       query_builder = query_builder.lte('created_at', query_params.created_before);
     }
 
-    // Apply sorting
     const sort_by = query_params.sort_by || 'created_at';
     const order = query_params.order || 'desc';
     const ascending = order === 'asc';
 
-    // Apply cursor-based pagination
     const cursor_conditions = parse_cursor_query(query_params.cursor, sort_by, ascending);
     query_builder = apply_cursor_conditions(query_builder, cursor_conditions);
 
-    // Fetch limit + 1 to check if there are more results
     query_builder = query_builder.order(sort_by, { ascending }).limit(query_params.limit + 1);
 
     const { data, error } = await query_builder;
@@ -70,11 +63,8 @@ export class DocumentsService {
   }
 
   async get_document_signed_url(id: string): Promise<{ url: string; expires_in: number }> {
-    // First, verify the document exists
     const document = await this.find_by_id(id);
 
-    // Generate signed URL for the PDF in the documents bucket
-    // The file is stored as {uuid}.pdf in the bucket
     const file_path = `${document.id}.pdf`;
 
     const { data, error } = await this.supabase.storage

@@ -23,8 +23,6 @@ export class CollectionsService {
   async find_all(query_params: QueryCollectionsDto): Promise<CursorPaginatedResponse<Collection>> {
     let query_builder = this.supabase.from('collections').select('*');
 
-    // If user_id is provided, show their collections + public/unlisted
-    // If not, show only public/unlisted
     if (query_params.user_id) {
       query_builder = query_builder.or(
         `user_id.eq.${query_params.user_id},visibility.in.(public,unlisted)`,
@@ -33,16 +31,13 @@ export class CollectionsService {
       query_builder = query_builder.in('visibility', ['public', 'unlisted']);
     }
 
-    // Apply sorting
     const sort_by = query_params.sort_by || 'created_at';
     const order = query_params.order || 'desc';
     const ascending = order === 'asc';
 
-    // Apply cursor-based pagination
     const cursor_conditions = parse_cursor_query(query_params.cursor, sort_by, ascending);
     query_builder = apply_cursor_conditions(query_builder, cursor_conditions);
 
-    // Fetch limit + 1 to check if there are more results
     query_builder = query_builder.order(sort_by, { ascending }).limit(query_params.limit + 1);
 
     const { data, error } = await query_builder;
@@ -67,7 +62,6 @@ export class CollectionsService {
 
     const collection = data as Collection;
 
-    // Check visibility permissions
     if (collection.visibility === 'private' && collection.user_id !== user_id) {
       throw new ForbiddenException('You do not have access to this collection');
     }
@@ -94,7 +88,6 @@ export class CollectionsService {
     user_id: string,
     update_collection_dto: UpdateCollectionDto,
   ): Promise<Collection> {
-    // First check if collection exists and user owns it
     const collection = await this.find_by_id(id, user_id);
 
     if (collection.user_id !== user_id) {
@@ -120,19 +113,17 @@ export class CollectionsService {
     user_id: string,
     patch_operations: CollectionPatchArray,
   ): Promise<Collection> {
-    // First check if collection exists and user owns it
     const collection = await this.find_by_id(id, user_id);
 
     if (collection.user_id !== user_id) {
       throw new ForbiddenException('You do not have permission to update this collection');
     }
 
-    // Apply JSON Patch operations (RFC 6902)
     const updated_collection: any = { ...collection };
 
     for (const operation of patch_operations) {
       if (operation.op === 'replace') {
-        const field = operation.path.substring(1); // Remove leading '/'
+        const field = operation.path.substring(1);
         if (field === 'name') {
           updated_collection.name = operation.value as string;
         } else if (field === 'description') {
@@ -143,7 +134,6 @@ export class CollectionsService {
       }
     }
 
-    // Update the collection in the database
     const { data, error } = await this.supabase
       .from('collections')
       .update({
@@ -163,7 +153,6 @@ export class CollectionsService {
   }
 
   async delete(id: string, user_id: string): Promise<void> {
-    // First check if collection exists and user owns it
     const collection = await this.find_by_id(id, user_id);
 
     if (collection.user_id !== user_id) {

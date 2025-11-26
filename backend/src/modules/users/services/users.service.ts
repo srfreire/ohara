@@ -22,16 +22,13 @@ export class UsersService {
   async find_all(query_params: QueryUsersDto): Promise<CursorPaginatedResponse<User>> {
     let query_builder = this.supabase.from('users').select('*');
 
-    // Apply sorting
     const sort_by = query_params.sort_by || 'created_at';
     const order = query_params.order || 'desc';
     const ascending = order === 'asc';
 
-    // Apply cursor-based pagination
     const cursor_conditions = parse_cursor_query(query_params.cursor, sort_by, ascending);
     query_builder = apply_cursor_conditions(query_builder, cursor_conditions);
 
-    // Fetch limit + 1 to check if there are more results
     query_builder = query_builder.order(sort_by, { ascending }).limit(query_params.limit + 1);
 
     const { data, error } = await query_builder;
@@ -97,7 +94,6 @@ export class UsersService {
   }
 
   async patch(id: string, patch_operations: UserPatchArray): Promise<User> {
-    // First, get the current user
     const { data: existing_user, error: fetch_error } = await this.supabase
       .from('users')
       .select('*')
@@ -108,12 +104,11 @@ export class UsersService {
       throw new NotFoundException(`User with id ${id} not found`);
     }
 
-    // Apply JSON Patch operations (RFC 6902)
     const updated_user: any = { ...existing_user };
 
     for (const operation of patch_operations) {
       if (operation.op === 'replace') {
-        const field = operation.path.substring(1); // Remove leading '/'
+        const field = operation.path.substring(1);
         if (field === 'email') {
           updated_user.email = operation.value as string;
         } else if (field === 'name') {
@@ -124,7 +119,6 @@ export class UsersService {
       }
     }
 
-    // Update the user in the database
     const { data, error } = await this.supabase
       .from('users')
       .update({

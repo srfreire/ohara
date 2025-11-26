@@ -416,5 +416,3 @@ downloads/
 # Generated files
 *.generated.*
 generated/
-
-agent/

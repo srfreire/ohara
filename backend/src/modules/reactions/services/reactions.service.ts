@@ -29,7 +29,6 @@ export class ReactionsService {
   async find_all(query_params: QueryReactionsDto): Promise<CursorPaginatedResponse<Reaction>> {
     let query_builder = this.supabase.from('reactions').select('*');
 
-    // Apply filters
     if (query_params.commentId) {
       query_builder = query_builder.eq('comment_id', query_params.commentId);
     }
@@ -42,16 +41,13 @@ export class ReactionsService {
       query_builder = query_builder.eq('user_id', query_params.user_id);
     }
 
-    // Apply sorting
     const sort_by = query_params.sort_by || 'created_at';
     const order = query_params.order || 'desc';
     const ascending = order === 'asc';
 
-    // Apply cursor-based pagination
     const cursor_conditions = parse_cursor_query(query_params.cursor, sort_by, ascending);
     query_builder = apply_cursor_conditions(query_builder, cursor_conditions);
 
-    // Fetch limit + 1 to check if there are more results
     query_builder = query_builder.order(sort_by, { ascending }).limit(query_params.limit + 1);
 
     const { data, error } = await query_builder;
@@ -71,7 +67,6 @@ export class ReactionsService {
       .single();
 
     if (error) {
-      // Check for unique constraint violation
       if (error.code === '23505') {
         throw new ConflictException(
           'Reaction already exists for this comment, user, and reaction type',
@@ -92,7 +87,6 @@ export class ReactionsService {
       .single();
 
     if (error) {
-      // Check for unique constraint violation
       if (error.code === '23505') {
         throw new ConflictException(
           'Reaction already exists for this comment, user, and reaction type',
@@ -109,7 +103,6 @@ export class ReactionsService {
   }
 
   async patch(id: string, patch_operations: ReactionPatchArray): Promise<Reaction> {
-    // First, get the current reaction
     const { data: existing_reaction, error: fetch_error } = await this.supabase
       .from('reactions')
       .select('*')
@@ -120,7 +113,6 @@ export class ReactionsService {
       throw new NotFoundException(`Reaction with id ${id} not found`);
     }
 
-    // Apply JSON Patch operations (RFC 6902)
     const updated_reaction = { ...existing_reaction };
 
     for (const operation of patch_operations) {
@@ -131,7 +123,6 @@ export class ReactionsService {
       }
     }
 
-    // Update the reaction in the database
     const { data, error } = await this.supabase
       .from('reactions')
       .update({ reaction_type: updated_reaction.reaction_type })
@@ -140,7 +131,6 @@ export class ReactionsService {
       .single();
 
     if (error) {
-      // Check for unique constraint violation
       if (error.code === '23505') {
         throw new ConflictException(
           'Reaction already exists for this comment, user, and reaction type',

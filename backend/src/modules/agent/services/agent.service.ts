@@ -5,9 +5,8 @@ import { JwtService } from '@nestjs/jwt';
 import axios from 'axios';
 import { Response } from 'express';
 
-// Constants
-const AGENT_HEALTH_CHECK_TIMEOUT_MS = 2000; // 2 seconds
-const AGENT_STREAM_TIMEOUT_MS = 300000; // 5 minutes
+const AGENT_HEALTH_CHECK_TIMEOUT_MS = 2000;
+const AGENT_STREAM_TIMEOUT_MS = 300000;
 
 interface StreamRequestDto {
   messages: Array<{
@@ -35,7 +34,6 @@ export class AgentService {
     res: Response,
   ): Promise<void> {
     try {
-      // Get agent service URL from config
       const agent_service_url = this.config_service.get<string>('AGENT_SERVICE_URL');
 
       if (!agent_service_url) {
@@ -45,18 +43,16 @@ export class AgentService {
         );
       }
 
-      // Check if agent service is reachable
       try {
         await axios.get(`${agent_service_url}/health`, { timeout: AGENT_HEALTH_CHECK_TIMEOUT_MS });
       } catch (error) {
-        this.logger.error(`🔌 Agent service not reachable at ${agent_service_url}`);
+        this.logger.error(`Agent service not reachable at ${agent_service_url}`);
         throw new HttpException(
           'Agent service is not running. Please start the AI service on port 8001.',
           HttpStatus.SERVICE_UNAVAILABLE,
         );
       }
 
-      // Get agent JWT secret (must match agent's JWT_SECRET_KEY)
       const agent_jwt_secret = this.config_service.get<string>('AGENT_SECRET_KEY');
 
       if (!agent_jwt_secret) {
@@ -66,9 +62,6 @@ export class AgentService {
         );
       }
 
-      // Build workspace context
-      // - workspaceId and workspaceName come from environment variables
-      // - workspaceDescription is dynamic: only included when a document is currently open
       const workspace_id = this.config_service.get<string>('WORKSPACE_ID');
       const workspace_name = this.config_service.get<string>('WORKSPACE_NAME');
 
@@ -84,23 +77,19 @@ export class AgentService {
           workspaceName: workspace_name || 'Default Workspace',
         };
 
-        // Add dynamic workspace description if document is selected
         if (stream_request.document_id) {
           workspace_context.workspaceDescription = `I'm currently working on document ${stream_request.document_id}. Please focus queries and responses on this specific document.`;
         }
       }
 
-      // Create JWT token for agent service authentication
-      // Note: Agent expects payload with 'sub' (email), 'user_id', and nested 'workspace' object
-      // The ToolExecutor will extract workspace_id from workspace.workspace_id
       const agent_service_token = this.jwt_service.sign(
         {
-          sub: user_email, // Agent expects 'sub' field
+          sub: user_email,
           user_id: user_id,
           email: user_email,
           workspace: workspace_id
             ? {
-                workspace_id: workspace_id, // Agent ToolExecutor extracts this
+                workspace_id: workspace_id,
               }
             : null,
         },
@@ -111,15 +100,13 @@ export class AgentService {
       );
 
       this.logger.debug(
-        `🎟️  Generated JWT for agent service (length: ${agent_service_token.length}, workspace: ${workspace_id})`,
+        `Generated JWT for agent service (length: ${agent_service_token.length}, workspace: ${workspace_id})`,
       );
 
-      // Set streaming response headers
       res.setHeader('Content-Type', 'text/plain; charset=utf-8');
       res.setHeader('Cache-Control', 'no-cache');
       res.setHeader('Connection', 'keep-alive');
 
-      // Prepare request for agent service
       const agent_request = {
         messages: stream_request.messages.map((msg) => ({
           role: msg.role,
@@ -131,10 +118,9 @@ export class AgentService {
       };
 
       this.logger.log(
-        `🤖 Calling agent service - URL: ${agent_service_url}/v1/chat/stream, Messages: ${stream_request.messages.length}, User: ${user_email}`,
+        `Calling agent service - URL: ${agent_service_url}/v1/chat/stream, Messages: ${stream_request.messages.length}, User: ${user_email}`,
       );
 
-      // Call agent service for AI processing
       const agent_response = await axios.post(
         `${agent_service_url}/v1/chat/stream`,
         agent_request,
@@ -148,44 +134,41 @@ export class AgentService {
         },
       );
 
-      // Validate that we received a proper stream response
       if (!agent_response.data || typeof agent_response.data.on !== 'function') {
-        this.logger.error('❌ Agent response is not a stream', agent_response.data);
+        this.logger.error('Agent response is not a stream', agent_response.data);
         throw new HttpException('Invalid response from agent service', HttpStatus.BAD_GATEWAY);
       }
 
-      this.logger.log('📡 Streaming response from agent service to client');
+      this.logger.log('Streaming response from agent service to client');
 
-      // Stream response to client
       agent_response.data.on('data', (chunk: Buffer) => {
         res.write(chunk);
       });
 
       agent_response.data.on('end', () => {
-        this.logger.log('✅ Chat stream completed successfully');
+        this.logger.log('Chat stream completed successfully');
         res.end();
       });
 
       agent_response.data.on('error', (error: any) => {
-        this.logger.error('❌ Agent stream error:', error);
+        this.logger.error('Agent stream error:', error);
         res.end();
       });
     } catch (error) {
-      this.logger.error('❌ Chat stream error:', error);
+      this.logger.error('Chat stream error:', error);
 
       if (axios.isAxiosError(error)) {
         if (error.code === 'ECONNABORTED') {
-          this.logger.error('⏱️  Agent service timeout');
+          this.logger.error('Agent service timeout');
           throw new HttpException('Agent service timeout', HttpStatus.GATEWAY_TIMEOUT);
         } else if (error.code === 'ECONNREFUSED') {
-          this.logger.error('🔌 Agent service unavailable (connection refused)');
+          this.logger.error('Agent service unavailable (connection refused)');
           throw new HttpException('Agent service unavailable', HttpStatus.SERVICE_UNAVAILABLE);
         } else {
           this.logger.error(
-            `⚠️  Axios error: ${error.code} - Status: ${error.response?.status} ${error.response?.statusText}`,
+            `Axios error: ${error.code} - Status: ${error.response?.status} ${error.response?.statusText}`,
           );
 
-          // Safely log response data (avoid circular references)
           try {
             const response_data = error.response?.data;
             if (response_data && typeof response_data === 'object') {
@@ -204,8 +187,7 @@ export class AgentService {
         }
       }
 
-      // Log the full error before throwing generic error
-      this.logger.error('❌ Unhandled error in chat stream:', {
+      this.logger.error('Unhandled error in chat stream:', {
         message: error instanceof Error ? error.message : String(error),
         stack: error instanceof Error ? error.stack : undefined,
         name: error instanceof Error ? error.name : typeof error,
