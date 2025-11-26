@@ -3,7 +3,6 @@ import {
   Get,
   Post,
   Put,
-  Patch,
   Delete,
   Param,
   Body,
@@ -29,11 +28,9 @@ import { ApiKeyOrJwtGuard } from '../../auth/guards/api-key-or-jwt.guard';
 import { UsersService } from '../services/users.service';
 import {
   create_user_schema,
-  user_patch_array_schema,
   query_users_schema,
   CreateUserDto,
   UpdateUserDto,
-  UserPatchArray,
   QueryUsersDto,
 } from '../models/user.model';
 
@@ -114,7 +111,7 @@ export class UsersController {
   @UseGuards(ApiKeyOrJwtGuard)
   @ApiOperation({
     summary: 'Update a user',
-    description: 'Update a user account (full update). Requires admin or ownership.',
+    description: 'Update a user account. Requires admin or ownership.',
   })
   @ApiParam({ name: 'id', type: String, description: 'User UUID' })
   @ApiBody({
@@ -126,36 +123,10 @@ export class UsersController {
   @ApiResponse({ status: 403, description: 'Forbidden - Can only update own account' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async update(@Param('id') id: string, @Body() update_user_dto: UpdateUserDto, @Req() req: any) {
-    // Allow if admin (API key) or if user is updating themselves
     if (!req.user.is_admin && req.user.id !== id) {
       throw new ForbiddenException('You can only update your own account');
     }
     return this.users_service.update(id, update_user_dto);
-  }
-
-  @Patch(':id')
-  @UseGuards(ApiKeyOrJwtGuard)
-  @ApiOperation({
-    summary: 'Patch a user',
-    description:
-      'Partially update a user using JSON Patch (RFC 6902). Requires admin or ownership.',
-  })
-  @ApiParam({ name: 'id', type: String, description: 'User UUID' })
-  @ApiBody({
-    description: 'JSON Patch operations',
-    schema: { example: [{ op: 'replace', path: '/name', value: 'New Name' }] },
-  })
-  @ApiResponse({ status: 200, description: 'User patched successfully' })
-  @ApiResponse({ status: 404, description: 'User not found' })
-  @ApiResponse({ status: 403, description: 'Forbidden - Can only update own account' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @UsePipes(new ZodValidationPipe(user_patch_array_schema))
-  async patch(@Param('id') id: string, @Body() patch_operations: UserPatchArray, @Req() req: any) {
-    // Allow if admin (API key) or if user is updating themselves
-    if (!req.user.is_admin && req.user.id !== id) {
-      throw new ForbiddenException('You can only update your own account');
-    }
-    return this.users_service.patch(id, patch_operations);
   }
 
   @Delete(':id')
@@ -170,7 +141,6 @@ export class UsersController {
   @ApiResponse({ status: 403, description: 'Forbidden - Can only delete own account' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async delete(@Param('id') id: string, @Req() req: any) {
-    // Allow if admin (API key) or if user is deleting themselves
     if (!req.user.is_admin && req.user.id !== id) {
       throw new ForbiddenException('You can only delete your own account');
     }

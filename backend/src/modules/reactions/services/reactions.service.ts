@@ -6,14 +6,13 @@ import {
   UpdateReactionDto,
   Reaction,
   QueryReactionsDto,
-  ReactionPatchArray,
 } from '../models/reaction.model';
 import {
   parse_cursor_query,
   apply_cursor_conditions,
   build_cursor_response,
   CursorPaginatedResponse,
-} from '../../../common/pagination';
+} from '../../../common/pagination/index';
 
 @Injectable()
 export class ReactionsService {
@@ -97,46 +96,6 @@ export class ReactionsService {
 
     if (!data) {
       throw new NotFoundException(`Reaction with id ${id} not found`);
-    }
-
-    return data as Reaction;
-  }
-
-  async patch(id: string, patch_operations: ReactionPatchArray): Promise<Reaction> {
-    const { data: existing_reaction, error: fetch_error } = await this.supabase
-      .from('reactions')
-      .select('*')
-      .eq('id', id)
-      .single();
-
-    if (fetch_error || !existing_reaction) {
-      throw new NotFoundException(`Reaction with id ${id} not found`);
-    }
-
-    const updated_reaction = { ...existing_reaction };
-
-    for (const operation of patch_operations) {
-      if (operation.op === 'replace') {
-        if (operation.path === '/reaction_type') {
-          updated_reaction.reaction_type = operation.value;
-        }
-      }
-    }
-
-    const { data, error } = await this.supabase
-      .from('reactions')
-      .update({ reaction_type: updated_reaction.reaction_type })
-      .eq('id', id)
-      .select()
-      .single();
-
-    if (error) {
-      if (error.code === '23505') {
-        throw new ConflictException(
-          'Reaction already exists for this comment, user, and reaction type',
-        );
-      }
-      throw new Error(`Failed to patch reaction: ${this.get_error_message(error)}`);
     }
 
     return data as Reaction;

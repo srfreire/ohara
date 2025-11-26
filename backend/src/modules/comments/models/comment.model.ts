@@ -52,19 +52,7 @@ export const query_comments_schema = base_query_schema.extend({
   sort_by: z.enum(['created_at', 'content']).optional().default('created_at'),
 });
 
-export const comment_patch_operation_schema = z.discriminatedUnion('op', [
-  z.object({
-    op: z.literal('replace'),
-    path: z.enum(['/content', '/start_offset', '/end_offset']),
-    value: z.union([z.string(), z.number().int()]),
-  }),
-]);
-
-export const comment_patch_array_schema = z.array(comment_patch_operation_schema);
-
 export type Comment = z.infer<typeof comment_schema>;
 export type CreateCommentDto = z.infer<typeof create_comment_schema>;
 export type UpdateCommentDto = z.infer<typeof update_comment_schema>;
 export type QueryCommentsDto = z.infer<typeof query_comments_schema>;
-export type CommentPatchOperation = z.infer<typeof comment_patch_operation_schema>;
-export type CommentPatchArray = z.infer<typeof comment_patch_array_schema>;

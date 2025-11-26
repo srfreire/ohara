@@ -6,14 +6,13 @@ import {
   UpdateCommentDto,
   Comment,
   QueryCommentsDto,
-  CommentPatchArray,
 } from '../models/comment.model';
 import {
   parse_cursor_query,
   apply_cursor_conditions,
   build_cursor_response,
   CursorPaginatedResponse,
-} from '../../../common/pagination';
+} from '../../../common/pagination/index';
 
 @Injectable()
 export class CommentsService {
@@ -80,54 +79,6 @@ export class CommentsService {
 
     if (error || !data) {
       throw new NotFoundException(`Comment with id ${id} not found`);
-    }
-
-    return data as Comment;
-  }
-
-  async patch(id: string, patch_operations: CommentPatchArray): Promise<Comment> {
-    const { data: existing_comment, error: fetch_error } = await this.supabase
-      .from('comments')
-      .select('*')
-      .eq('id', id)
-      .single();
-
-    if (fetch_error || !existing_comment) {
-      throw new NotFoundException(`Comment with id ${id} not found`);
-    }
-
-    const updated_comment: any = { ...existing_comment };
-
-    for (const operation of patch_operations) {
-      if (operation.op === 'replace') {
-        const field = operation.path.substring(1);
-        if (field === 'content') {
-          updated_comment.content = operation.value as string;
-        } else if (field === 'start_offset') {
-          updated_comment.start_offset = operation.value as number;
-        } else if (field === 'end_offset') {
-          updated_comment.end_offset = operation.value as number;
-        }
-      }
-    }
-
-    if (updated_comment.start_offset >= updated_comment.end_offset) {
-      throw new BadRequestException('start_offset must be less than end_offset');
-    }
-
-    const { data, error } = await this.supabase
-      .from('comments')
-      .update({
-        content: updated_comment.content,
-        start_offset: updated_comment.start_offset,
-        end_offset: updated_comment.end_offset,
-      })
-      .eq('id', id)
-      .select()
-      .single();
-
-    if (error || !data) {
-      throw new Error(`Failed to patch comment: ${error?.message || 'Unknown error'}`);
     }
 
     return data as Comment;

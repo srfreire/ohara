@@ -3,7 +3,6 @@ import {
   Get,
   Post,
   Put,
-  Patch,
   Delete,
   Param,
   Body,
@@ -28,11 +27,9 @@ import {
   create_reaction_schema,
   update_reaction_schema,
   query_reactions_schema,
-  reaction_patch_array_schema,
   CreateReactionDto,
   UpdateReactionDto,
   QueryReactionsDto,
-  ReactionPatchArray,
 } from '../models/reaction.model';
 
 @ApiTags('reactions')
@@ -111,7 +108,7 @@ export class ReactionsController {
   @Put(':id')
   @ApiOperation({
     summary: 'Update a reaction',
-    description: 'Update an existing reaction (full update)',
+    description: 'Update an existing reaction',
   })
   @ApiParam({ name: 'id', type: String, description: 'Reaction UUID' })
   @ApiBody({ description: 'Updated reaction data', schema: { example: { reaction_type: 'love' } } })
@@ -122,25 +119,6 @@ export class ReactionsController {
   @UsePipes(new ZodValidationPipe(update_reaction_schema))
   async update(@Param('id') id: string, @Body() update_reaction_dto: UpdateReactionDto) {
     return this.reactions_service.update(id, update_reaction_dto);
-  }
-
-  @Patch(':id')
-  @ApiOperation({
-    summary: 'Patch a reaction',
-    description: 'Partially update a reaction using JSON Patch (RFC 6902)',
-  })
-  @ApiParam({ name: 'id', type: String, description: 'Reaction UUID' })
-  @ApiBody({
-    description: 'JSON Patch operations',
-    schema: { example: [{ op: 'replace', path: '/reaction_type', value: 'insight' }] },
-  })
-  @ApiResponse({ status: 200, description: 'Reaction patched successfully' })
-  @ApiResponse({ status: 404, description: 'Reaction not found' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 409, description: 'Conflict - Reaction already exists with this type' })
-  @UsePipes(new ZodValidationPipe(reaction_patch_array_schema))
-  async patch(@Param('id') id: string, @Body() patch_operations: ReactionPatchArray) {
-    return this.reactions_service.patch(id, patch_operations);
   }
 
   @Delete(':id')

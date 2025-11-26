@@ -26,16 +26,6 @@ export const update_collection_schema = z.object({
   visibility: visibility_enum.optional(),
 });
 
-export const collection_patch_operation_schema = z.discriminatedUnion('op', [
-  z.object({
-    op: z.literal('replace'),
-    path: z.enum(['/name', '/description', '/visibility']),
-    value: z.union([z.string(), visibility_enum]),
-  }),
-]);
-
-export const collection_patch_array_schema = z.array(collection_patch_operation_schema);
-
 export const query_collections_schema = base_query_schema.extend({
   user_id: z.string().uuid().optional(),
   sort_by: z.enum(['created_at', 'name']).optional().default('created_at'),
@@ -45,6 +35,4 @@ export type Visibility = z.infer<typeof visibility_enum>;
 export type Collection = z.infer<typeof collection_schema>;
 export type CreateCollectionDto = z.infer<typeof create_collection_schema>;
 export type UpdateCollectionDto = z.infer<typeof update_collection_schema>;
-export type CollectionPatchOperation = z.infer<typeof collection_patch_operation_schema>;
-export type CollectionPatchArray = z.infer<typeof collection_patch_array_schema>;
 export type QueryCollectionsDto = z.infer<typeof query_collections_schema>;

@@ -5,8 +5,6 @@ import {
   CreateCollectionDto,
   UpdateCollectionDto,
   Collection,
-  CollectionPatchArray,
-  Visibility,
   QueryCollectionsDto,
 } from '../models/collection.model';
 import {
@@ -14,7 +12,7 @@ import {
   apply_cursor_conditions,
   build_cursor_response,
   CursorPaginatedResponse,
-} from '../../../common/pagination';
+} from '../../../common/pagination/index';
 
 @Injectable()
 export class CollectionsService {
@@ -103,50 +101,6 @@ export class CollectionsService {
 
     if (error || !data) {
       throw new NotFoundException(`Collection with id ${id} not found`);
-    }
-
-    return data as Collection;
-  }
-
-  async patch(
-    id: string,
-    user_id: string,
-    patch_operations: CollectionPatchArray,
-  ): Promise<Collection> {
-    const collection = await this.find_by_id(id, user_id);
-
-    if (collection.user_id !== user_id) {
-      throw new ForbiddenException('You do not have permission to update this collection');
-    }
-
-    const updated_collection: any = { ...collection };
-
-    for (const operation of patch_operations) {
-      if (operation.op === 'replace') {
-        const field = operation.path.substring(1);
-        if (field === 'name') {
-          updated_collection.name = operation.value as string;
-        } else if (field === 'description') {
-          updated_collection.description = operation.value as string;
-        } else if (field === 'visibility') {
-          updated_collection.visibility = operation.value as Visibility;
-        }
-      }
-    }
-
-    const { data, error } = await this.supabase
-      .from('collections')
-      .update({
-        name: updated_collection.name,
-        description: updated_collection.description,
-        visibility: updated_collection.visibility,
-      })
-      .eq('id', id)
-      .select()
-      .single();
-
-    if (error || !data) {
-      throw new Error(`Failed to patch collection: ${error?.message || 'Unknown error'}`);
     }
 
     return data as Collection;

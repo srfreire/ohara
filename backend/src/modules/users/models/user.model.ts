@@ -22,16 +22,6 @@ export const update_user_schema = z.object({
   avatar_url: z.string().url().nullable().optional(),
 });
 
-export const user_patch_operation_schema = z.discriminatedUnion('op', [
-  z.object({
-    op: z.literal('replace'),
-    path: z.enum(['/email', '/name', '/avatar_url']),
-    value: z.union([z.string().email(), z.string(), z.string().url(), z.null()]),
-  }),
-]);
-
-export const user_patch_array_schema = z.array(user_patch_operation_schema);
-
 export const query_users_schema = base_query_schema.extend({
   sort_by: z.enum(['created_at', 'email', 'name']).optional().default('created_at'),
 });
@@ -39,6 +29,4 @@ export const query_users_schema = base_query_schema.extend({
 export type User = z.infer<typeof user_schema>;
 export type CreateUserDto = z.infer<typeof create_user_schema>;
 export type UpdateUserDto = z.infer<typeof update_user_schema>;
-export type UserPatchOperation = z.infer<typeof user_patch_operation_schema>;
-export type UserPatchArray = z.infer<typeof user_patch_array_schema>;
 export type QueryUsersDto = z.infer<typeof query_users_schema>;

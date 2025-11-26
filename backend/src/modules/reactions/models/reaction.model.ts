@@ -28,18 +28,8 @@ export const query_reactions_schema = base_query_schema.extend({
   sort_by: z.enum(['created_at', 'reaction_type']).optional().default('created_at'),
 });
 
-export const reaction_patch_schema = z.object({
-  op: z.enum(['replace']),
-  path: z.enum(['/reaction_type']),
-  value: reaction_type_enum,
-});
-
-export const reaction_patch_array_schema = z.array(reaction_patch_schema);
-
 export type ReactionType = z.infer<typeof reaction_type_enum>;
 export type Reaction = z.infer<typeof reaction_schema>;
 export type CreateReactionDto = z.infer<typeof create_reaction_schema>;
 export type UpdateReactionDto = z.infer<typeof update_reaction_schema>;
 export type QueryReactionsDto = z.infer<typeof query_reactions_schema>;
-export type ReactionPatch = z.infer<typeof reaction_patch_schema>;
-export type ReactionPatchArray = z.infer<typeof reaction_patch_array_schema>;

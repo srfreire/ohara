@@ -47,10 +47,8 @@ export class AuthController {
 
     const result = await this.auth_service.handle_google_callback(req.user);
 
-    // Get frontend URL from environment
     const frontend_url = this.config_service.get<string>('FRONTEND_URL') || 'http://localhost:5173';
 
-    // Redirect to frontend with tokens in query params
     const avatar_param = result.user.avatar_url
       ? `&avatar_url=${encodeURIComponent(result.user.avatar_url)}`
       : '';

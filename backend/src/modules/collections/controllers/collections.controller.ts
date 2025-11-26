@@ -3,7 +3,6 @@ import {
   Get,
   Post,
   Put,
-  Patch,
   Delete,
   Param,
   Body,
@@ -28,11 +27,9 @@ import { CollectionsService } from '../services/collections.service';
 import {
   create_collection_schema,
   update_collection_schema,
-  collection_patch_array_schema,
   query_collections_schema,
   CreateCollectionDto,
   UpdateCollectionDto,
-  CollectionPatchArray,
   QueryCollectionsDto,
 } from '../models/collection.model';
 
@@ -79,7 +76,6 @@ export class CollectionsController {
     @Query(new ZodValidationPipe(query_collections_schema)) query_params: QueryCollectionsDto,
     @Req() req: any,
   ) {
-    // Inject user_id from JWT token into query params
     const user_id = req.user?.id;
     return this.collections_service.find_all({ ...query_params, user_id });
   }
@@ -126,7 +122,7 @@ export class CollectionsController {
   @Put(':id')
   @ApiOperation({
     summary: 'Update a collection',
-    description: 'Update an existing collection (full update). Requires ownership.',
+    description: 'Update an existing collection. Requires ownership.',
   })
   @ApiParam({ name: 'id', type: String, description: 'Collection UUID' })
   @ApiBody({
@@ -145,30 +141,6 @@ export class CollectionsController {
   ) {
     const user_id = req.user.id;
     return this.collections_service.update(id, user_id, update_collection_dto);
-  }
-
-  @Patch(':id')
-  @ApiOperation({
-    summary: 'Patch a collection',
-    description: 'Partially update a collection using JSON Patch (RFC 6902). Requires ownership.',
-  })
-  @ApiParam({ name: 'id', type: String, description: 'Collection UUID' })
-  @ApiBody({
-    description: 'JSON Patch operations',
-    schema: { example: [{ op: 'replace', path: '/visibility', value: 'public' }] },
-  })
-  @ApiResponse({ status: 200, description: 'Collection patched successfully' })
-  @ApiResponse({ status: 404, description: 'Collection not found' })
-  @ApiResponse({ status: 403, description: 'Forbidden - Not the owner' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @UsePipes(new ZodValidationPipe(collection_patch_array_schema))
-  async patch(
-    @Param('id') id: string,
-    @Body() patch_operations: CollectionPatchArray,
-    @Req() req: any,
-  ) {
-    const user_id = req.user.id;
-    return this.collections_service.patch(id, user_id, patch_operations);
   }
 
   @Delete(':id')

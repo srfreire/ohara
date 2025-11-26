@@ -3,7 +3,6 @@ import {
   Get,
   Post,
   Put,
-  Patch,
   Delete,
   Param,
   Body,
@@ -28,11 +27,9 @@ import {
   create_comment_schema,
   update_comment_schema,
   query_comments_schema,
-  comment_patch_array_schema,
   CreateCommentDto,
   UpdateCommentDto,
   QueryCommentsDto,
-  CommentPatchArray,
 } from '../models/comment.model';
 
 @ApiTags('comments')
@@ -122,7 +119,7 @@ export class CommentsController {
   @Put(':id')
   @ApiOperation({
     summary: 'Update a comment',
-    description: 'Update an existing comment (full update)',
+    description: 'Update an existing comment',
   })
   @ApiParam({ name: 'id', type: String, description: 'Comment UUID' })
   @ApiBody({
@@ -135,25 +132,6 @@ export class CommentsController {
   @UsePipes(new ZodValidationPipe(update_comment_schema))
   async update(@Param('id') id: string, @Body() update_comment_dto: UpdateCommentDto) {
     return this.comments_service.update(id, update_comment_dto);
-  }
-
-  @Patch(':id')
-  @ApiOperation({
-    summary: 'Patch a comment',
-    description: 'Partially update a comment using JSON Patch (RFC 6902)',
-  })
-  @ApiParam({ name: 'id', type: String, description: 'Comment UUID' })
-  @ApiBody({
-    description: 'JSON Patch operations',
-    schema: { example: [{ op: 'replace', path: '/content', value: 'New text' }] },
-  })
-  @ApiResponse({ status: 200, description: 'Comment patched successfully' })
-  @ApiResponse({ status: 404, description: 'Comment not found' })
-  @ApiResponse({ status: 400, description: 'Bad request - invalid offsets' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @UsePipes(new ZodValidationPipe(comment_patch_array_schema))
-  async patch(@Param('id') id: string, @Body() patch_operations: CommentPatchArray) {
-    return this.comments_service.patch(id, patch_operations);
   }
 
   @Delete(':id')
