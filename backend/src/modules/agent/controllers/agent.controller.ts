@@ -49,7 +49,7 @@ export class AgentController {
     const user_email = req.user.email;
 
     this.logger.log(
-      `💬 Chat stream request - User: ${user_email}, Messages: ${stream_request.messages.length}, Model: ${stream_request.model}${stream_request.document_id ? `, Document: ${stream_request.document_id}` : ''}`,
+      `Chat stream request - User: ${user_email}, Messages: ${stream_request.messages.length}, Model: ${stream_request.model}${stream_request.document_id ? `, Document: ${stream_request.document_id}` : ''}`,
     );
 
     await this.agent_service.stream_chat(stream_request, user_id, user_email, res);

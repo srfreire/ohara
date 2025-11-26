@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { base_query_schema } from '../../../common/pagination/index';
 
 export const folder_schema = z.object({
   id: z.string().uuid(),
@@ -18,12 +19,9 @@ export const update_folder_schema = z.object({
   parent_id: z.string().uuid().nullable().optional(),
 });
 
-export const query_folders_schema = z.object({
-  limit: z.coerce.number().min(1).max(100).optional().default(25),
-  cursor: z.string().optional(),
+export const query_folders_schema = base_query_schema.extend({
   parent_id: z.string().uuid().optional(),
   sort_by: z.enum(['created_at', 'name']).optional().default('created_at'),
-  order: z.enum(['asc', 'desc']).optional().default('desc'),
 });
 
 export type Folder = z.infer<typeof folder_schema>;

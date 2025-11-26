@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { base_query_schema } from '../../../common/pagination/index';
 
 export const item_schema = z.object({
   id: z.string().uuid(),
@@ -11,12 +12,8 @@ export const create_item_schema = z.object({
   document_id: z.string().uuid(),
 });
 
-// Query parameters for cursor-based pagination
-export const query_items_schema = z.object({
-  limit: z.coerce.number().min(1).max(100).optional().default(25),
-  cursor: z.string().optional(),
+export const query_items_schema = base_query_schema.extend({
   sort_by: z.enum(['created_at']).optional().default('created_at'),
-  order: z.enum(['asc', 'desc']).optional().default('desc'),
 });
 
 export type Item = z.infer<typeof item_schema>;

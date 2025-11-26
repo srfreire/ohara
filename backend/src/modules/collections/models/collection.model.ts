@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { base_query_schema } from '../../../common/pagination/index';
 
 export const visibility_enum = z.enum(['private', 'unlisted', 'public']);
 
@@ -25,7 +26,6 @@ export const update_collection_schema = z.object({
   visibility: visibility_enum.optional(),
 });
 
-// JSON Patch operation schema (RFC 6902)
 export const collection_patch_operation_schema = z.discriminatedUnion('op', [
   z.object({
     op: z.literal('replace'),
@@ -36,13 +36,9 @@ export const collection_patch_operation_schema = z.discriminatedUnion('op', [
 
 export const collection_patch_array_schema = z.array(collection_patch_operation_schema);
 
-// Query parameters for cursor-based pagination
-export const query_collections_schema = z.object({
-  limit: z.coerce.number().min(1).max(100).optional().default(25),
-  cursor: z.string().optional(),
+export const query_collections_schema = base_query_schema.extend({
   user_id: z.string().uuid().optional(),
   sort_by: z.enum(['created_at', 'name']).optional().default('created_at'),
-  order: z.enum(['asc', 'desc']).optional().default('desc'),
 });
 
 export type Visibility = z.infer<typeof visibility_enum>;

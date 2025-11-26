@@ -27,7 +27,7 @@ export class AuthController {
   })
   @ApiResponse({ status: 302, description: 'Redirects to Google OAuth' })
   async login() {
-    this.logger.log('🔐 Initiating Google OAuth login flow');
+    this.logger.log('Initiating Google OAuth login flow');
   }
 
   @Get('callback')
@@ -43,7 +43,7 @@ export class AuthController {
   })
   @ApiResponse({ status: 401, description: 'OAuth authentication failed' })
   async callback(@Req() req: any, @Res() res: Response) {
-    this.logger.log(`📥 OAuth callback received for user: ${req.user?.email || 'unknown'}`);
+    this.logger.log(`OAuth callback received for user: ${req.user?.email || 'unknown'}`);
 
     const result = await this.auth_service.handle_google_callback(req.user);
 
@@ -56,7 +56,7 @@ export class AuthController {
       : '';
     const redirect_url = `${frontend_url}/?access_token=${result.access_token}&id=${result.user.id}&email=${encodeURIComponent(result.user.email || '')}&name=${encodeURIComponent(result.user.name || '')}${avatar_param}`;
 
-    this.logger.log(`🔄 Redirecting user ${result.user.email} to frontend`);
+    this.logger.log(`Redirecting user ${result.user.email} to frontend`);
 
     return res.redirect(redirect_url);
   }
@@ -75,7 +75,7 @@ export class AuthController {
   })
   @ApiResponse({ status: 401, description: 'Unauthorized - Invalid or expired token' })
   async refresh(@Req() req: any) {
-    this.logger.log(`🔄 Token refresh requested for user: ${req.user?.email || req.user?.id}`);
+    this.logger.log(`Token refresh requested for user: ${req.user?.email || req.user?.id}`);
     return this.auth_service.refresh_token(req.user.id, req.user.email);
   }
 }

@@ -18,12 +18,13 @@ export interface CursorPaginatedResponse<T> {
   pagination: CursorPaginationMeta;
 }
 
-export const cursor_query_schema = z.object({
+export const base_query_schema = z.object({
   cursor: z.string().optional(),
   limit: z.coerce.number().min(1).max(100).optional().default(25),
+  order: z.enum(['asc', 'desc']).optional().default('desc'),
 });
 
-export type CursorQuery = z.infer<typeof cursor_query_schema>;
+export type BaseQuery = z.infer<typeof base_query_schema>;
 
 export function encode_cursor(data: CursorData): string {
   const cursor_string = `${data.timestamp}_${data.id}`;

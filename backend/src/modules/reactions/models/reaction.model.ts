@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { base_query_schema } from '../../../common/pagination/index';
 
 export const reaction_type_enum = z.enum(['like', 'love', 'insight', 'question', 'flag']);
 
@@ -20,20 +21,13 @@ export const update_reaction_schema = z.object({
   reaction_type: reaction_type_enum,
 });
 
-export const query_reactions_schema = z.object({
-  // Pagination (cursor-based)
-  limit: z.coerce.number().min(1).max(100).optional().default(25),
-  cursor: z.string().optional(), // Base64 encoded cursor for cursor-based pagination
-  // Filters
+export const query_reactions_schema = base_query_schema.extend({
   commentId: z.string().uuid().optional(),
-  reaction_type: reaction_type_enum.optional(), // Filter by reaction type
-  user_id: z.string().uuid().optional(), // Filter by user
-  // Sorting
+  reaction_type: reaction_type_enum.optional(),
+  user_id: z.string().uuid().optional(),
   sort_by: z.enum(['created_at', 'reaction_type']).optional().default('created_at'),
-  order: z.enum(['asc', 'desc']).optional().default('desc'),
 });
 
-// JSON Patch operation schema (RFC 6902)
 export const reaction_patch_schema = z.object({
   op: z.enum(['replace']),
   path: z.enum(['/reaction_type']),

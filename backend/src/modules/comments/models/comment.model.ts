@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { base_query_schema } from '../../../common/pagination/index';
 
 export const comment_schema = z.object({
   id: z.string().uuid(),
@@ -44,20 +45,13 @@ export const update_comment_schema = z
     },
   );
 
-export const query_comments_schema = z.object({
-  // Pagination (cursor-based)
-  limit: z.coerce.number().min(1).max(100).optional().default(25),
-  cursor: z.string().optional(), // Base64 encoded cursor for cursor-based pagination
-  // Filters
+export const query_comments_schema = base_query_schema.extend({
   documentId: z.string().uuid().optional(),
-  user_id: z.string().uuid().optional(), // Filter by user
-  parent_comment_id: z.string().uuid().optional(), // Filter by parent (replies)
-  // Sorting
+  user_id: z.string().uuid().optional(),
+  parent_comment_id: z.string().uuid().optional(),
   sort_by: z.enum(['created_at', 'content']).optional().default('created_at'),
-  order: z.enum(['asc', 'desc']).optional().default('desc'),
 });
 
-// JSON Patch operation schema (RFC 6902)
 export const comment_patch_operation_schema = z.discriminatedUnion('op', [
   z.object({
     op: z.literal('replace'),

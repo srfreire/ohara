@@ -14,7 +14,7 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
       callbackURL: config_service.get<string>('GOOGLE_CALLBACK_URL'),
       scope: ['email', 'profile'],
     });
-    this.logger.log('🔧 Google OAuth strategy initialized');
+    this.logger.log('Google OAuth strategy initialized');
   }
 
   async validate(
@@ -25,7 +25,7 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
   ): Promise<any> {
     const { id, emails, displayName, photos } = profile;
 
-    this.logger.log(`✅ Google OAuth validation successful for: ${emails[0].value}`);
+    this.logger.log(`Google OAuth validation successful for: ${emails[0].value}`);
     this.logger.debug(`Google profile - ID: ${id}, Name: ${displayName}`);
 
     const user = {
