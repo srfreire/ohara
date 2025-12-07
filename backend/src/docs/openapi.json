@@ -1,0 +1,1724 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/v2/users": {
+      "get": {
+        "description": "Retrieve all users (admin or authenticated users). Supports cursor-based pagination.",
+        "operationId": "UsersController_find_all",
+        "parameters": [
+          {
+            "name": "order",
+            "required": false,
+            "in": "query",
+            "description": "Sort order (default: desc)",
+            "schema": {
+              "enum": [
+                "asc",
+                "desc"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "sort_by",
+            "required": false,
+            "in": "query",
+            "description": "Sort by field (default: created_at)",
+            "schema": {
+              "enum": [
+                "created_at",
+                "email",
+                "name"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "cursor",
+            "required": false,
+            "in": "query",
+            "description": "Base64 encoded cursor for cursor-based pagination",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Number of items per page (1-100, default: 25)",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of users"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "api-key": []
+          },
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Get all users",
+        "tags": [
+          "users"
+        ]
+      },
+      "post": {
+        "description": "Create a new user account (admin or authenticated users)",
+        "operationId": "UsersController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "description": "User data",
+          "content": {
+            "application/json": {
+              "schema": {
+                "example": {
+                  "email": "user@example.com",
+                  "name": "John Doe",
+                  "avatar_url": "https://..."
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User created successfully"
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "api-key": []
+          },
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Create a user",
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/v2/users/{id}": {
+      "get": {
+        "description": "Retrieve a specific user's profile",
+        "operationId": "UsersController_find_by_id",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "User UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User details"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "User not found"
+          }
+        },
+        "security": [
+          {
+            "api-key": []
+          },
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Get user by ID",
+        "tags": [
+          "users"
+        ]
+      },
+      "put": {
+        "description": "Update a user account. Requires admin or ownership.",
+        "operationId": "UsersController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "User UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "Updated user data",
+          "content": {
+            "application/json": {
+              "schema": {
+                "example": {
+                  "email": "new@example.com",
+                  "name": "Jane Doe"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User updated successfully"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden - Can only update own account"
+          },
+          "404": {
+            "description": "User not found"
+          }
+        },
+        "security": [
+          {
+            "api-key": []
+          },
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Update a user",
+        "tags": [
+          "users"
+        ]
+      },
+      "delete": {
+        "description": "Remove a user account. Requires admin or ownership.",
+        "operationId": "UsersController_delete",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "User UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User deleted successfully"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden - Can only delete own account"
+          },
+          "404": {
+            "description": "User not found"
+          }
+        },
+        "security": [
+          {
+            "api-key": []
+          },
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Delete a user",
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/v2/auth/login": {
+      "get": {
+        "description": "Redirects to Google OAuth consent screen. After authentication, user is redirected to /auth/callback.",
+        "operationId": "AuthController_login",
+        "parameters": [],
+        "responses": {
+          "302": {
+            "description": "Redirects to Google OAuth"
+          }
+        },
+        "summary": "Initiate Google OAuth login",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/v2/auth/callback": {
+      "get": {
+        "description": "Handles Google OAuth callback, creates/updates user, generates JWT, and redirects to frontend with tokens.",
+        "operationId": "AuthController_callback",
+        "parameters": [],
+        "responses": {
+          "302": {
+            "description": "Redirects to frontend with access_token in query params"
+          },
+          "401": {
+            "description": "OAuth authentication failed"
+          }
+        },
+        "summary": "Google OAuth callback",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/v2/auth/refresh": {
+      "get": {
+        "description": "Generate a new JWT token using a valid existing token. Token expires in 7 days.",
+        "operationId": "AuthController_refresh",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "New JWT token generated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "access_token": "jwt_token_string"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid or expired token"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Refresh JWT token",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/v2/collections": {
+      "get": {
+        "description": "Retrieve collections based on visibility and ownership. Returns user's own collections plus public/unlisted ones. Supports cursor-based pagination.",
+        "operationId": "CollectionsController_find_all",
+        "parameters": [
+          {
+            "name": "order",
+            "required": false,
+            "in": "query",
+            "description": "Sort order (default: desc)",
+            "schema": {
+              "enum": [
+                "asc",
+                "desc"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "sort_by",
+            "required": false,
+            "in": "query",
+            "description": "Sort by field (default: created_at)",
+            "schema": {
+              "enum": [
+                "created_at",
+                "name"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "cursor",
+            "required": false,
+            "in": "query",
+            "description": "Base64 encoded cursor for cursor-based pagination",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Number of items per page (1-100, default: 25)",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of collections"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Get all collections",
+        "tags": [
+          "collections"
+        ]
+      },
+      "post": {
+        "description": "Create a new collection with private, unlisted, or public visibility",
+        "operationId": "CollectionsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "description": "Collection data",
+          "content": {
+            "application/json": {
+              "schema": {
+                "example": {
+                  "name": "My Collection",
+                  "user_id": "uuid",
+                  "description": "Description",
+                  "visibility": "private"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Collection created successfully"
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Create a collection",
+        "tags": [
+          "collections"
+        ]
+      }
+    },
+    "/v2/collections/{id}": {
+      "get": {
+        "description": "Retrieve a specific collection. Private collections require ownership.",
+        "operationId": "CollectionsController_find_by_id",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Collection UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Collection details"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden - No access to private collection"
+          },
+          "404": {
+            "description": "Collection not found"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Get collection by ID",
+        "tags": [
+          "collections"
+        ]
+      },
+      "put": {
+        "description": "Update an existing collection. Requires ownership.",
+        "operationId": "CollectionsController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Collection UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "Updated collection data",
+          "content": {
+            "application/json": {
+              "schema": {
+                "example": {
+                  "name": "Updated Name",
+                  "visibility": "public"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Collection updated successfully"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden - Not the owner"
+          },
+          "404": {
+            "description": "Collection not found"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Update a collection",
+        "tags": [
+          "collections"
+        ]
+      },
+      "delete": {
+        "description": "Remove a collection. Requires ownership.",
+        "operationId": "CollectionsController_delete",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Collection UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Collection deleted successfully"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden - Not the owner"
+          },
+          "404": {
+            "description": "Collection not found"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Delete a collection",
+        "tags": [
+          "collections"
+        ]
+      }
+    },
+    "/v2/collections/{id}/items": {
+      "get": {
+        "description": "Retrieve all items (documents) in a collection. Supports cursor-based pagination.",
+        "operationId": "ItemsController_find_by_collection_id",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Collection UUID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "order",
+            "required": false,
+            "in": "query",
+            "description": "Sort order (default: desc)",
+            "schema": {
+              "enum": [
+                "asc",
+                "desc"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "cursor",
+            "required": false,
+            "in": "query",
+            "description": "Base64 encoded cursor for cursor-based pagination",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Number of items per page (1-100, default: 25)",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of items in the collection"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Get collection items",
+        "tags": [
+          "items"
+        ]
+      },
+      "post": {
+        "description": "Add a document to a collection",
+        "operationId": "ItemsController_create",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Collection UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "Item data",
+          "content": {
+            "application/json": {
+              "schema": {
+                "example": {
+                  "document_id": "uuid"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Item added to collection successfully"
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Add item to collection",
+        "tags": [
+          "items"
+        ]
+      }
+    },
+    "/v2/collections/{id}/items/{itemId}": {
+      "delete": {
+        "description": "Remove a document from a collection",
+        "operationId": "ItemsController_delete",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Collection UUID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "itemId",
+            "required": true,
+            "in": "path",
+            "description": "Item UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Item removed from collection successfully"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Item not found"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Remove item from collection",
+        "tags": [
+          "items"
+        ]
+      }
+    },
+    "/v2/documents": {
+      "get": {
+        "description": "Retrieve documents with search, filtering, sorting, and cursor-based pagination",
+        "operationId": "DocumentsController_find_all",
+        "parameters": [
+          {
+            "name": "order",
+            "required": false,
+            "in": "query",
+            "description": "Sort order (default: desc)",
+            "schema": {
+              "enum": [
+                "asc",
+                "desc"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "sort_by",
+            "required": false,
+            "in": "query",
+            "description": "Sort by field (default: created_at)",
+            "schema": {
+              "enum": [
+                "created_at",
+                "title",
+                "updated_at"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "created_before",
+            "required": false,
+            "in": "query",
+            "description": "Filter by creation date (ISO 8601)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "created_after",
+            "required": false,
+            "in": "query",
+            "description": "Filter by creation date (ISO 8601)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Search documents by title (case-insensitive)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "folder_id",
+            "required": false,
+            "in": "query",
+            "description": "Filter by folder UUID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "cursor",
+            "required": false,
+            "in": "query",
+            "description": "Base64 encoded cursor for cursor-based pagination",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Number of items per page (1-100, default: 25)",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of documents"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "api-key": []
+          },
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Get all documents",
+        "tags": [
+          "documents"
+        ]
+      }
+    },
+    "/v2/documents/{id}": {
+      "get": {
+        "description": "Retrieve a specific document's metadata",
+        "operationId": "DocumentsController_find_by_id",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Document UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Document details"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Document not found"
+          }
+        },
+        "security": [
+          {
+            "api-key": []
+          },
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Get document by ID",
+        "tags": [
+          "documents"
+        ]
+      }
+    },
+    "/v2/documents/{id}/url": {
+      "get": {
+        "description": "Generate a signed URL to access the PDF file (expires in 1 hour)",
+        "operationId": "DocumentsController_get_document_url",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Document UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Signed URL generated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "url": "https://...",
+                    "expires_in": 3600
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Document not found"
+          }
+        },
+        "security": [
+          {
+            "api-key": []
+          },
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Get document signed URL",
+        "tags": [
+          "documents"
+        ]
+      }
+    },
+    "/v2/folders": {
+      "get": {
+        "description": "Retrieve folders with pagination. Supports hierarchical structure via parent_id.",
+        "operationId": "FoldersController_find_all",
+        "parameters": [
+          {
+            "name": "parent_id",
+            "required": false,
+            "in": "query",
+            "description": "Filter by parent folder UUID (null for root folders)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "cursor",
+            "required": false,
+            "in": "query",
+            "description": "Base64 encoded cursor for cursor-based pagination",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Number of items per page (1-100, default: 25)",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of folders"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "api-key": []
+          },
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Get all folders",
+        "tags": [
+          "folders"
+        ]
+      },
+      "post": {
+        "description": "Create a new folder. Can be nested by specifying parent_id.",
+        "operationId": "FoldersController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "description": "Folder data",
+          "content": {
+            "application/json": {
+              "schema": {
+                "example": {
+                  "name": "Documents",
+                  "parent_id": null
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Folder created successfully"
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "api-key": []
+          },
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Create a folder",
+        "tags": [
+          "folders"
+        ]
+      }
+    },
+    "/v2/folders/{id}": {
+      "get": {
+        "description": "Retrieve a specific folder",
+        "operationId": "FoldersController_find_by_id",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Folder UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Folder details"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Folder not found"
+          }
+        },
+        "security": [
+          {
+            "api-key": []
+          },
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Get folder by ID",
+        "tags": [
+          "folders"
+        ]
+      },
+      "put": {
+        "description": "Update an existing folder (full update)",
+        "operationId": "FoldersController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Folder UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "Updated folder data",
+          "content": {
+            "application/json": {
+              "schema": {
+                "example": {
+                  "name": "New Name",
+                  "parent_id": "uuid"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Folder updated successfully"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Folder not found"
+          }
+        },
+        "security": [
+          {
+            "api-key": []
+          },
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Update a folder",
+        "tags": [
+          "folders"
+        ]
+      },
+      "delete": {
+        "description": "Remove a folder",
+        "operationId": "FoldersController_delete",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Folder UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Folder deleted successfully"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Folder not found"
+          }
+        },
+        "security": [
+          {
+            "api-key": []
+          },
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Delete a folder",
+        "tags": [
+          "folders"
+        ]
+      }
+    },
+    "/v2/comments": {
+      "get": {
+        "description": "Retrieve comments with filtering, sorting, and pagination (offset or cursor-based). Supports threaded comments and text annotations.",
+        "operationId": "CommentsController_find_all",
+        "parameters": [
+          {
+            "name": "order",
+            "required": false,
+            "in": "query",
+            "description": "Sort order (default: desc)",
+            "schema": {
+              "enum": [
+                "asc",
+                "desc"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "sort_by",
+            "required": false,
+            "in": "query",
+            "description": "Sort by field (default: created_at)",
+            "schema": {
+              "enum": [
+                "created_at",
+                "content"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "parent_comment_id",
+            "required": false,
+            "in": "query",
+            "description": "Filter by parent comment UUID (get replies)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "user_id",
+            "required": false,
+            "in": "query",
+            "description": "Filter by user UUID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "documentId",
+            "required": false,
+            "in": "query",
+            "description": "Filter by document UUID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "cursor",
+            "required": false,
+            "in": "query",
+            "description": "Base64 encoded cursor for cursor-based pagination",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Number of items per page (1-100, default: 25)",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of comments"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Get all comments",
+        "tags": [
+          "comments"
+        ]
+      },
+      "post": {
+        "description": "Add a new comment to a document or reply to another comment. Supports text selection offsets for annotations.",
+        "operationId": "CommentsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "description": "Comment data",
+          "content": {
+            "application/json": {
+              "schema": {
+                "example": {
+                  "user_id": "uuid",
+                  "document_id": "uuid",
+                  "content": "Great point!",
+                  "start_offset": 0,
+                  "end_offset": 100
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Comment created successfully"
+          },
+          "400": {
+            "description": "Bad request - invalid offsets"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Create a comment",
+        "tags": [
+          "comments"
+        ]
+      }
+    },
+    "/v2/comments/{id}": {
+      "put": {
+        "description": "Update an existing comment",
+        "operationId": "CommentsController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Comment UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "Updated comment data",
+          "content": {
+            "application/json": {
+              "schema": {
+                "example": {
+                  "content": "Updated comment text"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Comment updated successfully"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Comment not found"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Update a comment",
+        "tags": [
+          "comments"
+        ]
+      },
+      "delete": {
+        "description": "Remove a comment",
+        "operationId": "CommentsController_delete",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Comment UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Comment deleted successfully"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Comment not found"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Delete a comment",
+        "tags": [
+          "comments"
+        ]
+      }
+    },
+    "/v2/reactions": {
+      "get": {
+        "description": "Retrieve reactions with filtering, sorting, and pagination (offset or cursor-based)",
+        "operationId": "ReactionsController_find_all",
+        "parameters": [
+          {
+            "name": "order",
+            "required": false,
+            "in": "query",
+            "description": "Sort order (default: desc)",
+            "schema": {
+              "enum": [
+                "asc",
+                "desc"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "sort_by",
+            "required": false,
+            "in": "query",
+            "description": "Sort by field (default: created_at)",
+            "schema": {
+              "enum": [
+                "created_at",
+                "reaction_type"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "user_id",
+            "required": false,
+            "in": "query",
+            "description": "Filter by user UUID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "reaction_type",
+            "required": false,
+            "in": "query",
+            "description": "Filter by reaction type",
+            "schema": {
+              "enum": [
+                "like",
+                "love",
+                "insight",
+                "question",
+                "flag"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "commentId",
+            "required": false,
+            "in": "query",
+            "description": "Filter by comment UUID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "cursor",
+            "required": false,
+            "in": "query",
+            "description": "Base64 encoded cursor for cursor-based pagination",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Number of items per page (1-100, default: 25)",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of reactions"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Get all reactions",
+        "tags": [
+          "reactions"
+        ]
+      },
+      "post": {
+        "description": "Add a new reaction to a comment",
+        "operationId": "ReactionsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "description": "Reaction data",
+          "content": {
+            "application/json": {
+              "schema": {
+                "example": {
+                  "comment_id": "uuid",
+                  "user_id": "uuid",
+                  "reaction_type": "like"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Reaction created successfully"
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "409": {
+            "description": "Conflict - Reaction already exists"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Create a reaction",
+        "tags": [
+          "reactions"
+        ]
+      }
+    },
+    "/v2/reactions/{id}": {
+      "put": {
+        "description": "Update an existing reaction",
+        "operationId": "ReactionsController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Reaction UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "Updated reaction data",
+          "content": {
+            "application/json": {
+              "schema": {
+                "example": {
+                  "reaction_type": "love"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Reaction updated successfully"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Reaction not found"
+          },
+          "409": {
+            "description": "Conflict - Reaction already exists with this type"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Update a reaction",
+        "tags": [
+          "reactions"
+        ]
+      },
+      "delete": {
+        "description": "Remove a reaction",
+        "operationId": "ReactionsController_delete",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Reaction UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Reaction deleted successfully"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Reaction not found"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Delete a reaction",
+        "tags": [
+          "reactions"
+        ]
+      }
+    },
+    "/v2/agent/stream": {
+      "post": {
+        "description": "Send messages to the AI agent and receive streamed responses via Server-Sent Events (SSE). Supports document context.",
+        "operationId": "AgentController_stream",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "description": "Chat request with message history",
+          "content": {
+            "application/json": {
+              "schema": {
+                "example": {
+                  "messages": [
+                    {
+                      "role": "user",
+                      "content": "Summarize this document",
+                      "timestamp": "2025-01-10T12:00:00Z"
+                    }
+                  ],
+                  "model": "gpt-4.1",
+                  "document_id": "uuid-optional"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Streaming response started (text/event-stream)"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Agent service unavailable"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Stream AI chat responses",
+        "tags": [
+          "agent"
+        ]
+      }
+    }
+  },
+  "info": {
+    "title": "Ohara API",
+    "description": "REST API for Ohara App developed por EnSer management system with AI agent integration",
+    "version": "2.0.0",
+    "contact": {}
+  },
+  "tags": [
+    {
+      "name": "auth",
+      "description": "Authentication endpoints (Google OAuth, JWT)"
+    },
+    {
+      "name": "users",
+      "description": "User management"
+    },
+    {
+      "name": "collections",
+      "description": "User collections with visibility controls"
+    },
+    {
+      "name": "documents",
+      "description": "Document management and PDF access"
+    },
+    {
+      "name": "folders",
+      "description": "Folder hierarchy management"
+    },
+    {
+      "name": "comments",
+      "description": "Comments with threading and text annotations"
+    },
+    {
+      "name": "reactions",
+      "description": "Comment reactions (like, love, insight, question, flag)"
+    },
+    {
+      "name": "items",
+      "description": "Collection items (documents in collections)"
+    },
+    {
+      "name": "agent",
+      "description": "AI agent chat integration"
+    }
+  ],
+  "servers": [
+    {
+      "url": "http://localhost:3000",
+      "description": "Local Development"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "JWT-auth": {
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "type": "http",
+        "name": "JWT",
+        "description": "Enter JWT token",
+        "in": "header"
+      },
+      "api-key": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "x-api-key",
+        "description": "Admin API key for server-to-server authentication"
+      }
+    },
+    "schemas": {}
+  }
+}

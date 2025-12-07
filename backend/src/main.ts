@@ -1,8 +1,9 @@
 import { NestFactory, Reflector } from '@nestjs/core';
 import { Logger } from '@nestjs/common';
-import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import { SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
+import * as openApiSpec from './docs/openapi.json';
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
@@ -21,47 +22,8 @@ async function bootstrap() {
     next();
   });
 
-  // Swagger API Documentation
-  const config = new DocumentBuilder()
-    .setTitle('Ohara API')
-    .setDescription(
-      'REST API for Ohara App developed por EnSer management system with AI agent integration',
-    )
-    .setVersion('2.0.0')
-    .addBearerAuth(
-      {
-        type: 'http',
-        scheme: 'bearer',
-        bearerFormat: 'JWT',
-        name: 'JWT',
-        description: 'Enter JWT token',
-        in: 'header',
-      },
-      'JWT-auth',
-    )
-    .addApiKey(
-      {
-        type: 'apiKey',
-        name: 'x-api-key',
-        in: 'header',
-        description: 'Admin API key for server-to-server authentication',
-      },
-      'api-key',
-    )
-    .addServer('http://localhost:3000', 'Local Development')
-    .addTag('auth', 'Authentication endpoints (Google OAuth, JWT)')
-    .addTag('users', 'User management')
-    .addTag('collections', 'User collections with visibility controls')
-    .addTag('documents', 'Document management and PDF access')
-    .addTag('folders', 'Folder hierarchy management')
-    .addTag('comments', 'Comments with threading and text annotations')
-    .addTag('reactions', 'Comment reactions (like, love, insight, question, flag)')
-    .addTag('items', 'Collection items (documents in collections)')
-    .addTag('agent', 'AI agent chat integration')
-    .build();
-
-  const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api/docs', app, document, {
+  // Swagger API Documentation - loaded from external OpenAPI spec
+  SwaggerModule.setup('api/docs', app, openApiSpec as any, {
     customSiteTitle: 'Ohara API Docs',
     customCss: `
       .topbar-wrapper img { content: url('https://raw.githubusercontent.com/swagger-api/swagger-ui/master/src/img/logo_small.png'); width: 40px; height: 40px; }

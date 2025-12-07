@@ -12,16 +12,7 @@ import {
   Req,
   ForbiddenException,
 } from '@nestjs/common';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiBearerAuth,
-  ApiSecurity,
-  ApiParam,
-  ApiBody,
-  ApiQuery,
-} from '@nestjs/swagger';
+import { ApiTags } from '@nestjs/swagger';
 
 import { ZodValidationPipe } from '../../../common/validation/zod-validation.pipe';
 import { ApiKeyOrJwtGuard } from '../../auth/guards/api-key-or-jwt.guard';
@@ -35,73 +26,24 @@ import {
 } from '../models/user.model';
 
 @ApiTags('users')
-@ApiBearerAuth('JWT-auth')
-@ApiSecurity('api-key')
 @Controller('v2/users')
 export class UsersController {
   constructor(private readonly users_service: UsersService) {}
 
   @Get()
   @UseGuards(ApiKeyOrJwtGuard)
-  @ApiOperation({
-    summary: 'Get all users',
-    description:
-      'Retrieve all users (admin or authenticated users). Supports cursor-based pagination.',
-  })
-  @ApiQuery({
-    name: 'limit',
-    required: false,
-    type: Number,
-    description: 'Number of items per page (1-100, default: 25)',
-  })
-  @ApiQuery({
-    name: 'cursor',
-    required: false,
-    type: String,
-    description: 'Base64 encoded cursor for cursor-based pagination',
-  })
-  @ApiQuery({
-    name: 'sort_by',
-    required: false,
-    enum: ['created_at', 'email', 'name'],
-    description: 'Sort by field (default: created_at)',
-  })
-  @ApiQuery({
-    name: 'order',
-    required: false,
-    enum: ['asc', 'desc'],
-    description: 'Sort order (default: desc)',
-  })
-  @ApiResponse({ status: 200, description: 'List of users' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
   async find_all(@Query(new ZodValidationPipe(query_users_schema)) query_params: QueryUsersDto) {
     return this.users_service.find_all(query_params);
   }
 
   @Get(':id')
   @UseGuards(ApiKeyOrJwtGuard)
-  @ApiOperation({ summary: 'Get user by ID', description: "Retrieve a specific user's profile" })
-  @ApiParam({ name: 'id', type: String, description: 'User UUID' })
-  @ApiResponse({ status: 200, description: 'User details' })
-  @ApiResponse({ status: 404, description: 'User not found' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
   async find_by_id(@Param('id') id: string) {
     return this.users_service.find_by_id(id);
   }
 
   @Post()
   @UseGuards(ApiKeyOrJwtGuard)
-  @ApiOperation({
-    summary: 'Create a user',
-    description: 'Create a new user account (admin or authenticated users)',
-  })
-  @ApiBody({
-    description: 'User data',
-    schema: { example: { email: 'user@example.com', name: 'John Doe', avatar_url: 'https://...' } },
-  })
-  @ApiResponse({ status: 201, description: 'User created successfully' })
-  @ApiResponse({ status: 400, description: 'Bad request' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
   @UsePipes(new ZodValidationPipe(create_user_schema))
   async create(@Body() create_user_dto: CreateUserDto) {
     return this.users_service.create(create_user_dto);
@@ -109,19 +51,6 @@ export class UsersController {
 
   @Put(':id')
   @UseGuards(ApiKeyOrJwtGuard)
-  @ApiOperation({
-    summary: 'Update a user',
-    description: 'Update a user account. Requires admin or ownership.',
-  })
-  @ApiParam({ name: 'id', type: String, description: 'User UUID' })
-  @ApiBody({
-    description: 'Updated user data',
-    schema: { example: { email: 'new@example.com', name: 'Jane Doe' } },
-  })
-  @ApiResponse({ status: 200, description: 'User updated successfully' })
-  @ApiResponse({ status: 404, description: 'User not found' })
-  @ApiResponse({ status: 403, description: 'Forbidden - Can only update own account' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
   async update(@Param('id') id: string, @Body() update_user_dto: UpdateUserDto, @Req() req: any) {
     if (!req.user.is_admin && req.user.id !== id) {
       throw new ForbiddenException('You can only update your own account');
@@ -131,15 +60,6 @@ export class UsersController {
 
   @Delete(':id')
   @UseGuards(ApiKeyOrJwtGuard)
-  @ApiOperation({
-    summary: 'Delete a user',
-    description: 'Remove a user account. Requires admin or ownership.',
-  })
-  @ApiParam({ name: 'id', type: String, description: 'User UUID' })
-  @ApiResponse({ status: 200, description: 'User deleted successfully' })
-  @ApiResponse({ status: 404, description: 'User not found' })
-  @ApiResponse({ status: 403, description: 'Forbidden - Can only delete own account' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
   async delete(@Param('id') id: string, @Req() req: any) {
     if (!req.user.is_admin && req.user.id !== id) {
       throw new ForbiddenException('You can only delete your own account');
