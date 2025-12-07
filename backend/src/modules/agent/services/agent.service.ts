@@ -62,24 +62,27 @@ export class AgentService {
         );
       }
 
-      const workspace_id = this.config_service.get<string>('WORKSPACE_ID');
-      const workspace_name = this.config_service.get<string>('WORKSPACE_NAME');
+      const org_unit_id = this.config_service.get<string>('ORG_UNIT_ID');
+      const org_unit_name = this.config_service.get<string>('ORG_UNIT_NAME');
 
-      let workspace_context: {
-        workspaceId: string;
-        workspaceName: string;
-        workspaceDescription?: string;
+      this.logger.debug(`ORG_UNIT_ID from env: ${org_unit_id}`);
+      this.logger.debug(`ORG_UNIT_NAME from env: ${org_unit_name}`);
+
+      let org_unit_context: {
+        org_unit_id: string;
+        org_unit_name: string;
+        selected_folders?: string[];
       } | null = null;
 
-      if (workspace_id) {
-        workspace_context = {
-          workspaceId: workspace_id,
-          workspaceName: workspace_name || 'Default Workspace',
+      if (org_unit_id) {
+        org_unit_context = {
+          org_unit_id: org_unit_id,
+          org_unit_name: org_unit_name || 'Default Organization',
+          selected_folders: [],
         };
-
-        if (stream_request.document_id) {
-          workspace_context.workspaceDescription = `I'm currently working on document ${stream_request.document_id}. Please focus queries and responses on this specific document.`;
-        }
+        this.logger.debug(`Created org_unit_context: ${JSON.stringify(org_unit_context)}`);
+      } else {
+        this.logger.error('ORG_UNIT_ID not found in environment variables!');
       }
 
       const agent_service_token = this.jwt_service.sign(
@@ -87,9 +90,10 @@ export class AgentService {
           sub: user_email,
           user_id: user_id,
           email: user_email,
-          workspace: workspace_id
+          org_unit: org_unit_id
             ? {
-                workspace_id: workspace_id,
+                org_unit_id: org_unit_id,
+                org_unit_name: org_unit_name,
               }
             : null,
         },
@@ -100,7 +104,7 @@ export class AgentService {
       );
 
       this.logger.debug(
-        `Generated JWT for agent service (length: ${agent_service_token.length}, workspace: ${workspace_id})`,
+        `Generated JWT for agent service (length: ${agent_service_token.length}, org_unit: ${org_unit_id})`,
       );
 
       res.setHeader('Content-Type', 'text/plain; charset=utf-8');
@@ -114,8 +118,11 @@ export class AgentService {
           timestamp: msg.timestamp,
         })),
         model: stream_request.model || 'gpt-4.1',
-        workspace_context: workspace_context,
+        org_unit_context: org_unit_context,
       };
+
+      this.logger.debug(`Sending to agent: ${JSON.stringify({ ...agent_request, messages: `${agent_request.messages.length} messages` })}`);
+
 
       this.logger.log(
         `Calling agent service - URL: ${agent_service_url}/v1/chat/stream, Messages: ${stream_request.messages.length}, User: ${user_email}`,
