@@ -416,3 +416,6 @@ downloads/
 # Generated files
 *.generated.*
 generated/
+
+nessie-agent/
+

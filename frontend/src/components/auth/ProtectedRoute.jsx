@@ -4,7 +4,6 @@ import { useAuth } from '../../contexts/auth-context'
 const ProtectedRoute = ({ children }) => {
   const { is_authenticated, is_loading } = useAuth()
 
-  // Show loading spinner while checking authentication
   if (is_loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 to-secondary-50 dark:from-secondary-900 dark:to-secondary-800">
@@ -16,12 +15,10 @@ const ProtectedRoute = ({ children }) => {
     )
   }
 
-  // Redirect to login if not authenticated
   if (!is_authenticated) {
     return <Navigate to="/" replace />
   }
 
-  // Render children if authenticated
   return children
 }
 

@@ -12,7 +12,6 @@ function App() {
       <AuthProvider>
         <Router>
           <div className="App">
-            {/* Toast notifications */}
             <Toaster
               position="top-right"
               reverseOrder={false}
@@ -25,7 +24,7 @@ function App() {
                 },
                 success: {
                   style: {
-                    background: '#4a7c54', // forest green (primary-600)
+                    background: '#4a7c54',
                     color: '#ffffff',
                   },
                   iconTheme: {
@@ -35,7 +34,7 @@ function App() {
                 },
                 error: {
                   style: {
-                    background: '#dc2626', // red for errors
+                    background: '#dc2626',
                     color: '#ffffff',
                   },
                   iconTheme: {
@@ -56,7 +55,6 @@ function App() {
                   </ProtectedRoute>
                 }
               />
-              {/* Redirect any unknown routes to login */}
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </div>

@@ -3,21 +3,20 @@ import Header from '../layout/Header'
 import FileExplorer from './FileExplorer'
 import FileViewer from './FileViewer'
 import ChatAgent from '../chat/ChatAgent'
-import { get_folders } from '../../api/folders' // Updated to use .ts file
-import { get_documents } from '../../api/documents' // Updated to use .ts file
+import { get_folders } from '../../api/folders'
+import { get_documents } from '../../api/documents'
 import { toast_error } from '../../utils/toast'
 
 const Dashboard = () => {
   const [selected_file, set_selected_file] = useState(null)
   const [selected_folder, set_selected_folder] = useState(null)
   const [is_chat_collapsed, set_is_chat_collapsed] = useState(false)
-  const [current_folder_id, set_current_folder_id] = useState(null) // For icon view navigation
+  const [current_folder_id, set_current_folder_id] = useState(null)
   const [folders, set_folders] = useState([])
   const [documents, set_documents] = useState([])
   const [is_loading, set_is_loading] = useState(true)
   const [active_citation, set_active_citation] = useState(null)
 
-  // Fetch folders and documents on mount
   useEffect(() => {
     fetch_folders_and_documents()
   }, [])
@@ -25,14 +24,11 @@ const Dashboard = () => {
   const fetch_folders_and_documents = async () => {
     try {
       set_is_loading(true)
-      // v2 API: Fetch folders and documents with cursor pagination
-      // Using high limit to fetch all at once (can be optimized with infinite scroll later)
       const [folders_result, documents_result] = await Promise.all([
         get_folders({ limit: 100 }),
         get_documents({ limit: 100 })
       ])
 
-      // Extract data from v2 response format
       set_folders(folders_result.folders)
       set_documents(documents_result.documents)
     } catch (error) {
@@ -75,10 +71,8 @@ const Dashboard = () => {
     set_active_citation(citation)
   }
 
-  // Keyboard shortcuts
   useEffect(() => {
     const handle_keyboard_shortcuts = (e) => {
-      // ESC key: Close file and return to file explorer
       if (e.key === 'Escape') {
         if (selected_file) {
           set_selected_file(null)
@@ -96,25 +90,20 @@ const Dashboard = () => {
 
   return (
     <div className="h-screen flex flex-col relative overflow-hidden">
-      {/* Background Hero Image */}
       <div
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
         style={{
           backgroundImage: 'url(/hero.jpg)',
         }}
       >
-        {/* Overlay for better contrast */}
         <div className="absolute inset-0 bg-black/20 dark:bg-black/50"></div>
       </div>
 
-      {/* Header */}
       <div className="relative z-10">
         <Header />
       </div>
 
-      {/* Main Content */}
       <div className="flex-1 flex overflow-hidden gap-4 p-4 relative z-10">
-        {/* File Explorer - Only show when no file is selected */}
         {!selected_file && (
           <FileExplorer
             selected_file={null}
@@ -133,7 +122,6 @@ const Dashboard = () => {
           />
         )}
 
-        {/* File Viewer - Only render when file is selected */}
         {selected_file && (
           <div className="flex-1 h-full">
             <FileViewer
@@ -146,7 +134,6 @@ const Dashboard = () => {
           </div>
         )}
 
-        {/* Chat Agent Sidebar */}
         {!is_chat_collapsed && (
           <ChatAgent
             is_collapsed={is_chat_collapsed}
@@ -156,7 +143,6 @@ const Dashboard = () => {
           />
         )}
 
-        {/* Floating AI Button when collapsed */}
         {is_chat_collapsed && (
           <button
             onClick={handle_toggle_chat}

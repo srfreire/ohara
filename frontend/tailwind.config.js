@@ -6,13 +6,11 @@ export default {
   ],
   darkMode: 'class',
   safelist: [
-    // Ensure dark mode background classes are always generated
     'dark:bg-secondary-800/90',
     'dark:bg-secondary-900/80',
     'dark:bg-secondary-900/60',
     'dark:bg-secondary-900/40',
     'dark:border-secondary-600/50',
-    // Button states
     'dark:bg-secondary-700',
     'dark:hover:bg-secondary-600',
     'dark:hover:bg-secondary-700',
@@ -25,7 +23,6 @@ export default {
         'reddit-sans': ['Reddit Sans', 'sans-serif'],
       },
       colors: {
-        // Primary colors - easily customizable
         primary: {
           50: 'var(--color-primary-50)',
           100: 'var(--color-primary-100)',
@@ -39,7 +36,6 @@ export default {
           900: 'var(--color-primary-900)',
           950: 'var(--color-primary-950)',
         },
-        // Secondary colors
         secondary: {
           50: 'rgb(var(--color-secondary-50) / <alpha-value>)',
           100: 'rgb(var(--color-secondary-100) / <alpha-value>)',
@@ -53,7 +49,6 @@ export default {
           900: 'rgb(var(--color-secondary-900) / <alpha-value>)',
           950: 'rgb(var(--color-secondary-950) / <alpha-value>)',
         },
-        // Background and text colors
         background: {
           light: 'var(--color-background-light)',
           dark: 'var(--color-background-dark)',
@@ -67,8 +62,6 @@ export default {
       }
     },
   },
-  plugins: [
-    require('@tailwindcss/typography'),
-  ],
+  plugins: [],
 }
 

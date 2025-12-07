@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react'
-import { is_authenticated, logout as api_logout } from '../api/auth' // Updated to use .ts file
+import { is_authenticated, logout as api_logout } from '../api/auth'
 import { useNavigate } from 'react-router-dom'
 
 const AuthContext = createContext(null)
@@ -9,7 +9,6 @@ export const AuthProvider = ({ children }) => {
   const [is_loading, set_is_loading] = useState(true)
   const [is_auth, set_is_auth] = useState(false)
 
-  // Check authentication status on mount
   useEffect(() => {
     check_auth()
   }, [])
@@ -20,7 +19,6 @@ export const AuthProvider = ({ children }) => {
       set_is_auth(authenticated)
 
       if (authenticated) {
-        // Try to get user from localStorage
         const stored_user = localStorage.getItem('user')
         if (stored_user) {
           set_user(JSON.parse(stored_user))
@@ -38,7 +36,6 @@ export const AuthProvider = ({ children }) => {
   const login = (user_data) => {
     set_user(user_data)
     set_is_auth(true)
-    // Store user in localStorage
     localStorage.setItem('user', JSON.stringify(user_data))
   }
 

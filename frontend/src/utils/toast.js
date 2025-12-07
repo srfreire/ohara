@@ -1,6 +1,5 @@
 import toast from 'react-hot-toast'
 
-// Custom toast configurations
 const toast_config = {
   success: {
     duration: 3000,

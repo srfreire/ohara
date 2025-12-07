@@ -1,23 +1,20 @@
 import { useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import { useAuth } from '../../contexts/auth-context'
-import { login_with_google } from '../../api/auth' // Updated to use .ts file
+import { login_with_google } from '../../api/auth'
 
 const LoginPage = () => {
   const navigate = useNavigate()
   const { is_authenticated, login } = useAuth()
   const [is_loading, set_is_loading] = useState(false)
 
-  // Redirect to dashboard if already authenticated
   useEffect(() => {
     if (is_authenticated) {
       navigate('/dashboard')
     }
   }, [is_authenticated, navigate])
 
-  // Handle OAuth callback
   useEffect(() => {
-    // Check if we're returning from OAuth callback
     const url_params = new URLSearchParams(window.location.search)
     const access_token = url_params.get('access_token')
     const user_email = url_params.get('email')
@@ -26,10 +23,8 @@ const LoginPage = () => {
     const avatar_url = url_params.get('avatar_url')
 
     if (access_token) {
-      // Store token in localStorage
       localStorage.setItem('access_token', access_token)
 
-      // Store user data
       const user_data = {
         id: user_id,
         email: user_email,
@@ -37,65 +32,54 @@ const LoginPage = () => {
         avatar_url: avatar_url
       }
 
-      // Update auth context
       login(user_data)
-
-      // Redirect to dashboard
       navigate('/dashboard')
     }
   }, [login, navigate])
 
   const handle_google_login = () => {
     set_is_loading(true)
-    // Redirect to backend OAuth endpoint
     login_with_google()
   }
 
   return (
     <div className="min-h-screen flex relative overflow-hidden">
-      {/* Background Hero Image */}
       <div
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
         style={{
           backgroundImage: 'url(/hero.jpg)',
         }}
       >
-        {/* Overlay for better contrast - adapts to theme */}
         <div className="absolute inset-0 bg-black/20"></div>
       </div>
 
-
-      {/* Login Card - Right Side */}
       <div className="relative z-10 ml-auto flex items-center mr-8">
         <div className="max-w-md w-full">
           <div className="bg-white/80 dark:bg-secondary-900/80 backdrop-blur-lg rounded-2xl p-8 shadow-2xl border border-primary-200/20 dark:border-secondary-600/30">
-            {/* Logo/Title */}
-          <div className="text-center mb-8">
-            <div className="flex items-center justify-center mb-4">
-              <img
-                src="src/assets/icon.png"
-                alt="Ohara Icon"
-                className="w-12 h-12 mr-3 rounded-md"
-              />
-              <h1 className="text-4xl font-bold text-text-light font-sora">
-                OHARA
-              </h1>
-            </div>
-            <p className="text-text-dark text-lg font-reddit-sans">
-              File Repository & Chat Assistant
-            </p>
-          </div>
-
-          {/* Login Content */}
-          <div className="space-y-6">
-            <div className="text-center">
-              <p className="text-text-muted mb-6 font-reddit-sans">
-                Sign in to access your files and chat with our AI assistant
+            <div className="text-center mb-8">
+              <div className="flex items-center justify-center mb-4">
+                <img
+                  src="src/assets/icon.png"
+                  alt="Ohara Icon"
+                  className="w-12 h-12 mr-3 rounded-md"
+                />
+                <h1 className="text-4xl font-bold text-text-light font-sora">
+                  OHARA
+                </h1>
+              </div>
+              <p className="text-text-dark text-lg font-reddit-sans">
+                File Repository & Chat Assistant
               </p>
             </div>
 
-            {/* Google Login Button */}
-            <button
+            <div className="space-y-6">
+              <div className="text-center">
+                <p className="text-text-muted mb-6 font-reddit-sans">
+                  Sign in to access your files and chat with our AI assistant
+                </p>
+              </div>
+
+              <button
               onClick={handle_google_login}
               disabled={is_loading}
               className="w-full bg-secondary-100 dark:bg-secondary-700 dark:hover:bg-secondary-700 hover:bg-secondary-200 text-text-light font-semibold py-3 px-6 rounded-lg transition-all duration-200 flex items-center justify-center space-x-3 backdrop-blur-sm disabled:opacity-50 disabled:cursor-not-allowed"
