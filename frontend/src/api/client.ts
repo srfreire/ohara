@@ -10,19 +10,14 @@ const api_client: AxiosInstance = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials: true, // Enable cookies to be sent with requests
 })
 
-const get_jwt_token = (): string | null => {
-  return localStorage.getItem('access_token')
-}
-
-
+// Request interceptor - no need to manually add Authorization header
+// JWT is now automatically sent via HttpOnly cookie
 api_client.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    const token = get_jwt_token()
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`
-    }
+    // Cookies are sent automatically with withCredentials: true
     return config
   },
   (error) => {
@@ -42,7 +37,6 @@ api_client.interceptors.response.use(
       switch (status) {
         case 401:
           toast.error('Session expired. Please login again.')
-          localStorage.removeItem('access_token')
           localStorage.removeItem('user')
           setTimeout(() => {
             window.location.href = '/'

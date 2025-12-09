@@ -1,5 +1,5 @@
 import api_client from './client'
-import type { ApiSuccessResponse, AuthTokenResponse, User } from '../types/api'
+import type { User } from '../types/api'
 
 export const login_with_google = (): void => {
   window.location.href = `${api_client.defaults.baseURL}/auth/login`
@@ -8,25 +8,23 @@ export const login_with_google = (): void => {
 export const handle_auth_callback = async (): Promise<User | null> => {
   try {
     const url_params = new URLSearchParams(window.location.search)
-    const access_token = url_params.get('access_token')
 
-    if (access_token) {
-      localStorage.setItem('access_token', access_token)
+    // JWT is now in HttpOnly cookie, only extract user info from URL
+    const id = url_params.get('id') || url_params.get('user_id')
+    const email = url_params.get('email')
 
-
+    if (id && email) {
       const user_data: User = {
-        id: url_params.get('id') || url_params.get('user_id') || '',
-        email: url_params.get('email') || '',
+        id,
+        email,
         name: url_params.get('name') || '',
         avatar_url: url_params.get('avatar_url') || undefined,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       }
 
-      if (user_data.id && user_data.email) {
-        localStorage.setItem('user', JSON.stringify(user_data))
-        return user_data
-      }
+      localStorage.setItem('user', JSON.stringify(user_data))
+      return user_data
     }
 
     const stored_user = localStorage.getItem('user')
@@ -51,10 +49,10 @@ export const get_current_user = (): User | null => {
   }
 }
 
-export const refresh_token = async (): Promise<string> => {
+export const refresh_token = async (): Promise<void> => {
   try {
-    const response = await api_client.get<ApiSuccessResponse<AuthTokenResponse>>('/auth/refresh')
-    return response.data.data.access_token
+    // Token is refreshed and set in HttpOnly cookie by backend
+    await api_client.get('/auth/refresh')
   } catch (error) {
     console.error('Token refresh error:', error)
     throw error
@@ -62,12 +60,13 @@ export const refresh_token = async (): Promise<string> => {
 }
 
 export const logout = (): void => {
-  localStorage.removeItem('access_token')
   localStorage.removeItem('user')
+  // Cookie will be cleared by setting maxAge to 0 or by backend logout endpoint
   window.location.href = '/'
 }
 
 export const is_authenticated = (): boolean => {
-  const token = localStorage.getItem('access_token')
-  return !!token
+  // Check if user info exists (JWT is in HttpOnly cookie, not accessible to JS)
+  const user = localStorage.getItem('user')
+  return !!user
 }

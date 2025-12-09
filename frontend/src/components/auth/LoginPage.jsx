@@ -16,15 +16,13 @@ const LoginPage = () => {
 
   useEffect(() => {
     const url_params = new URLSearchParams(window.location.search)
-    const access_token = url_params.get('access_token')
     const user_email = url_params.get('email')
     const user_name = url_params.get('name')
     const user_id = url_params.get('id')
     const avatar_url = url_params.get('avatar_url')
 
-    if (access_token) {
-      localStorage.setItem('access_token', access_token)
-
+    // JWT is now in HttpOnly cookie, only extract user info
+    if (user_id && user_email) {
       const user_data = {
         id: user_id,
         email: user_email,

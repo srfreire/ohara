@@ -79,14 +79,6 @@ export const stream_chat = async (messages: ChatMessage[], options: StreamChatOp
     on_citations = () => {},
   } = options
 
-  // Get JWT token from localStorage
-  const access_token = localStorage.getItem('access_token')
-
-  if (!access_token) {
-    on_error(new Error('No access token found. Please login.'))
-    return () => {}
-  }
-
   const controller = new AbortController()
 
   try {
@@ -94,8 +86,8 @@ export const stream_chat = async (messages: ChatMessage[], options: StreamChatOp
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${access_token}`,
       },
+      credentials: 'include', // Send cookies with request
       body: JSON.stringify({
         messages,
         model,
@@ -225,18 +217,12 @@ export const stream_chat = async (messages: ChatMessage[], options: StreamChatOp
  * POST /v2/agent/chat
  */
 export const send_chat_message = async (messages: ChatMessage[], model: string = 'gpt-4.1'): Promise<any> => {
-  const access_token = localStorage.getItem('access_token')
-
-  if (!access_token) {
-    throw new Error('No access token found. Please login.')
-  }
-
   const response = await fetch(`${API_BASE_URL}/agent/chat`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${access_token}`,
     },
+    credentials: 'include', // Send cookies with request
     body: JSON.stringify({
       messages,
       model,

@@ -3,6 +3,7 @@ import { Logger } from '@nestjs/common';
 import { SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
+import cookieParser from 'cookie-parser';
 import * as openApiSpec from './docs/openapi.json';
 
 async function bootstrap() {
@@ -10,8 +11,14 @@ async function bootstrap() {
 
   const app = await NestFactory.create(AppModule);
 
-  // Enable CORS
-  app.enableCors();
+  // Enable cookie parser
+  app.use(cookieParser());
+
+  // Enable CORS with credentials
+  app.enableCors({
+    origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+    credentials: true,
+  });
 
   // Register global response transform interceptor
   app.useGlobalInterceptors(new TransformInterceptor(app.get(Reflector)));
