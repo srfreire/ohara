@@ -11,6 +11,11 @@ Base URL: `/v2`
 | GET | `/auth/logout` | Cookie | Logout current session |
 | GET | `/auth/logout-all` | Cookie | Logout all user sessions |
 
+**Redis Session Storage:**
+- Sessions stored in Redis with 2-hour TTL
+- Key `session:{session_id}` stores session data
+- Key `user_sessions:{user_id}` (Set) tracks all sessions per user for logout-all
+
 ## Users
 | Method | Endpoint | Auth | Description |
 |--------|----------|------|-------------|

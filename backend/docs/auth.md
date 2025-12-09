@@ -73,14 +73,30 @@ Sessions are stored in Redis for **immediate revocation** capability.
 ```
 
 **Redis Keys**:
-- `session:{session_id}` → Session data (TTL: 2 hours)
-- `user_sessions:{user_id}` → Set of session IDs (for logout-all)
+
+1. **`session:{session_id}`** (String)
+   - Stores the session data as JSON
+   - TTL: 2 hours (auto-expires)
+   - Used for: Validating sessions on each request
+   - Example: `session:550e8400-e29b-41d4-a716-446655440000`
+
+2. **`user_sessions:{user_id}`** (Set)
+   - Redis Set containing all `session_id` values for a user
+   - No TTL (managed manually)
+   - Used for: `logout-all` functionality to find all user sessions
+   - Example: `user_sessions:123e4567-e89b-12d3-a456-426614174000`
+   - Contains: `["session-id-1", "session-id-2", "session-id-3"]`
+
+**How logout-all works**:
+1. Get all session IDs from `user_sessions:{user_id}` set
+2. Delete each `session:{session_id}` key
+3. Delete the `user_sessions:{user_id}` set itself
 
 **Session Lifecycle**:
-1. **Create**: On login/refresh → UUID generated, stored with TTL
-2. **Validate**: Every request → JwtStrategy checks Redis
-3. **Delete**: On logout → Single session removed
-4. **Delete All**: On logout-all → All user sessions purged
+1. **Create**: On login/refresh → UUID generated, stored with TTL, added to user's session set
+2. **Validate**: Every request → JwtStrategy checks Redis for `session:{session_id}`
+3. **Delete**: On logout → Remove from `user_sessions:{user_id}` set, delete `session:{session_id}`
+4. **Delete All**: On logout-all → Get all IDs from set, delete all sessions, delete set
 
 **Why Redis Sessions?**
 - JWT alone can't be revoked (stateless)
@@ -143,7 +159,10 @@ User → GET /v2/auth/login
   → AuthService:
       → Find/create user in Supabase
       → Store OAuth tokens
-      → Create session in Redis
+      → Create session in Redis:
+          → Generate UUID session_id
+          → Store in session:{session_id} (TTL: 2h)
+          → Add session_id to user_sessions:{user_id} set
       → Sign JWT with session_id
   → Set JWT in HttpOnly cookie
   → Redirect to frontend with user info
@@ -176,8 +195,8 @@ User → GET /v2/auth/logout
 User → GET /v2/auth/refresh
   → JwtAuthGuard validates current session
   → AuthService.refresh_token():
-      → Delete old session
-      → Create new session
+      → Delete old session (from both keys)
+      → Create new session (new UUID, same user)
       → Sign new JWT
   → Set new cookie
   → Old token invalidated
