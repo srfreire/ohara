@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { get_supabase_client } from '../../lib/supabase.client';
 import { UsersService } from '../users/services/users.service';
+import { SessionService } from './services/session.service';
 
 const OAUTH_TOKEN_EXPIRY_MS = 3600 * 1000;
 
@@ -13,6 +14,7 @@ export class AuthService {
   constructor(
     private jwt_service: JwtService,
     private users_service: UsersService,
+    private session_service: SessionService,
   ) {}
 
   async handle_google_callback(google_user: any) {
@@ -60,10 +62,13 @@ export class AuthService {
       this.logger.log(`Google OAuth tokens updated for user: ${user.id}`);
     }
 
-    const payload = { id: user.id, email: user.email };
+    // Create session in Redis
+    const session_id = await this.session_service.create_session(user.id, user.email);
+
+    const payload = { id: user.id, email: user.email, session_id };
     const jwt_token = this.jwt_service.sign(payload);
 
-    this.logger.log(`JWT generated for user: ${user.email}`);
+    this.logger.log(`JWT generated with session for user: ${user.email}`);
 
     return {
       access_token: jwt_token,
@@ -76,16 +81,30 @@ export class AuthService {
     };
   }
 
-  async refresh_token(user_id: string, email: string) {
+  async refresh_token(user_id: string, email: string, old_session_id: string) {
     this.logger.log(`Refreshing JWT for user: ${email} (${user_id})`);
 
-    const payload = { id: user_id, email };
+    // Delete old session
+    await this.session_service.delete_session(old_session_id);
+
+    // Create new session
+    const session_id = await this.session_service.create_session(user_id, email);
+
+    const payload = { id: user_id, email, session_id };
     const jwt_token = this.jwt_service.sign(payload);
 
-    this.logger.log(`JWT refreshed for user: ${email}`);
+    this.logger.log(`JWT refreshed with new session for user: ${email}`);
 
     return {
       access_token: jwt_token,
     };
+  }
+
+  async logout(session_id: string): Promise<void> {
+    await this.session_service.delete_session(session_id);
+  }
+
+  async logout_all(user_id: string): Promise<void> {
+    await this.session_service.delete_all_user_sessions(user_id);
   }
 }

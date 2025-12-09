@@ -8,6 +8,7 @@ Base URL: `/v2`
 | GET | `/auth/login` | None | Initiate Google OAuth |
 | GET | `/auth/callback` | None | OAuth callback |
 | GET | `/auth/refresh` | JWT | Refresh JWT token |
+| GET | `/auth/logout` | JWT | Logout and clear session |
 
 ## Users
 | Method | Endpoint | Auth | Description |

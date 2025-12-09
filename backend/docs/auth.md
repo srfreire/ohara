@@ -3,75 +3,235 @@
 ## Overview
 Ohara uses a **multi-layered authentication system** with three methods:
 
-### 1. Google OAuth 2.0 (Primary)
-- Users log in via Google accounts
-- **Endpoint**: `GET /v2/auth/login` - Redirects to Google OAuth consent
-- **Callback**: `GET /v2/auth/callback` - Handles OAuth response
-- JWT set in **HttpOnly cookie** named `access_token`
-- User info (id, email, name, avatar) passed via URL query params
-- Frontend extracts user info only (token is in secure cookie)
+| Method | Use Case | Validation |
+|--------|----------|------------|
+| Google OAuth 2.0 | User login | Passport + Google API |
+| JWT + Redis Sessions | Session management | Cookie + Redis lookup |
+| API Keys | Admin/server-to-server | Header check |
 
-### 2. JWT Tokens (Session Management)
+## Architecture
+
+```
+src/modules/auth/
+├── auth.module.ts           # Module config, exports
+├── auth.service.ts          # Core auth logic
+├── controllers/
+│   └── auth.controller.ts   # Auth endpoints
+├── services/
+│   └── session.service.ts   # Redis session management
+├── guards/
+│   ├── jwt-auth.guard.ts
+│   ├── api-key.guard.ts
+│   ├── api-key-or-jwt.guard.ts
+│   └── google-auth.guard.ts
+└── strategies/
+    ├── jwt.strategy.ts
+    └── google.strategy.ts
+```
+
+## Endpoints
+
+| Endpoint | Guard | Description |
+|----------|-------|-------------|
+| `GET /v2/auth/login` | GoogleAuthGuard | Redirects to Google OAuth |
+| `GET /v2/auth/callback` | GoogleAuthGuard | OAuth callback, sets cookie |
+| `GET /v2/auth/refresh` | JwtAuthGuard | Rotates session + token |
+| `GET /v2/auth/logout` | JwtAuthGuard | Deletes current session |
+| `GET /v2/auth/logout-all` | JwtAuthGuard | Deletes all user sessions |
+
+## JWT Token
+
 - **Storage**: HttpOnly cookie (`access_token`)
-- **Algorithm**: HS256 (HMAC-SHA256)
-- **Expiration**: 2 hours
-- **Payload**: `{ id: string, email: string }`
-- **Cookie Flags**:
-  - `httpOnly: true` - JavaScript cannot access (XSS protection)
-  - `secure: true` - HTTPS only in production
-  - `sameSite: 'strict'` - Maximum CSRF protection (cookies never sent on cross-site requests)
-  - `maxAge: 7200000` - 2 hours in milliseconds
-- **Refresh**: `GET /v2/auth/refresh` - Issues new token in cookie
-- **Backward Compatible**: Also accepts `Authorization: Bearer <token>` header
+- **Algorithm**: HS256
+- **Payload**: `{ id, email, session_id }`
+- **Expiration**: 7 days (JWT) / 2 hours (cookie maxAge)
 
-### 3. API Keys (Admin/Server-to-Server)
-- **Header**: `x-api-key: <admin_api_key>`
-- Full admin privileges
-- Bypasses ownership checks
+**Cookie Flags**:
+```typescript
+{
+  httpOnly: true,      // XSS protection
+  secure: true,        // HTTPS only (production)
+  sameSite: 'strict',  // CSRF protection
+  maxAge: 7200000,     // 2 hours
+  path: '/',
+}
+```
+
+**Extraction Order**:
+1. HttpOnly cookie `access_token` (primary)
+2. `Authorization: Bearer <token>` header (fallback)
+
+## Redis Sessions
+
+Sessions are stored in Redis for **immediate revocation** capability.
+
+**Session Data**:
+```typescript
+{
+  user_id: string,
+  email: string,
+  created_at: number,
+}
+```
+
+**Redis Keys**:
+- `session:{session_id}` → Session data (TTL: 2 hours)
+- `user_sessions:{user_id}` → Set of session IDs (for logout-all)
+
+**Session Lifecycle**:
+1. **Create**: On login/refresh → UUID generated, stored with TTL
+2. **Validate**: Every request → JwtStrategy checks Redis
+3. **Delete**: On logout → Single session removed
+4. **Delete All**: On logout-all → All user sessions purged
+
+**Why Redis Sessions?**
+- JWT alone can't be revoked (stateless)
+- Redis enables: logout, logout-all, session limits
+- 2-hour TTL auto-expires abandoned sessions
 
 ## Guards
-- **JwtAuthGuard**: Validates JWT (cookie → header fallback)
-- **ApiKeyGuard**: Validates API keys
-- **ApiKeyOrJwtGuard**: Accepts either method
-- **GoogleAuthGuard**: Handles OAuth flow
 
-## Authentication Flow
-```
-1. User clicks "Login with Google"
-2. Frontend → GET /v2/auth/login
-3. Backend redirects to Google OAuth consent
-4. User approves
-5. Google → Backend callback with auth code
-6. Backend exchanges code for tokens
-7. Backend creates/updates user in database
-8. Backend generates JWT
-9. Backend sets JWT in HttpOnly cookie
-10. Backend redirects to frontend with user info in URL
-11. Frontend extracts user info, stores in localStorage
-12. Browser auto-sends cookie with all API requests
+### JwtAuthGuard
+Validates JWT and session. Used on protected routes.
+
+```typescript
+@UseGuards(JwtAuthGuard)
+@Get('protected')
+async protected(@Req() req) {
+  // req.user = { id, email, session_id }
+}
 ```
 
-## Security Features
-✅ **HttpOnly Cookie**: JavaScript cannot access token (XSS protection)
-✅ **Secure Flag**: HTTPS-only transmission in production
-✅ **SameSite: strict**: Maximum CSRF protection (no cross-site cookie sending)
-✅ **No Token in URL**: Prevents history/log leaks
-✅ **Auto-sent by Browser**: No manual token management needed
-✅ **2-hour Expiration**: Limited window for token misuse
+**Validation Flow**:
+1. Extract JWT from cookie/header
+2. Verify signature with JWT_SECRET
+3. Validate `session_id` exists in Redis
+4. Verify session belongs to user
+5. Attach user to request
 
-### SameSite: strict Implications
-- Cookies are **never sent** on cross-site requests (links from external sites)
-- User must navigate directly to your domain for cookies to be sent
-- **Note**: OAuth callback from Google is same-site after initial redirect
-- Stronger CSRF protection than 'lax' mode
+### ApiKeyGuard
+Validates `x-api-key` header against `ADMIN_API_KEY`.
 
-## CORS Configuration
-- **Origin**: `FRONTEND_URL` environment variable
-- **Credentials**: Enabled (`credentials: true`)
-- Required for cookies to work cross-origin
+```typescript
+@UseGuards(ApiKeyGuard)
+@Post('admin-only')
+async adminOnly() { ... }
+```
 
-## Frontend Requirements
-- **Axios**: `withCredentials: true` in config
-- **Fetch**: `credentials: 'include'` in requests
-- **Storage**: Only store user info in localStorage (not token)
-- **Auth Check**: Verify user info exists (token check impossible due to HttpOnly)
+### ApiKeyOrJwtGuard
+Accepts either API key OR JWT. Useful for hybrid access.
+
+```typescript
+@UseGuards(ApiKeyOrJwtGuard)
+@Get('flexible')
+async flexible(@Req() req) {
+  if (req.user.is_admin) { /* API key */ }
+  else { /* JWT user */ }
+}
+```
+
+### GoogleAuthGuard
+Handles OAuth flow. Only used on login/callback.
+
+## Authentication Flows
+
+### Login Flow
+```
+User → GET /v2/auth/login
+  → GoogleAuthGuard redirects to Google
+  → User approves
+  → Google → GET /v2/auth/callback
+  → GoogleStrategy extracts profile
+  → AuthService:
+      → Find/create user in Supabase
+      → Store OAuth tokens
+      → Create session in Redis
+      → Sign JWT with session_id
+  → Set JWT in HttpOnly cookie
+  → Redirect to frontend with user info
+```
+
+### Request Flow
+```
+Browser → Protected endpoint
+  → Cookie sent automatically
+  → JwtAuthGuard:
+      → Extract JWT from cookie
+      → Verify signature
+      → Validate session in Redis
+      → Attach user to request
+  → Controller executes
+```
+
+### Logout Flow
+```
+User → GET /v2/auth/logout
+  → JwtAuthGuard validates current session
+  → AuthService.logout(session_id)
+      → Delete from Redis
+  → Clear cookie (maxAge: 0)
+  → Token immediately invalid
+```
+
+### Token Refresh Flow
+```
+User → GET /v2/auth/refresh
+  → JwtAuthGuard validates current session
+  → AuthService.refresh_token():
+      → Delete old session
+      → Create new session
+      → Sign new JWT
+  → Set new cookie
+  → Old token invalidated
+```
+
+## API Keys
+
+For admin/server-to-server access:
+- **Header**: `x-api-key: <ADMIN_API_KEY>`
+- **Bypasses**: JWT validation, ownership checks
+- **Use**: Internal services, admin scripts
+
+## Security Summary
+
+| Feature | Protection |
+|---------|------------|
+| HttpOnly cookie | XSS - JS can't read token |
+| Secure flag | Network - HTTPS only |
+| SameSite: strict | CSRF - No cross-site cookies |
+| Redis sessions | Revocation - Immediate logout |
+| Session validation | Replay - Stolen tokens invalidated |
+| 2-hour session TTL | Expiry - Abandoned sessions cleaned |
+
+## Environment Variables
+
+```bash
+JWT_SECRET=<strong-secret>
+GOOGLE_CLIENT_ID=<oauth-client-id>
+GOOGLE_CLIENT_SECRET=<oauth-client-secret>
+GOOGLE_CALLBACK_URL=<backend-url>/v2/auth/callback
+ADMIN_API_KEY=<admin-key>
+REDIS_URL=redis://localhost:6379
+FRONTEND_URL=http://localhost:5173
+```
+
+## Frontend Integration
+
+**Axios Config**:
+```typescript
+axios.defaults.withCredentials = true;
+```
+
+**Fetch Config**:
+```typescript
+fetch(url, { credentials: 'include' });
+```
+
+**Auth Check**: Verify user info in localStorage (token inaccessible due to HttpOnly).
+
+## Module Exports
+
+AuthModule exports for use by other modules:
+- `AuthService` - Auth operations
+- `SessionService` - Session management
+- `JwtModule` - Token signing/verification

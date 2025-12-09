@@ -61,14 +61,19 @@ export class AuthController {
   async refresh(@Req() req: any, @Res() res: Response) {
     this.logger.log(`Token refresh requested for user: ${req.user?.email || req.user?.id}`);
 
-    const result = await this.auth_service.refresh_token(req.user.id, req.user.email);
+    const result = await this.auth_service.refresh_token(
+      req.user.id,
+      req.user.email,
+      req.user.session_id,
+    );
+
     const is_production = this.config_service.get<string>('NODE_ENV') === 'production';
 
     // Set new JWT in HttpOnly cookie
     res.cookie('access_token', result.access_token, {
       httpOnly: true,
       secure: is_production,
-      sameSite: 'strict', // Maximum CSRF protection
+      sameSite: 'strict',
       maxAge: 2 * 60 * 60 * 1000, // 2 hours
       path: '/',
     });
@@ -76,5 +81,57 @@ export class AuthController {
     this.logger.log(`JWT refreshed and set in cookie for user: ${req.user.email}`);
 
     return res.json({ message: 'Token refreshed successfully' });
+  }
+
+  @Get('logout')
+  @UseGuards(JwtAuthGuard)
+  async logout(@Req() req: any, @Res() res: Response) {
+    this.logger.log(`Logout requested for user: ${req.user?.email || req.user?.id}`);
+
+    // Delete session from Redis
+    if (req.user.session_id) {
+      await this.auth_service.logout(req.user.session_id);
+      this.logger.log(`Session ${req.user.session_id} deleted from Redis`);
+    }
+
+    const is_production = this.config_service.get<string>('NODE_ENV') === 'production';
+
+    // Clear the access_token cookie
+    res.cookie('access_token', '', {
+      httpOnly: true,
+      secure: is_production,
+      sameSite: 'strict',
+      maxAge: 0,
+      path: '/',
+    });
+
+    this.logger.log(`User ${req.user.email} logged out, cookie cleared`);
+
+    return res.json({ message: 'Logged out successfully' });
+  }
+
+  @Get('logout-all')
+  @UseGuards(JwtAuthGuard)
+  async logout_all(@Req() req: any, @Res() res: Response) {
+    this.logger.log(`Logout all sessions requested for user: ${req.user?.email || req.user?.id}`);
+
+    // Delete all sessions for this user from Redis
+    await this.auth_service.logout_all(req.user.id);
+    this.logger.log(`All sessions deleted from Redis for user: ${req.user.id}`);
+
+    const is_production = this.config_service.get<string>('NODE_ENV') === 'production';
+
+    // Clear the access_token cookie
+    res.cookie('access_token', '', {
+      httpOnly: true,
+      secure: is_production,
+      sameSite: 'strict',
+      maxAge: 0,
+      path: '/',
+    });
+
+    this.logger.log(`User ${req.user.email} logged out from all devices, cookie cleared`);
+
+    return res.json({ message: 'Logged out from all devices successfully' });
   }
 }
