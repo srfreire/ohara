@@ -35,6 +35,9 @@ const CommentInput = ({
           placeholder={placeholder}
           maxLength={max_length}
           disabled={is_loading}
+          autoComplete="off"
+          data-lpignore="true"
+          data-form-type="other"
           className={`w-full resize-none rounded-lg border border-white/80 dark:border-secondary-600/50
             bg-white/60 dark:bg-secondary-900/60 backdrop-blur-sm px-4 py-3 text-sm
             text-text-light placeholder-text-muted focus:border-primary-500 focus:outline-none

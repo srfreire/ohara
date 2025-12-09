@@ -10,6 +10,7 @@ export const comment_schema = z.object({
   start_offset: z.number().int(),
   end_offset: z.number().int(),
   created_at: z.string(),
+  user_name: z.string().nullable().optional(), // User's display name from JOIN with users table
 });
 
 export const create_comment_schema = z

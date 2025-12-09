@@ -4,8 +4,8 @@ import { ZoomIn, ZoomOut, Download, Search, ChevronLeft, ChevronRight } from 'lu
 import 'react-pdf/dist/Page/AnnotationLayer.css'
 import 'react-pdf/dist/Page/TextLayer.css'
 
-// Configure PDF.js worker
-pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`
+// Configure PDF.js worker - Using CDN with correct version to match react-pdf v10
+pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`
 
 const PdfViewer = ({ pdf_url, document_title, citation_to_highlight }) => {
   const [num_pages, set_num_pages] = useState(null)
@@ -397,7 +397,7 @@ const PdfViewer = ({ pdf_url, document_title, citation_to_highlight }) => {
                   pageNumber={page_num}
                   scale={scale}
                   renderTextLayer={true}
-                  renderAnnotationLayer={true}
+                  renderAnnotationLayer={false}
                   className="bg-white"
                 />
               </div>

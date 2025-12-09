@@ -205,6 +205,7 @@ export interface Comment {
   parent_comment_id?: string; // UUID for threading
   created_at: string; // ISO 8601
   updated_at: string; // ISO 8601
+  user_name?: string; // User's display name (populated from users table JOIN)
 }
 
 export interface CommentCreateInput {

@@ -19,7 +19,13 @@ export class CommentsService {
   private supabase = get_supabase_client();
 
   async find_all(query_params: QueryCommentsDto): Promise<CursorPaginatedResponse<Comment>> {
-    let query_builder = this.supabase.from('comments').select('*');
+    // Include user data via JOIN using Supabase nested query syntax
+    let query_builder = this.supabase.from('comments').select(`
+      *,
+      users (
+        name
+      )
+    `);
 
     if (query_params.documentId) {
       query_builder = query_builder.eq('document_id', query_params.documentId);
@@ -48,7 +54,14 @@ export class CommentsService {
       throw new Error(`Failed to fetch comments: ${error.message}`);
     }
 
-    return build_cursor_response(data as Comment[], query_params.limit, sort_by);
+    // Transform nested user data to flat user_name field for frontend compatibility
+    const transformed_data = (data as any[]).map(comment => ({
+      ...comment,
+      user_name: comment.users?.name || null,
+      users: undefined // Remove nested object
+    }));
+
+    return build_cursor_response(transformed_data as Comment[], query_params.limit, sort_by);
   }
 
   async create(create_comment_dto: CreateCommentDto): Promise<Comment> {
