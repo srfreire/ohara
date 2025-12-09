@@ -65,7 +65,7 @@ export class SessionService {
     const session_ids = await this.redis.smembers(`user_sessions:${user_id}`);
 
     if (session_ids.length > 0) {
-      const keys = session_ids.map((id) => `session:${id}`);
+      const keys = session_ids.map((id: string) => `session:${id}`);
       await this.redis.del(...keys);
     }
 
