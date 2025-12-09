@@ -78,7 +78,6 @@ export class UsersService {
     user_id?: string,
     is_admin?: boolean,
   ): Promise<User> {
-    // Si no es admin, validar ownership
     if (!is_admin && user_id && id !== user_id) {
       throw new ForbiddenException('You can only update your own account');
     }
@@ -98,7 +97,6 @@ export class UsersService {
   }
 
   async delete(id: string, user_id?: string, is_admin?: boolean): Promise<void> {
-    // Si no es admin, validar ownership
     if (!is_admin && user_id && id !== user_id) {
       throw new ForbiddenException('You can only delete your own account');
     }

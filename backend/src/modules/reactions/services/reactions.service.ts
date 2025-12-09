@@ -78,7 +78,6 @@ export class ReactionsService {
   }
 
   async update(id: string, update_reaction_dto: UpdateReactionDto, user_id: string): Promise<Reaction> {
-    // Primero obtener la reacción para validar ownership
     const { data: reaction, error: fetchError } = await this.supabase
       .from('reactions')
       .select('user_id')
@@ -89,12 +88,10 @@ export class ReactionsService {
       throw new NotFoundException(`Reaction with id ${id} not found`);
     }
 
-    // Validar ownership
     if (reaction.user_id !== user_id) {
       throw new ForbiddenException('You can only update your own reactions');
     }
 
-    // Actualizar
     const { data, error } = await this.supabase
       .from('reactions')
       .update(update_reaction_dto)
@@ -119,7 +116,6 @@ export class ReactionsService {
   }
 
   async delete(id: string, user_id: string): Promise<void> {
-    // Primero obtener la reacción para validar ownership
     const { data: reaction, error: fetchError } = await this.supabase
       .from('reactions')
       .select('user_id')
@@ -130,12 +126,10 @@ export class ReactionsService {
       throw new NotFoundException(`Reaction with id ${id} not found`);
     }
 
-    // Validar ownership
     if (reaction.user_id !== user_id) {
       throw new ForbiddenException('You can only delete your own reactions');
     }
 
-    // Eliminar
     const { error } = await this.supabase.from('reactions').delete().eq('id', id);
 
     if (error) {

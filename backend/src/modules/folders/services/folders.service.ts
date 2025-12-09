@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, Logger } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 
 import { get_supabase_client } from '../../../lib/supabase.client';
 import { Folder, QueryFoldersDto, CreateFolderDto, UpdateFolderDto } from '../models/folder.model';
@@ -11,7 +11,6 @@ import {
 
 @Injectable()
 export class FoldersService {
-  private readonly logger = new Logger('FoldersService');
   private supabase = get_supabase_client();
 
   async find_all(query_params: QueryFoldersDto): Promise<CursorPaginatedResponse<Folder>> {
@@ -33,7 +32,6 @@ export class FoldersService {
     const { data, error } = await query_builder;
 
     if (error) {
-      this.logger.error(`Supabase error: ${error.message}`, error);
       throw new Error(`Failed to fetch folders: ${error.message}`);
     }
 
