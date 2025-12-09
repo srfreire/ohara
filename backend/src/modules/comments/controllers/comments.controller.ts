@@ -9,6 +9,7 @@ import {
   Query,
   UsePipes,
   UseGuards,
+  Req,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 
@@ -45,13 +46,17 @@ export class CommentsController {
 
   @Put(':id')
   @UsePipes(new ZodValidationPipe(update_comment_schema))
-  async update(@Param('id') id: string, @Body() update_comment_dto: UpdateCommentDto) {
-    return this.comments_service.update(id, update_comment_dto);
+  async update(
+    @Param('id') id: string,
+    @Body() update_comment_dto: UpdateCommentDto,
+    @Req() req: any,
+  ) {
+    return this.comments_service.update(id, update_comment_dto, req.user.id);
   }
 
   @Delete(':id')
-  async delete(@Param('id') id: string) {
-    await this.comments_service.delete(id);
+  async delete(@Param('id') id: string, @Req() req: any) {
+    await this.comments_service.delete(id, req.user.id);
     return { data: null, message: 'Comment deleted successfully' };
   }
 }

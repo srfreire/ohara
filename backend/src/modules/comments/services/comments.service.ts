@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
 
 import { get_supabase_client } from '../../../lib/supabase.client';
 import {
@@ -82,7 +82,24 @@ export class CommentsService {
     return data as Comment;
   }
 
-  async update(id: string, update_comment_dto: UpdateCommentDto): Promise<Comment> {
+  async update(id: string, update_comment_dto: UpdateCommentDto, user_id: string): Promise<Comment> {
+    // Primero obtener el comentario para validar ownership
+    const { data: comment, error: fetchError } = await this.supabase
+      .from('comments')
+      .select('user_id')
+      .eq('id', id)
+      .single();
+
+    if (fetchError || !comment) {
+      throw new NotFoundException(`Comment with id ${id} not found`);
+    }
+
+    // Validar ownership
+    if (comment.user_id !== user_id) {
+      throw new ForbiddenException('You can only update your own comments');
+    }
+
+    // Actualizar
     const { data, error } = await this.supabase
       .from('comments')
       .update(update_comment_dto)
@@ -97,7 +114,24 @@ export class CommentsService {
     return data as Comment;
   }
 
-  async delete(id: string): Promise<void> {
+  async delete(id: string, user_id: string): Promise<void> {
+    // Primero obtener el comentario para validar ownership
+    const { data: comment, error: fetchError } = await this.supabase
+      .from('comments')
+      .select('user_id')
+      .eq('id', id)
+      .single();
+
+    if (fetchError || !comment) {
+      throw new NotFoundException(`Comment with id ${id} not found`);
+    }
+
+    // Validar ownership
+    if (comment.user_id !== user_id) {
+      throw new ForbiddenException('You can only delete your own comments');
+    }
+
+    // Eliminar
     const { error } = await this.supabase.from('comments').delete().eq('id', id);
 
     if (error) {

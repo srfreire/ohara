@@ -39,6 +39,19 @@ src/modules/auth/
 | `GET /v2/auth/logout` | JwtAuthGuard | Deletes current session |
 | `GET /v2/auth/logout-all` | JwtAuthGuard | Deletes all user sessions |
 
+### Other Module Endpoints
+
+**Users:**
+- `GET /v2/users` - `ApiKeyOrJwtGuard` (admin access to list all users)
+- `GET /v2/users/:id` - `JwtAuthGuard` (users can only view their own profile)
+- `POST /v2/users` - `ApiKeyGuard` (admin only)
+- `PUT /v2/users/:id` - `ApiKeyOrJwtGuard` (own or admin)
+- `DELETE /v2/users/:id` - `ApiKeyOrJwtGuard` (own or admin)
+
+**Comments & Reactions:**
+- All endpoints use `JwtAuthGuard`
+- `PUT` and `DELETE` validate ownership (users can only modify their own)
+
 ## JWT Token
 
 - **Storage**: HttpOnly cookie (`access_token`)
@@ -98,10 +111,6 @@ Sessions are stored in Redis for **immediate revocation** capability.
 3. **Delete**: On logout → Remove from `user_sessions:{user_id}` set, delete `session:{session_id}`
 4. **Delete All**: On logout-all → Get all IDs from set, delete all sessions, delete set
 
-**Why Redis Sessions?**
-- JWT alone can't be revoked (stateless)
-- Redis enables: logout, logout-all, session limits
-- 2-hour TTL auto-expires abandoned sessions
 
 ## Guards
 

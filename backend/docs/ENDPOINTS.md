@@ -5,11 +5,11 @@ Base URL: `/v2`
 ## Authentication
 | Method | Endpoint | Auth | Description |
 |--------|----------|------|-------------|
-| GET | `/auth/login` | None | Initiate Google OAuth |
-| GET | `/auth/callback` | None | OAuth callback, sets cookie |
-| GET | `/auth/refresh` | Cookie | Refresh JWT + rotate session |
-| GET | `/auth/logout` | Cookie | Logout current session |
-| GET | `/auth/logout-all` | Cookie | Logout all user sessions |
+| GET | `/auth/login` | GoogleAuthGuard | Initiate Google OAuth (redirects to Google) |
+| GET | `/auth/callback` | GoogleAuthGuard | OAuth callback, sets cookie |
+| GET | `/auth/refresh` | Cookie (JwtAuthGuard) | Refresh JWT + rotate session |
+| GET | `/auth/logout` | Cookie (JwtAuthGuard) | Logout current session |
+| GET | `/auth/logout-all` | Cookie (JwtAuthGuard) | Logout all user sessions |
 
 **Redis Session Storage:**
 - Sessions stored in Redis with 2-hour TTL
@@ -19,27 +19,31 @@ Base URL: `/v2`
 ## Users
 | Method | Endpoint | Auth | Description |
 |--------|----------|------|-------------|
-| GET | `/users` | Cookie/API | List all users |
-| GET | `/users/:id` | Cookie/API | Get user by ID |
-| POST | `/users` | Cookie/API | Create user |
+| GET | `/users` | Cookie/API | List all users (admin access) |
+| GET | `/users/:id` | Cookie | Get own user profile (users can only view their own) |
+| POST | `/users` | API | Create user (admin only) |
 | PUT | `/users/:id` | Cookie/API | Update user (own or admin) |
 | DELETE | `/users/:id` | Cookie/API | Delete user (own or admin) |
 
 ## Documents
 | Method | Endpoint | Auth | Description |
 |--------|----------|------|-------------|
-| GET | `/documents` | Cookie/API | List documents |
-| GET | `/documents/:id` | Cookie/API | Get document by ID |
-| GET | `/documents/:id/url` | Cookie/API | Get signed URL |
+| GET | `/documents` | Cookie/API | List all documents (shared resource) |
+| GET | `/documents/:id` | Cookie/API | Get document by ID (shared resource) |
+| GET | `/documents/:id/url` | Cookie/API | Get signed URL (shared resource) |
+
+**Note:** Documents are shared resources accessible to all authenticated users.
 
 ## Folders
 | Method | Endpoint | Auth | Description |
 |--------|----------|------|-------------|
-| GET | `/folders` | Cookie/API | List folders |
-| GET | `/folders/:id` | Cookie/API | Get folder by ID |
-| POST | `/folders` | Cookie/API | Create folder |
-| PUT | `/folders/:id` | Cookie/API | Update folder |
-| DELETE | `/folders/:id` | Cookie/API | Delete folder |
+| GET | `/folders` | Cookie/API | List all folders (shared resource) |
+| GET | `/folders/:id` | Cookie/API | Get folder by ID (shared resource) |
+| POST | `/folders` | Cookie/API | Create folder (shared resource) |
+| PUT | `/folders/:id` | Cookie/API | Update folder (shared resource) |
+| DELETE | `/folders/:id` | Cookie/API | Delete folder (shared resource) |
+
+**Note:** Folders are shared resources accessible to all authenticated users.
 
 ## Collections
 | Method | Endpoint | Auth | Description |
@@ -62,16 +66,16 @@ Base URL: `/v2`
 |--------|----------|------|-------------|
 | GET | `/comments` | Cookie | List comments |
 | POST | `/comments` | Cookie | Create comment |
-| PUT | `/comments/:id` | Cookie | Update comment |
-| DELETE | `/comments/:id` | Cookie | Delete comment |
+| PUT | `/comments/:id` | Cookie | Update own comment only |
+| DELETE | `/comments/:id` | Cookie | Delete own comment only |
 
 ## Reactions
 | Method | Endpoint | Auth | Description |
 |--------|----------|------|-------------|
 | GET | `/reactions` | Cookie | List reactions |
 | POST | `/reactions` | Cookie | Create reaction |
-| PUT | `/reactions/:id` | Cookie | Update reaction |
-| DELETE | `/reactions/:id` | Cookie | Delete reaction |
+| PUT | `/reactions/:id` | Cookie | Update own reaction only |
+| DELETE | `/reactions/:id` | Cookie | Delete own reaction only |
 
 ## Agent
 | Method | Endpoint | Auth | Description |

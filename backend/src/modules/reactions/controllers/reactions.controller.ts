@@ -9,6 +9,7 @@ import {
   Query,
   UsePipes,
   UseGuards,
+  Req,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 
@@ -45,13 +46,17 @@ export class ReactionsController {
 
   @Put(':id')
   @UsePipes(new ZodValidationPipe(update_reaction_schema))
-  async update(@Param('id') id: string, @Body() update_reaction_dto: UpdateReactionDto) {
-    return this.reactions_service.update(id, update_reaction_dto);
+  async update(
+    @Param('id') id: string,
+    @Body() update_reaction_dto: UpdateReactionDto,
+    @Req() req: any,
+  ) {
+    return this.reactions_service.update(id, update_reaction_dto, req.user.id);
   }
 
   @Delete(':id')
-  async delete(@Param('id') id: string) {
-    await this.reactions_service.delete(id);
+  async delete(@Param('id') id: string, @Req() req: any) {
+    await this.reactions_service.delete(id, req.user.id);
     return { data: null, message: 'Reaction deleted successfully' };
   }
 }

@@ -16,6 +16,8 @@ import { ApiTags } from '@nestjs/swagger';
 
 import { ZodValidationPipe } from '../../../common/validation/zod-validation.pipe';
 import { ApiKeyOrJwtGuard } from '../../auth/guards/api-key-or-jwt.guard';
+import { ApiKeyGuard } from '../../auth/guards/api-key.guard';
+import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { UsersService } from '../services/users.service';
 import {
   create_user_schema,
@@ -37,13 +39,17 @@ export class UsersController {
   }
 
   @Get(':id')
-  @UseGuards(ApiKeyOrJwtGuard)
-  async find_by_id(@Param('id') id: string) {
+  @UseGuards(JwtAuthGuard)
+  async find_by_id(@Param('id') id: string, @Req() req: any) {
+    // Validar que solo vea su propio perfil
+    if (id !== req.user.id) {
+      throw new ForbiddenException('You can only view your own profile');
+    }
     return this.users_service.find_by_id(id);
   }
 
   @Post()
-  @UseGuards(ApiKeyOrJwtGuard)
+  @UseGuards(ApiKeyGuard)
   @UsePipes(new ZodValidationPipe(create_user_schema))
   async create(@Body() create_user_dto: CreateUserDto) {
     return this.users_service.create(create_user_dto);
@@ -52,19 +58,17 @@ export class UsersController {
   @Put(':id')
   @UseGuards(ApiKeyOrJwtGuard)
   async update(@Param('id') id: string, @Body() update_user_dto: UpdateUserDto, @Req() req: any) {
-    if (!req.user.is_admin && req.user.id !== id) {
-      throw new ForbiddenException('You can only update your own account');
-    }
-    return this.users_service.update(id, update_user_dto);
+    const is_admin = req.user.is_admin || false;
+    const user_id = req.user.id;
+    return this.users_service.update(id, update_user_dto, user_id, is_admin);
   }
 
   @Delete(':id')
   @UseGuards(ApiKeyOrJwtGuard)
   async delete(@Param('id') id: string, @Req() req: any) {
-    if (!req.user.is_admin && req.user.id !== id) {
-      throw new ForbiddenException('You can only delete your own account');
-    }
-    await this.users_service.delete(id);
+    const is_admin = req.user.is_admin || false;
+    const user_id = req.user.id;
+    await this.users_service.delete(id, user_id, is_admin);
     return { data: null, message: 'User deleted successfully' };
   }
 }

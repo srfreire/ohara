@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 
 import { get_supabase_client } from '../../../lib/supabase.client';
 import { CreateUserDto, UpdateUserDto, User, QueryUsersDto } from '../models/user.model';
@@ -72,7 +72,17 @@ export class UsersService {
     return data as User;
   }
 
-  async update(id: string, update_user_dto: UpdateUserDto): Promise<User> {
+  async update(
+    id: string,
+    update_user_dto: UpdateUserDto,
+    user_id?: string,
+    is_admin?: boolean,
+  ): Promise<User> {
+    // Si no es admin, validar ownership
+    if (!is_admin && user_id && id !== user_id) {
+      throw new ForbiddenException('You can only update your own account');
+    }
+
     const { data, error } = await this.supabase
       .from('users')
       .update(update_user_dto)
@@ -87,7 +97,12 @@ export class UsersService {
     return data as User;
   }
 
-  async delete(id: string): Promise<void> {
+  async delete(id: string, user_id?: string, is_admin?: boolean): Promise<void> {
+    // Si no es admin, validar ownership
+    if (!is_admin && user_id && id !== user_id) {
+      throw new ForbiddenException('You can only delete your own account');
+    }
+
     const { error } = await this.supabase.from('users').delete().eq('id', id);
 
     if (error) {
