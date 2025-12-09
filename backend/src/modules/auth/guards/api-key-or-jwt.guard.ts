@@ -1,12 +1,14 @@
 import { Injectable, CanActivate, ExecutionContext, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
+import { SessionService } from '../services/session.service';
 
 @Injectable()
 export class ApiKeyOrJwtGuard implements CanActivate {
   constructor(
     private config_service: ConfigService,
     private jwt_service: JwtService,
+    private session_service: SessionService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -21,24 +23,39 @@ export class ApiKeyOrJwtGuard implements CanActivate {
       return true;
     }
 
-    // Check for JWT token
-    const auth_header = request.headers.authorization;
-    if (auth_header && auth_header.startsWith('Bearer ')) {
-      const token = auth_header.substring(7);
+    // Check for JWT in cookie
+    const token = request.cookies?.access_token;
 
-      try {
-        const payload = await this.jwt_service.verifyAsync(token, {
-          secret: this.config_service.get<string>('JWT_SECRET'),
-        });
-        request.user = payload;
-        return true;
-      } catch (error) {
-        throw new UnauthorizedException('Invalid or expired JWT token');
-      }
+    if (!token) {
+      throw new UnauthorizedException('Missing authentication: provide x-api-key header or access_token cookie');
     }
 
-    throw new UnauthorizedException(
-      'Missing authentication: provide either x-api-key or Bearer token',
-    );
+    try {
+      const payload = await this.jwt_service.verifyAsync(token, {
+        secret: this.config_service.get<string>('JWT_SECRET'),
+      });
+
+      if (!payload.session_id) {
+        throw new UnauthorizedException('Invalid token payload');
+      }
+
+      const session = await this.session_service.validate_session(payload.session_id);
+
+      if (!session) {
+        throw new UnauthorizedException('Session expired or invalidated');
+      }
+
+      if (session.user_id !== payload.id) {
+        throw new UnauthorizedException('Session mismatch');
+      }
+
+      request.user = { id: payload.id, email: payload.email, session_id: payload.session_id };
+      return true;
+    } catch (error) {
+      if (error instanceof UnauthorizedException) {
+        throw error;
+      }
+      throw new UnauthorizedException('Invalid or expired token');
+    }
   }
 }

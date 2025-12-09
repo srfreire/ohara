@@ -6,75 +6,76 @@ Base URL: `/v2`
 | Method | Endpoint | Auth | Description |
 |--------|----------|------|-------------|
 | GET | `/auth/login` | None | Initiate Google OAuth |
-| GET | `/auth/callback` | None | OAuth callback |
-| GET | `/auth/refresh` | JWT | Refresh JWT token |
-| GET | `/auth/logout` | JWT | Logout and clear session |
+| GET | `/auth/callback` | None | OAuth callback, sets cookie |
+| GET | `/auth/refresh` | Cookie | Refresh JWT + rotate session |
+| GET | `/auth/logout` | Cookie | Logout current session |
+| GET | `/auth/logout-all` | Cookie | Logout all user sessions |
 
 ## Users
 | Method | Endpoint | Auth | Description |
 |--------|----------|------|-------------|
-| GET | `/users` | JWT/API | List all users |
-| GET | `/users/:id` | JWT/API | Get user by ID |
-| POST | `/users` | JWT/API | Create user |
-| PUT | `/users/:id` | JWT/API | Update user (own or admin) |
-| DELETE | `/users/:id` | JWT/API | Delete user (own or admin) |
+| GET | `/users` | Cookie/API | List all users |
+| GET | `/users/:id` | Cookie/API | Get user by ID |
+| POST | `/users` | Cookie/API | Create user |
+| PUT | `/users/:id` | Cookie/API | Update user (own or admin) |
+| DELETE | `/users/:id` | Cookie/API | Delete user (own or admin) |
 
 ## Documents
 | Method | Endpoint | Auth | Description |
 |--------|----------|------|-------------|
-| GET | `/documents` | JWT/API | List documents |
-| GET | `/documents/:id` | JWT/API | Get document by ID |
-| GET | `/documents/:id/url` | JWT/API | Get signed URL |
+| GET | `/documents` | Cookie/API | List documents |
+| GET | `/documents/:id` | Cookie/API | Get document by ID |
+| GET | `/documents/:id/url` | Cookie/API | Get signed URL |
 
 ## Folders
 | Method | Endpoint | Auth | Description |
 |--------|----------|------|-------------|
-| GET | `/folders` | JWT/API | List folders |
-| GET | `/folders/:id` | JWT/API | Get folder by ID |
-| POST | `/folders` | JWT/API | Create folder |
-| PUT | `/folders/:id` | JWT/API | Update folder |
-| DELETE | `/folders/:id` | JWT/API | Delete folder |
+| GET | `/folders` | Cookie/API | List folders |
+| GET | `/folders/:id` | Cookie/API | Get folder by ID |
+| POST | `/folders` | Cookie/API | Create folder |
+| PUT | `/folders/:id` | Cookie/API | Update folder |
+| DELETE | `/folders/:id` | Cookie/API | Delete folder |
 
 ## Collections
 | Method | Endpoint | Auth | Description |
 |--------|----------|------|-------------|
-| GET | `/collections` | JWT | List user's collections |
-| GET | `/collections/:id` | JWT | Get collection by ID |
-| POST | `/collections` | JWT | Create collection |
-| PUT | `/collections/:id` | JWT | Update collection |
-| DELETE | `/collections/:id` | JWT | Delete collection |
+| GET | `/collections` | Cookie | List user's collections |
+| GET | `/collections/:id` | Cookie | Get collection by ID |
+| POST | `/collections` | Cookie | Create collection |
+| PUT | `/collections/:id` | Cookie | Update collection |
+| DELETE | `/collections/:id` | Cookie | Delete collection |
 
 ## Items
 | Method | Endpoint | Auth | Description |
 |--------|----------|------|-------------|
-| GET | `/collections/:id/items` | JWT | List items in collection |
-| POST | `/collections/:id/items` | JWT | Add item to collection |
-| DELETE | `/collections/:id/items/:itemId` | JWT | Remove item |
+| GET | `/collections/:id/items` | Cookie | List items in collection |
+| POST | `/collections/:id/items` | Cookie | Add item to collection |
+| DELETE | `/collections/:id/items/:itemId` | Cookie | Remove item |
 
 ## Comments
 | Method | Endpoint | Auth | Description |
 |--------|----------|------|-------------|
-| GET | `/comments` | JWT | List comments |
-| POST | `/comments` | JWT | Create comment |
-| PUT | `/comments/:id` | JWT | Update comment |
-| DELETE | `/comments/:id` | JWT | Delete comment |
+| GET | `/comments` | Cookie | List comments |
+| POST | `/comments` | Cookie | Create comment |
+| PUT | `/comments/:id` | Cookie | Update comment |
+| DELETE | `/comments/:id` | Cookie | Delete comment |
 
 ## Reactions
 | Method | Endpoint | Auth | Description |
 |--------|----------|------|-------------|
-| GET | `/reactions` | JWT | List reactions |
-| POST | `/reactions` | JWT | Create reaction |
-| PUT | `/reactions/:id` | JWT | Update reaction |
-| DELETE | `/reactions/:id` | JWT | Delete reaction |
+| GET | `/reactions` | Cookie | List reactions |
+| POST | `/reactions` | Cookie | Create reaction |
+| PUT | `/reactions/:id` | Cookie | Update reaction |
+| DELETE | `/reactions/:id` | Cookie | Delete reaction |
 
 ## Agent
 | Method | Endpoint | Auth | Description |
 |--------|----------|------|-------------|
-| POST | `/agent/stream` | JWT | Stream chat with AI agent |
+| POST | `/agent/stream` | Cookie | Stream chat with AI agent |
 
 ---
 
 **Auth Types:**
-- **JWT**: Requires `Authorization: Bearer <token>` header
-- **API**: Requires `x-api-key: <key>` header
-- **JWT/API**: Accepts either authentication method
+- **Cookie**: HttpOnly cookie `access_token` (JWT + Redis session)
+- **API**: Header `x-api-key: <key>` (admin access)
+- **Cookie/API**: Accepts either authentication method

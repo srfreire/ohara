@@ -57,9 +57,7 @@ src/modules/auth/
 }
 ```
 
-**Extraction Order**:
-1. HttpOnly cookie `access_token` (primary)
-2. `Authorization: Bearer <token>` header (fallback)
+**Extraction**: HttpOnly cookie `access_token`
 
 ## Redis Sessions
 
@@ -103,7 +101,7 @@ async protected(@Req() req) {
 ```
 
 **Validation Flow**:
-1. Extract JWT from cookie/header
+1. Extract JWT from cookie
 2. Verify signature with JWT_SECRET
 3. Validate `session_id` exists in Redis
 4. Verify session belongs to user
