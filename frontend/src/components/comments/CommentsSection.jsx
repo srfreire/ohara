@@ -81,8 +81,8 @@ const CommentsSection = ({ document_id }) => {
       set_is_loading(true)
       // v2 API: Use cursor pagination, fetch with high limit
       const [comments_result, reactions_result] = await Promise.all([
-        get_comments({ documentId: document_id, limit: 100 }),
-        get_reactions({ commentId: undefined, limit: 100 }) // Get all reactions for comments
+        get_comments({ document_id: document_id, limit: 100 }),
+        get_reactions({ comment_id: undefined, limit: 100 }) // Get all reactions for comments
       ])
 
       // Extract data from v2 response format

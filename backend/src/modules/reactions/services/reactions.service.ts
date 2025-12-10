@@ -28,8 +28,8 @@ export class ReactionsService {
   async find_all(query_params: QueryReactionsDto): Promise<CursorPaginatedResponse<Reaction>> {
     let query_builder = this.supabase.from('reactions').select('*');
 
-    if (query_params.commentId) {
-      query_builder = query_builder.eq('comment_id', query_params.commentId);
+    if (query_params.comment_id) {
+      query_builder = query_builder.eq('comment_id', query_params.comment_id);
     }
 
     if (query_params.reaction_type) {

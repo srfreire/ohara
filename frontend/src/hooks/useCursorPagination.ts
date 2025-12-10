@@ -37,7 +37,7 @@ interface UseCursorPaginationResult<T> {
  * ```tsx
  * const { data, isLoading, loadMore, hasMore } = useCursorPagination({
  *   fetchFn: async (cursor) => {
- *     const result = await get_comments({ cursor, limit: 25, documentId: docId })
+ *     const result = await get_comments({ cursor, limit: 25, document_id: docId })
  *     return { data: result.comments, pagination: result.pagination }
  *   }
  * })

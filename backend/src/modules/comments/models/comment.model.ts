@@ -47,7 +47,7 @@ export const update_comment_schema = z
   );
 
 export const query_comments_schema = base_query_schema.extend({
-  documentId: z.string().uuid().optional(),
+  document_id: z.string().uuid().optional(),
   user_id: z.string().uuid().optional(),
   parent_comment_id: z.string().uuid().optional(),
   sort_by: z.enum(['created_at', 'content']).optional().default('created_at'),

@@ -224,7 +224,7 @@ export interface CommentUpdateInput {
 }
 
 export interface CommentListParams extends CursorPaginationParams {
-  documentId?: string; // Filter by document
+  document_id?: string; // Filter by document
   user_id?: string; // Filter by user
   parent_comment_id?: string; // Get replies
 }
@@ -255,7 +255,7 @@ export interface ReactionUpdateInput {
 }
 
 export interface ReactionListParams extends CursorPaginationParams {
-  commentId?: string; // Filter by comment
+  comment_id?: string; // Filter by comment
   reaction_type?: ReactionType;
   user_id?: string; // Filter by user
 }

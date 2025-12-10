@@ -22,7 +22,7 @@ export const update_reaction_schema = z.object({
 });
 
 export const query_reactions_schema = base_query_schema.extend({
-  commentId: z.string().uuid().optional(),
+  comment_id: z.string().uuid().optional(),
   reaction_type: reaction_type_enum.optional(),
   user_id: z.string().uuid().optional(),
   sort_by: z.enum(['created_at', 'reaction_type']).optional().default('created_at'),

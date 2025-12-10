@@ -321,11 +321,68 @@
         ]
       }
     },
+    "/v2/auth/logout": {
+      "get": {
+        "description": "Logout the current session. Invalidates the JWT token and removes the session from Redis.",
+        "operationId": "AuthController_logout",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successfully logged out"
+          },
+          "401": {
+            "description": "Unauthorized - Invalid or expired token"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Logout current session",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/v2/auth/logout-all": {
+      "get": {
+        "description": "Logout all sessions for the current user. Invalidates all JWT tokens and removes all sessions from Redis.",
+        "operationId": "AuthController_logout_all",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successfully logged out from all sessions"
+          },
+          "401": {
+            "description": "Unauthorized - Invalid or expired token"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Logout all user sessions",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
     "/v2/collections": {
       "get": {
         "description": "Retrieve collections based on visibility and ownership. Returns user's own collections plus public/unlisted ones. Supports cursor-based pagination.",
         "operationId": "CollectionsController_find_all",
         "parameters": [
+          {
+            "name": "user_id",
+            "required": false,
+            "in": "query",
+            "description": "Filter by user UUID",
+            "schema": {
+              "type": "string"
+            }
+          },
           {
             "name": "order",
             "required": false,
@@ -934,6 +991,32 @@
             }
           },
           {
+            "name": "order",
+            "required": false,
+            "in": "query",
+            "description": "Sort order (default: desc)",
+            "schema": {
+              "enum": [
+                "asc",
+                "desc"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "sort_by",
+            "required": false,
+            "in": "query",
+            "description": "Sort by field (default: created_at)",
+            "schema": {
+              "enum": [
+                "created_at",
+                "name"
+              ],
+              "type": "string"
+            }
+          },
+          {
             "name": "cursor",
             "required": false,
             "in": "query",
@@ -1196,7 +1279,7 @@
             }
           },
           {
-            "name": "documentId",
+            "name": "document_id",
             "required": false,
             "in": "query",
             "description": "Filter by document UUID",
@@ -1426,7 +1509,7 @@
             }
           },
           {
-            "name": "commentId",
+            "name": "comment_id",
             "required": false,
             "in": "query",
             "description": "Filter by comment UUID",

@@ -26,8 +26,8 @@ export class CommentsService {
       )
     `);
 
-    if (query_params.documentId) {
-      query_builder = query_builder.eq('document_id', query_params.documentId);
+    if (query_params.document_id) {
+      query_builder = query_builder.eq('document_id', query_params.document_id);
     }
 
     if (query_params.user_id) {

@@ -2,6 +2,7 @@
 # Claude
 # =================================
 .claude/
+backend/docs/ENDPOINTS.md
 **/CLAUDE.md
 # Python
 # =================================
