@@ -45,10 +45,9 @@ export class CommentsController {
   }
 
   @Put(':id')
-  @UsePipes(new ZodValidationPipe(update_comment_schema))
   async update(
     @Param('id') id: string,
-    @Body() update_comment_dto: UpdateCommentDto,
+    @Body(new ZodValidationPipe(update_comment_schema)) update_comment_dto: UpdateCommentDto,
     @Req() req: any,
   ) {
     return this.comments_service.update(id, update_comment_dto, req.user.id);

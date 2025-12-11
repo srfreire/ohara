@@ -4,7 +4,7 @@ const toast_config = {
   success: {
     duration: 3000,
     style: {
-      background: '#10b981',
+      background: '#4a7c54',
       color: '#fff',
       fontFamily: 'Reddit Sans, sans-serif',
       borderRadius: '0.75rem',
@@ -12,7 +12,7 @@ const toast_config = {
     },
     iconTheme: {
       primary: '#fff',
-      secondary: '#10b981',
+      secondary: '#4a7c54',
     },
   },
   error: {
